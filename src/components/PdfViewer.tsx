@@ -16,64 +16,7 @@ export interface ViewerTarget {
   quote: string;
 }
 
-type Range = [number, number]; // char offsets within one text item
-
-function normChar(c: string): string {
-  if (c === "‘" || c === "’" || c === "‛") return "'";
-  if (c === "“" || c === "”") return '"';
-  if (c >= "‐" && c <= "―") return "-";
-  return c.toLowerCase();
-}
-
-/** Normalizes text (case, whitespace, quotes, dashes) while recording where each char came from. */
-function normalizeWithMap(parts: string[]) {
-  const chars: string[] = [];
-  const map: { item: number; off: number }[] = [];
-  const push = (ch: string, item: number, off: number) => {
-    if (ch === " ") {
-      if (chars.length === 0 || chars[chars.length - 1] === " ") return;
-    }
-    chars.push(ch);
-    map.push({ item, off });
-  };
-  parts.forEach((str, item) => {
-    for (let i = 0; i < str.length; i++) {
-      const c = str[i];
-      push(/\s/.test(c) ? " " : normChar(c), item, i);
-    }
-    push(" ", item, str.length); // items are separated by whitespace
-  });
-  return { text: chars.join(""), map };
-}
-
-function normalizeQuote(q: string): string {
-  return normalizeWithMap([q]).text.trim();
-}
-
-/** Finds the quote across text items and returns per-item char ranges to highlight. */
-export function matchQuote(items: string[], quote: string): Map<number, Range> {
-  const out = new Map<number, Range>();
-  const q = normalizeQuote(quote);
-  if (!q) return out;
-  const { text, map } = normalizeWithMap(items);
-  let at = text.indexOf(q);
-  let len = q.length;
-  if (at < 0) {
-    // Fuzzy fallback: longest prefix (>= 60% of the quote) that still matches, to survive small differences.
-    for (let n = q.length - 1; n >= Math.ceil(q.length * 0.6) && at < 0; n--) {
-      at = text.indexOf(q.slice(0, n));
-      len = n;
-    }
-  }
-  if (at < 0) return out;
-  for (let i = at; i < at + len; i++) {
-    const { item, off } = map[i];
-    if (off >= items[item].length) continue; // separator
-    const cur = out.get(item);
-    out.set(item, cur ? [Math.min(cur[0], off), Math.max(cur[1], off + 1)] : [off, off + 1]);
-  }
-  return out;
-}
+import { matchQuote, type Range } from "@/lib/highlight";
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -83,6 +26,7 @@ export default function PdfViewer({ target, onClose }: { target: ViewerTarget | 
   const [page, setPage] = useState(1);
   const [ranges, setRanges] = useState<Map<number, Range> | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
   const bodyRef = useRef<HTMLDivElement>(null);
   const url = target?.url;
 
@@ -99,6 +43,7 @@ export default function PdfViewer({ target, onClose }: { target: ViewerTarget | 
     setPage(target?.page ?? 1);
     setRanges(null);
     setError(null);
+    setZoom(1);
   }
 
   // Compute the highlight ranges for the visible page from the PDF's own text items.
@@ -109,7 +54,10 @@ export default function PdfViewer({ target, onClose }: { target: ViewerTarget | 
       const p = await pdf.getPage(page);
       const tc = await p.getTextContent();
       const items = tc.items.map((i) => ("str" in i ? (i.str as string) : ""));
-      if (!cancelled) setRanges(page === target.page ? matchQuote(items, target.quote) : new Map());
+      if (cancelled) return;
+      // Dense pages (e.g. long official tables) open zoomed in so the highlight is readable on screen.
+      if (page === target.page && items.length > 150) setZoom(1.8);
+      setRanges(page === target.page ? matchQuote(items, target.quote) : new Map());
     })().catch(() => {
       if (!cancelled) setRanges(new Map());
     });
@@ -122,10 +70,10 @@ export default function PdfViewer({ target, onClose }: { target: ViewerTarget | 
   useEffect(() => {
     if (!ranges || ranges.size === 0) return;
     const t = setTimeout(() => {
-      bodyRef.current?.querySelector("mark")?.scrollIntoView({ block: "center", behavior: "smooth" });
+      bodyRef.current?.querySelector("mark")?.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
     }, 350);
     return () => clearTimeout(t);
-  }, [ranges, page]);
+  }, [ranges, page, zoom]);
 
   const customTextRenderer = useMemo(() => {
     return ({ str, itemIndex }: { str: string; itemIndex: number }) => {
@@ -149,7 +97,7 @@ export default function PdfViewer({ target, onClose }: { target: ViewerTarget | 
     <>
       <div className="fixed inset-0 z-40 bg-slate-900/30" onClick={onClose} aria-hidden />
       <aside
-        className="fixed right-0 top-0 z-50 flex h-full w-full max-w-[620px] flex-col bg-white shadow-2xl"
+        className="fixed right-0 top-0 z-50 flex h-full w-full max-w-[860px] flex-col bg-white shadow-2xl"
         role="dialog"
         aria-label="Source document viewer"
         data-testid="pdf-drawer"
@@ -162,6 +110,11 @@ export default function PdfViewer({ target, onClose }: { target: ViewerTarget | 
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <div className="mr-2 flex items-center overflow-hidden rounded-md border border-slate-200 text-xs text-slate-600">
+              <button className="px-2 py-1 hover:bg-slate-50 disabled:opacity-40" disabled={zoom <= 1} onClick={() => setZoom((z) => Math.max(1, z - 0.4))} aria-label="Zoom out">−</button>
+              <span className="w-12 border-x border-slate-200 py-1 text-center tabular-nums">{Math.round(zoom * 100)}%</span>
+              <button className="px-2 py-1 hover:bg-slate-50 disabled:opacity-40" disabled={zoom >= 3} onClick={() => setZoom((z) => Math.min(3, z + 0.4))} aria-label="Zoom in">+</button>
+            </div>
             <button
               className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
               disabled={page <= 1}
@@ -205,10 +158,10 @@ export default function PdfViewer({ target, onClose }: { target: ViewerTarget | 
               <Page
                 key={`${page}-${ranges.size}`}
                 pageNumber={page}
-                width={560}
+                width={800 * zoom}
                 customTextRenderer={customTextRenderer}
                 renderAnnotationLayer={false}
-                className="mx-auto shadow-md"
+                className="mx-auto w-fit shadow-md"
               />
             )}
           </Document>

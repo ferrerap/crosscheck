@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "docs": "tsx scripts/generate-docs.ts",
-    "test": "tsx scripts/test-math.ts && tsx scripts/check-ingest.ts",
+    "test": "tsx scripts/test-math.ts && tsx scripts/check-ingest.ts && tsx scripts/check-highlights.ts",
     "eval": "tsx --env-file=.env.local scripts/eval.ts"
   },
   "dependencies": {

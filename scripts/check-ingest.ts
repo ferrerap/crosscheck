@@ -23,7 +23,12 @@ async function main() {
     { docId: "D06", page: 1, text: "we forecast the placed-in-service date on or about February 15, 2027" },
     { docId: "D02", page: 1, text: "this sentence does not exist" },
   ];
-  for (const c of checks) console.log(verifyQuote(docs, c).verified ? "OK  " : "MISS", c.docId, c.text);
+  // The last check is a fabricated quote and must be rejected.
+  checks.forEach((c, i) => {
+    const verified = verifyQuote(docs, c).verified;
+    const expected = i < checks.length - 1;
+    console.log(verified === expected ? "PASS" : "FAIL", expected ? "verified" : "rejected", c.docId, c.text);
+  });
   if (process.argv.includes("--dump")) console.log(docs.get(process.argv[3] ?? "D01")?.pages.join("\n----\n"));
 }
 main();
