@@ -1,0 +1,86 @@
+// Renders the synthetic data room to PDFs.  Usage: npx tsx scripts/generate-docs.ts
+import fs from "node:fs";
+import path from "node:path";
+import PDFDocument from "pdfkit";
+import { docs, type SynthDoc } from "./docs/itc-transfer";
+
+const OUT = path.join(process.cwd(), "public", "demo-data", "itc-transfer");
+const M = 64; // page margin
+
+function render(doc: SynthDoc): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const pdf = new PDFDocument({ size: "LETTER", margin: M, bufferPages: true, info: { Title: doc.title } });
+    const stream = fs.createWriteStream(path.join(OUT, doc.filename));
+    pdf.pipe(stream);
+    const width = pdf.page.width - 2 * M;
+
+    pdf.font("Helvetica-Bold").fontSize(9).fillColor("#555").text(doc.letterhead, { width });
+    pdf.moveTo(M, pdf.y + 4).lineTo(M + width, pdf.y + 4).strokeColor("#999").stroke();
+    pdf.moveDown(1.2);
+    pdf.font("Helvetica-Bold").fontSize(15).fillColor("#111").text(doc.title, { width });
+    pdf.moveDown(0.4);
+    pdf.font("Helvetica").fontSize(9.5).fillColor("#333");
+    for (const m of doc.meta) pdf.text(m, { width });
+    pdf.moveDown(1);
+
+    for (const b of doc.blocks) {
+      if (typeof b === "string") {
+        pdf.font("Helvetica").fontSize(10.5).fillColor("#111").text(b, { width, align: "left", lineGap: 2 });
+        pdf.moveDown(0.7);
+      } else if ("h" in b) {
+        pdf.moveDown(0.3);
+        pdf.font("Helvetica-Bold").fontSize(11.5).fillColor("#111").text(b.h, { width });
+        pdf.moveDown(0.4);
+      } else if ("table" in b) {
+        const cols = b.table[0].length;
+        const colW = cols === 2 ? [width * 0.38, width * 0.62] : Array(cols).fill(width / cols);
+        b.table.forEach((row, r) => {
+          const heights = row.map((cell, i) =>
+            pdf.font(r === 0 ? "Helvetica-Bold" : "Helvetica").fontSize(9.5).heightOfString(cell, { width: colW[i] - 10 }),
+          );
+          const h = Math.max(...heights) + 8;
+          if (pdf.y + h > pdf.page.height - M) pdf.addPage();
+          const y = pdf.y;
+          let x = M;
+          if (r === 0) pdf.rect(M, y, width, h).fill("#eef1f4");
+          row.forEach((cell, i) => {
+            pdf.font(r === 0 ? "Helvetica-Bold" : "Helvetica").fontSize(9.5).fillColor("#111")
+              .text(cell, x + 5, y + 4, { width: colW[i] - 10 });
+            x += colW[i];
+          });
+          pdf.moveTo(M, y + h).lineTo(M + width, y + h).strokeColor("#ccc").stroke();
+          pdf.x = M;
+          pdf.y = y + h;
+        });
+        pdf.moveDown(0.8);
+      } else if ("sig" in b) {
+        pdf.moveDown(1.5);
+        pdf.font("Helvetica").fontSize(10.5);
+        for (const line of b.sig) pdf.text(line, { width });
+        pdf.moveDown(0.7);
+      } else if ("pageBreak" in b) {
+        pdf.addPage();
+      }
+    }
+
+    const range = pdf.bufferedPageRange();
+    for (let i = range.start; i < range.start + range.count; i++) {
+      pdf.switchToPage(i);
+      pdf.page.margins.bottom = 0;
+      pdf.font("Helvetica-Oblique").fontSize(7.5).fillColor("#888")
+        .text(`Synthetic document created for a software demonstration. All parties and figures are fictional.   Page ${i + 1} of ${range.count}`, M, pdf.page.height - M + 20, { width, lineBreak: false });
+    }
+    pdf.end();
+    stream.on("finish", resolve);
+    stream.on("error", reject);
+  });
+}
+
+async function main() {
+  fs.mkdirSync(OUT, { recursive: true });
+  for (const d of docs) {
+    await render(d);
+    console.log("wrote", d.filename);
+  }
+}
+main();
