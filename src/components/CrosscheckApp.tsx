@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BaselineAssumption, DocClassification, Evidence, Finding, Gap, Question, Quote, Rfi, Risk, RunUsage } from "@/engine/types";
 import type { Values } from "@/playbooks/types";
 import { itcTransfer } from "@/playbooks/itc-transfer";
-import { creditRange } from "@/lib/scenarios";
+import { creditAtRisk, creditRange } from "@/lib/scenarios";
 import { docLabels } from "@/lib/meta";
 import { ZERO_USAGE, addUsage, fileUrl, makeRunner, type DocMeta, type Runner, type RunnerMode } from "@/lib/runner";
 import { cx } from "./ui";
@@ -77,6 +77,10 @@ export default function CrosscheckApp() {
   const baselineValues: Values = useMemo(() => Object.fromEntries(baseline.map((b) => [b.id, b.value])), [baseline]);
   const range = useMemo(
     () => (baseline.length && findings.length ? creditRange(itcTransfer, baselineValues, findings, questions, evidence) : null),
+    [baseline, baselineValues, findings, questions, evidence],
+  );
+  const atRisk = useMemo(
+    () => (baseline.length && findings.length ? creditAtRisk(itcTransfer, baselineValues, findings, questions, evidence) : {}),
     [baseline, baselineValues, findings, questions, evidence],
   );
   // Questions that reach a check on the page; the accepted ones are the ones "sent".
@@ -244,6 +248,7 @@ export default function CrosscheckApp() {
             questions={questions}
             rfis={rfis}
             risks={risks}
+            atRisk={atRisk}
             accepted={accepted}
             edits={edits}
             onAccept={(id, on) =>
@@ -273,6 +278,7 @@ export default function CrosscheckApp() {
         {step === "report" && range && (
           <ReportStep
             range={range}
+            atRisk={atRisk}
             findings={findings}
             rfis={sentRfis}
             edits={edits}

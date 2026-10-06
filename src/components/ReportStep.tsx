@@ -4,9 +4,10 @@ import type { Finding, Label, Metric, Quote, Rfi, Risk, RunUsage } from "@/engin
 import { LABEL_ORDER, fmtDelta, fmtMetric, fmtMoney } from "@/lib/format";
 import { GROUPS, assumptionKind, assumptionName } from "@/lib/meta";
 import type { CreditRange } from "@/lib/scenarios";
-import { Card, LabelChip, PriorityBadge, QuoteChip, StanceTag, cx, sortRfis } from "./ui";
+import { creditTag } from "@/lib/creditTag";
+import { Card, CreditPill, LabelChip, PriorityBadge, QuoteChip, StanceTag, cx, sortRfis } from "./ui";
 
-const COLS = "lg:grid-cols-[13rem_7.5rem_11rem_13rem_1fr]";
+const COLS = "lg:grid-cols-[11rem_7rem_9rem_12rem_9.5rem_1fr]";
 
 const pick = (m: Metric[], id: string) => m.find((x) => x.id === id);
 const span = (lo: number, hi: number, f: Metric["format"]) => (Math.abs(hi - lo) < 1e-9 ? fmtMetric(lo, f) : `${fmtMetric(lo, f)}–${fmtMetric(hi, f)}`);
@@ -26,6 +27,7 @@ function CheckTags({ ids }: { ids: string[] }) {
 export function ReportStep({
   range,
   findings,
+  atRisk,
   rfis,
   edits,
   risks,
@@ -35,6 +37,8 @@ export function ReportStep({
 }: {
   range: CreditRange;
   findings: Finding[];
+  /** Credit at risk per check (see creditAtRisk). */
+  atRisk: Record<string, number>;
   /** The questions that were accepted for sending. */
   rfis: Rfi[];
   edits: Record<string, string>;
@@ -46,6 +50,7 @@ export function ReportStep({
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const counts = LABEL_ORDER.map((l) => [l, findings.filter((f) => f.label === l).length] as [Label, number]);
   const sent = sortRfis(rfis);
+  const findingBy = new Map(findings.map((f) => [f.assumptionId, f]));
   const unverified = findings.flatMap((f) => f.evidence).filter((e) => !e.quote.verified).length;
 
   const credit = { signed: pick(range.asSigned, "credit"), low: pick(range.low, "credit"), high: pick(range.high, "credit") };
@@ -143,6 +148,7 @@ export function ReportStep({
           <div>Status</div>
           <div>Term sheet</div>
           <div>Current</div>
+          <div>Credit at risk</div>
           <div>Why</div>
         </div>
         {GROUPS.map((g) => {
@@ -175,6 +181,13 @@ export function ReportStep({
                         <div className="text-sm font-medium text-slate-900">
                           <span className="mr-1 text-[11px] font-normal uppercase text-slate-400 lg:hidden">Current: </span>
                           {f.currentDisplay}
+                        </div>
+                        <div data-testid={`report-risk-${f.assumptionId}`}>
+                          <span className="mr-1 text-[11px] uppercase text-slate-400 lg:hidden">Credit at risk: </span>
+                          {(() => {
+                            const t = creditTag(f, atRisk, findingBy);
+                            return t ? <CreditPill tag={t} wrap /> : <span className="text-sm text-slate-400">–</span>;
+                          })()}
                         </div>
                         <div className="text-sm leading-relaxed text-slate-600">{f.summary}</div>
                       </button>
