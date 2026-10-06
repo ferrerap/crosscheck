@@ -87,7 +87,7 @@ export async function extractBaseline(p: Playbook, docs: DocRecord[]) {
   if (!anchor) throw new Error("No anchor document");
   const { data, usage } = await ask({
     system: system(p, docs),
-    task: `Extract every assumption and deal term (${p.assumptions.map((a) => a.id).join(", ")}) from the ${p.anchorLabel.toLowerCase()} only (document ${anchor.id}). For T9-style coverage requirements stated as a percentage, give the dollar amount implied by the stated price as the value and explain in display. If an item is not stated, set found=false.`,
+    task: `Extract every assumption and deal term (${p.assumptions.map((a) => a.id).join(", ")}) from the ${p.anchorLabel.toLowerCase()} only (document ${anchor.id}). For a requirement stated as a percentage of a price (e.g. coverage as a percentage of the purchase price), give the dollar amount implied by the stated price as the value and explain in display. If an item is not stated, set found=false.`,
     schema: BaselineSchema,
   });
   const byId = new Map(docs.map((d) => [d.id, d]));
@@ -235,13 +235,15 @@ const ReconcileSchema = z.object({
 });
 
 export async function reconcile(
-  p: Playbook, docs: DocRecord[], baseline: BaselineAssumption[], evidence: Evidence[],
+  p: Playbook, docs: DocRecord[], baseline: BaselineAssumption[], evidence: Evidence[], classifications: DocClassification[] = [],
 ): Promise<{ findings: Finding[]; questions: Question[]; rfis: Rfi[]; risks: Risk[]; usage: RunUsage }> {
+  const sourceOf = new Map(classifications.map((c) => [c.docId, c.sourceRole]));
   const { data, usage } = await ask({
     system: system(p, docs),
     task: `Reconcile each assumption and identity fact (not deal terms) against the gathered evidence, applying the judging rules. Where the answer requires a human judgment call or depends on a conflict between sources, label it "conflicting" or "contradicted" as appropriate and raise a question with 2-3 concrete options; each option's "sets" gives the resolved current values that answer implies (use machine value formats). Raise at most 3 questions and combine assumptions that hinge on the same decision into one question. Questions are judgment calls: raise one only when the buyer's decision changes an assumption's value; a clerical or descriptive discrepancy gets an RFI instead. Write an RFI for every missing document, certification or confirmation the buyer should request, and list risks separately. Unverified quotes are marked verified:false; do not rely on them alone.
 Baseline: ${JSON.stringify(baseline.map(({ id, value, display }) => ({ id, value, display })))}
-Evidence: ${JSON.stringify(evidence.map((e) => ({ assumptionId: e.assumptionId, docId: e.docId, value: e.value, display: e.display, stance: e.stance, note: e.note, quote: e.quote.text, page: e.quote.page, verified: e.quote.verified })))}`,
+Evidence from a document whose source is "seller" is the seller's own assertion, not independent evidence: it cannot by itself confirm an assumption the seller benefits from.
+Evidence: ${JSON.stringify(evidence.map((e) => ({ assumptionId: e.assumptionId, docId: e.docId, source: sourceOf.get(e.docId) ?? "unknown", value: e.value, display: e.display, stance: e.stance, note: e.note, quote: e.quote.text, page: e.quote.page, verified: e.quote.verified })))}`,
     schema: ReconcileSchema,
     effort: "high",
   });

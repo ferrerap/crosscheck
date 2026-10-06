@@ -33,12 +33,16 @@ export async function loadDataRoom(playbookId: string, runId?: string): Promise<
   return docs;
 }
 
+/** Document text is untrusted: escape markup so a PDF cannot close a <page> tag and impersonate another document. */
+const escapeText = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 /** Render documents as page-tagged text for prompts. Page tags let Claude cite pages we can verify. */
 export function renderDocs(docs: DocRecord[]): string {
   return docs
     .map((d) =>
-      [`<document id="${d.id}" filename="${d.filename}" role="${d.role}">`,
-        ...d.pages.map((p, i) => `<page number="${i + 1}">\n${p}\n</page>`),
+      [`<document id="${d.id}" filename="${escapeText(d.filename)}" role="${d.role}">`,
+        ...d.pages.map((p, i) =>
+          `<page number="${i + 1}">\n${p.trim().length < 20 ? "[No extractable text on this page; likely a scanned image. Not read.]" : escapeText(p)}\n</page>`),
         "</document>"].join("\n"),
     )
     .join("\n\n");

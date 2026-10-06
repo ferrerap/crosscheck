@@ -11,6 +11,8 @@ export interface Playbook {
   anchorLabel: string;
   /** The question the report answers. */
   question: string;
+  /** Assumption whose short value names the deal in the UI (e.g. the project company). */
+  dealNameFrom?: string;
   /** Domain framing given to Claude in every prompt. */
   context: string;
   assumptions: AssumptionDef[];

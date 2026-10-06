@@ -19,5 +19,5 @@ export function creditTag(f: Finding, impact: CreditImpact, findings: Map<string
   if (f.dependsOn && parent > 0 && findings.has(f.dependsOn))
     return { kind: "part", text: `part of the ${fmtMoney(parent)} on the ${assumptionName(f.dependsOn).toLowerCase()}` };
   if (f.label === "confirmed") return null;
-  return { kind: "none", text: "no credit impact" };
+  return { kind: "none", text: "credit amount unchanged" };
 }

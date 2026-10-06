@@ -44,8 +44,6 @@ export const SOURCE_LABEL: Record<SourceRole, string> = {
   other: "Other",
 };
 
-export const isInjection = (c: DocClassification) =>
-  !!c.suspiciousInstructions || /embedded instruction|prompt injection|addressed to automated|aimed at automated/i.test(c.summary);
 
 /** Evidence rows that merely record an embedded instruction are not shown as facts. */
 export const isInjectedEvidence = (display: string) => /suspicious instruction/i.test(display);

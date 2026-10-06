@@ -82,7 +82,7 @@ const assumptions: AssumptionDef[] = [
     valueType: "date",
     extractionHint: "The date or period construction is assumed to have begun for tax purposes.",
     evidenceHint: "Notices to proceed, physical work records (on-site or off-site under binding written contract), independent engineer reports, manufacturer letters.",
-    rule: "A notice to proceed alone is not physical work. If sources support different dates or methods, mark conflicting and ask which governs; do not pick the latest or earliest file automatically.",
+    rule: "Under the Physical Work Test, construction begins when physical work of a significant nature starts, on site or off site under a binding written contract (not from inventory). A notice to proceed or other preliminary activity is not physical work. If off-site work is claimed, the open question is evidentiary: is it substantiated (binding written contract and its terms, significance of the work, not inventory, continuity)? Mark conflicting while that is unresolved and ask for the substantiating documents; do not pick the latest or earliest file automatically.",
   },
   {
     id: "T7",
@@ -98,7 +98,7 @@ const assumptions: AssumptionDef[] = [
     valueType: "boolean",
     extractionHint: "Whether the term sheet assumes compliance with prohibited foreign entity (FEOC) material assistance rules, or that they do not apply.",
     evidenceHint: "Supplier certifications, material assistance cost ratio calculations, and anything that determines whether the rules apply (construction start date).",
-    rule: "Label unverified if any supplier certification or the material assistance cost ratio is missing, even if applicability is also in question (missing evidence takes precedence over 'conflicting'). If applicability depends on the beginning-of-construction date, say so and link to that question.",
+    rule: "The material assistance rules apply to facilities whose construction begins after December 31, 2025; a facility that fails them is not a qualified facility (no credit). Label unverified if any supplier certification or the material assistance cost ratio is missing, even if applicability is also in question (missing evidence takes precedence over 'conflicting'). If applicability depends on the beginning-of-construction date, say so and link to that question.",
   },
   {
     id: "T9",
@@ -124,13 +124,23 @@ const assumptions: AssumptionDef[] = [
 // ---- Deterministic tax math (the LLM never does this) ----
 
 /** Domestic content manufactured-products threshold by construction start year. */
+/**
+ * Domestic content manufactured-products threshold for §48E by construction start date:
+ * 40% before June 16, 2025; 45% from June 16 to December 31, 2025; 50% in 2026; 55% after 2026.
+ * Dates may be YYYY-MM-DD or YYYY-MM (a month before June 2025 is treated as pre-June 16).
+ */
 export function dcThreshold(bocDate: string | null): number | null {
-  if (!bocDate) return null;
-  const y = Number(bocDate.slice(0, 4));
-  if (y < 2025) return 40;
-  if (y === 2025) return 45;
-  if (y === 2026) return 50;
+  if (!bocDate || !/^\d{4}-\d{2}/.test(bocDate)) return null;
+  if (bocDate < "2025-06-16") return 40;
+  if (bocDate < "2026") return 45;
+  if (bocDate < "2027") return 50;
   return 55;
+}
+
+/** Construction beginning after December 31, 2025 brings the material assistance (FEOC) rules into play. */
+export function feocApplies(bocDate: string | null): boolean | null {
+  if (!bocDate || !/^\d{4}/.test(bocDate)) return null;
+  return bocDate >= "2026";
 }
 
 export interface CreditFacts {
@@ -140,6 +150,8 @@ export interface CreditFacts {
   dcQualifies: boolean | null;
   price: number | null;
   insuranceLimit: number | null;
+  /** True when the FEOC rules apply and compliance fails: not a qualified facility, so no credit. */
+  feocFails: boolean;
 }
 
 function asBool(v: unknown): boolean | null {
@@ -170,11 +182,13 @@ export function toFacts(v: Values): CreditFacts {
     dcQualifies: dc,
     price: asNum(v.P1),
     insuranceLimit: asNum(v.T9),
+    feocFails: asBool(v.T8) === false && feocApplies(typeof v.T6 === "string" ? v.T6 : null) === true,
   };
 }
 
-/** §48E rate: 6% base or 30% with PWA; each bonus is 10 points with PWA, 2 without. */
+/** §48E rate: 6% base or 30% with PWA; each bonus is 10 points with PWA, 2 without. FEOC failure: 0. */
 export function creditRate(f: CreditFacts): number | null {
+  if (f.feocFails) return 0;
   if (f.pwaMet === null) return null;
   const base = f.pwaMet ? 30 : 6;
   const bonus = f.pwaMet ? 10 : 2;
@@ -209,6 +223,7 @@ export const itcTransfer: Playbook = {
   id: "itc-transfer",
   name: "Tax credit transfer diligence",
   anchorLabel: "Term sheet",
+  dealNameFrom: "I2",
   question: "Do the assumptions behind the term sheet's credit amount survive diligence?",
   context:
     "Buyer-side diligence of a transfer of a §48E investment tax credit under §6418. The term sheet is the baseline; the seller's data room is current evidence. Values in tax documents are exact; never round.",

@@ -22,7 +22,7 @@ async function main() {
   for (const { where, q } of quotes) {
     const f = file.get(q.docId)!;
     if (!cache.has(f)) {
-      const doc = await pdfjs.getDocument({ data: new Uint8Array(fs.readFileSync(path.join(DIR, f))) }).promise;
+      const doc = await pdfjs.getDocument({ data: new Uint8Array(fs.readFileSync(path.join(DIR, f))), verbosity: pdfjs.VerbosityLevel.ERRORS }).promise;
       const pages: string[][] = [];
       for (let i = 1; i <= doc.numPages; i++) {
         const tc = await (await doc.getPage(i)).getTextContent();

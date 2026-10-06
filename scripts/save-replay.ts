@@ -17,7 +17,7 @@ async function main() {
     playbookId: "itc-transfer",
     createdAt: new Date().toISOString(),
     mode: "replay",
-    docs: docs.map(({ id, filename, sha256, role }) => ({ id, filename, sha256, role })),
+    docs: docs.map(({ id, filename, sha256, role, textless }) => ({ id, filename, sha256, role, textless })),
     baseline: r.ex.baseline,
     baselineConfirmed: false,
     classifications: r.cl.classifications,

@@ -4,7 +4,7 @@ import type { DocRecord } from "./types";
 
 export async function extractPages(bytes: Uint8Array): Promise<string[]> {
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const task = pdfjs.getDocument({ data: bytes.slice(), useSystemFonts: true });
+  const task = pdfjs.getDocument({ data: bytes.slice(), useSystemFonts: true, verbosity: pdfjs.VerbosityLevel.ERRORS });
   const doc = await task.promise;
   const pages: string[] = [];
   for (let i = 1; i <= doc.numPages; i++) {
@@ -28,5 +28,6 @@ export async function ingest(
   role: DocRecord["role"],
 ): Promise<DocRecord> {
   const sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
-  return { id, filename, sha256, role, pages: await extractPages(bytes) };
+  const pages = await extractPages(bytes);
+  return { id, filename, sha256, role, pages, textless: pages.some((p) => p.trim().length < 20) || undefined };
 }

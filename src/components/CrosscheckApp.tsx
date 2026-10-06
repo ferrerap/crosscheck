@@ -76,19 +76,28 @@ export default function CrosscheckApp() {
 
   // ---- credit range across the ways the open questions could resolve ----
   const baselineValues: Values = useMemo(() => Object.fromEntries(baseline.map((b) => [b.id, b.value])), [baseline]);
+  const scenarioInput = useMemo(
+    () => ({
+      findings,
+      questions,
+      evidence,
+      sellerDocs: new Set(classifications.filter((c) => c.sourceRole === "seller").map((c) => c.docId)),
+    }),
+    [findings, questions, evidence, classifications],
+  );
   const range = useMemo(
-    () => (baseline.length && findings.length ? creditRange(activePlaybook, baselineValues, findings, questions, evidence) : null),
-    [baseline, baselineValues, findings, questions, evidence],
+    () => (baseline.length && findings.length ? creditRange(activePlaybook, baselineValues, scenarioInput) : null),
+    [baseline, baselineValues, findings, scenarioInput],
   );
   const impact: CreditImpact = useMemo(
     () =>
       baseline.length && findings.length
         ? {
-            atRisk: creditAtRisk(activePlaybook, baselineValues, findings, questions, evidence),
-            cut: creditCutByFacts(activePlaybook, baselineValues, findings, questions, evidence),
+            atRisk: creditAtRisk(activePlaybook, baselineValues, scenarioInput),
+            cut: creditCutByFacts(activePlaybook, baselineValues, scenarioInput),
           }
         : { atRisk: {}, cut: {} },
-    [baseline, baselineValues, findings, questions, evidence],
+    [baseline, baselineValues, findings, scenarioInput],
   );
   const sentRfis = useMemo(() => sendableRfis(rfis, findings, accepted), [rfis, findings, accepted]);
   const shownRisks = useMemo(() => readerRisks(risks, classifications), [risks, classifications]);
@@ -210,6 +219,8 @@ export default function CrosscheckApp() {
   };
 
   const anchor = docs.find((d) => d.role === "anchor");
+  const nameRow = baseline.find((b) => b.id === activePlaybook.dealNameFrom);
+  const dealName = (nameRow?.short ?? nameRow?.display ?? anchor?.filename ?? "this deal").replace(/,?\s+(LLC|Inc\.?|L\.P\.|LP)$/i, "");
   const wide = step === "baseline" || step === "check";
 
   return (
@@ -240,6 +251,7 @@ export default function CrosscheckApp() {
 
         {step === "check" && (
           <CheckStep
+            dealName={dealName}
             docs={docs}
             baseline={baseline}
             classifications={classifications}
@@ -279,6 +291,7 @@ export default function CrosscheckApp() {
 
         {step === "report" && range && (
           <ReportStep
+            dealName={dealName}
             range={range}
             impact={impact}
             findings={findings}

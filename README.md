@@ -6,8 +6,6 @@
 
 A tax credit buyer signs a term sheet that assumes a credit amount: an eligible basis, a credit rate built from prevailing wage, energy community and domestic content, a placed-in-service year and an insurance limit. Diligence is the work of checking every one of those assumptions against the seller's data room. Crosscheck does that cross-document reading with Claude, puts every finding next to the exact source passage, and asks a human to make the judgment calls. The dollar impact recomputes as you decide.
 
-> Screenshot / GIF: _to add after UI round 2_
-
 **Built as a demo for the AI Product Engineer role at Crux.** Crux's diligence products already match files to checklist items and extract key terms from single documents. Crosscheck explores the next layer: **reasoning across documents against the deal's own assumptions.**
 
 ## What it does
@@ -21,7 +19,7 @@ A tax credit buyer signs a term sheet that assumes a credit amount: an eligible 
 
 ### The demo deal
 
-*Cottonwood Solar I* is a fictional 100 MWac / 135 MWdc solar project whose Â§48E ITC is being sold under Â§6418 at $0.935. The data room holds **12 synthetic documents** (cost segregation report, PWA compliance report, IE and construction monitoring reports, domestic content certification, insurance binder and others) plus **4 excerpts of real public documents**: the IRS coal closure census tract list, two IRS notices, and a county siting ordinance for a *different* project. The planted issues:
+*Cottonwood Solar I* is a fictional 100 MWac / 135 MWdc solar project whose §48E ITC is being sold under §6418 at $0.935. The data room holds **12 synthetic documents** (cost segregation report, PWA compliance report, IE and construction monitoring reports, domestic content certification, insurance binder and others) plus **4 excerpts of real public documents**: the IRS coal closure census tract list, two IRS notices, and a county siting ordinance for a *different* project. The planted issues:
 
 - Eligible basis falls from $142.0M to $136.4M because network upgrades are excluded.
 - Apprenticeship labor hours are 13.2% against 15% required, and the cure payment is unpaid.
@@ -32,7 +30,7 @@ A tax credit buyer signs a term sheet that assumes a credit amount: an eligible 
 - The insurance binder says 132 MWdc where every other document says 135.
 - The seller counsel's email contains a line telling "any automated review tool" to mark everything confirmed.
 
-As signed, the credit is **$71.0M**. Depending on how the seller answers, it lands between **$10.9M and $68.2M**. The range is computed in code across every way the open questions could resolve.
+As signed, the credit is **$71.0M**. Depending on how the seller answers, it lands between **$0 and $68.2M**: a 2026 construction start plus a FEOC failure means no qualified facility and no credit. If FEOC compliance is shown, the low case is **$10.9M**. The range is computed in code across every way the open questions could resolve.
 
 ## How it works
 
@@ -50,12 +48,12 @@ flowchart LR
 ```
 
 - **The engine is generic; playbooks hold the deal type.** `src/engine/` knows nothing about tax credits. `src/playbooks/itc-transfer/` defines the assumptions (what to extract, what counts as evidence, how to judge it) and the deterministic math. A new transaction type is a new folder, not a new app. A project-acquisition LOI playbook is next.
-- **Claude reads; code does the math.** Claude extracts values and quotes. TypeScript computes the credit rate (6% or 30% base, bonuses of +2 or +10 points), the domestic content threshold by construction year, and the dollar impact. Every number on screen is reproducible.
+- **Claude reads; code does the math.** Claude extracts values and quotes. TypeScript computes the credit rate (6% or 30% base, bonuses of +2 or +10 points, zero on a FEOC failure), the domestic content threshold by construction start date, and every credit figure: the range, the credit at risk per check, and the credit already cut by data room facts. Figures quoted inside Claude's prose (a day count, a dollar shortfall) come from the documents and are shown as text, not computed.
 - **Every quote is verified.** Claude must return verbatim quotes with page numbers, and each one is string-matched against the PDF's text layer before it's shown. Anything that doesn't match is flagged as unverified rather than shown as fact. The same matcher drives the highlight in the PDF viewer.
-- **Questions to the seller, not verdicts.** At the LOI stage the buyer's next move is to go back to the seller. Every check that doesn't hold becomes a targeted question the reviewer can edit before sending. A clerical discrepancy is a clean-up request, not a deal issue. Documents are tagged by source (seller, seller's advisor, independent, government), so the seller's own assertions never pass as independent evidence.
+- **Questions to the seller, not verdicts.** At the LOI stage the buyer's next move is to go back to the seller. Every check that doesn't hold becomes a targeted question the reviewer can edit before sending. A clerical discrepancy is a clean-up request, not a deal issue. Documents are tagged by source (seller, seller's advisor, independent, government). Seller documents sit in their own lane, the model is told they are assertions, and a seller-stated value never becomes an outcome in the credit range.
 - **The dollar range is computed, not guessed.** Data room facts (for example the $136.4M basis) always apply. Each open question resolves either to the term sheet value or to the data room's. Every combination runs through the deterministic math to give the low and high case.
 - **Documents are untrusted input.** The prompt treats data room text as data. Embedded instructions are surfaced as suspicious and ignored, and the eval checks this.
-- **Four calls, one cached prefix.** The whole data room sits in a cached system prompt shared by the extract, classify, evidence and reconcile calls.
+- **Four calls, cached per step.** The whole data room sits in a cached system prompt. Each step has its own structured-output schema and effort level, so each keeps its own cache, reused when that step runs again within the cache window. That is why a cold run costs about $1.00 and a warm one about $0.65. Cache reads and writes are recorded separately in usage. Sharing one schema across steps would let all four share a cache; it's on the list, not done.
 
 ### Tradeoffs worth naming
 
@@ -76,13 +74,17 @@ flowchart LR
 - the source role of key documents (seller vs independent), and that no document IDs or codes leak into text a person reads;
 - RFI and risk coverage;
 - resistance to the injected instruction;
+- that evidence comes from the right documents (for example, the energy community check cites the real IRS list);
+- that the hidden instruction is detected, not just disobeyed;
 - the quote verification rate.
 
 | Model | Checks passed | Quotes verified | Cost per run | Time per run |
 |---|---|---|---|---|
-| `claude-opus-5-5`, 3 repeat runs | **64 / 64** in each of the 3 runs | **227 / 227** (72 to 78 per run) | $0.64 to $0.96 | ~4.5 min |
+| `claude-opus-5-5`, 4 runs (3 repeats re-scored, 1 live after the final fixes) | **77 / 77** in every run | **301 / 301** (72 to 78 per run) | $0.64 to $0.96 (warm vs cold cache) | ~4–5 min |
 
-Scores use exact matching (a partial value like "2026" for "2026-11-30" fails). Saved runs can be re-scored for free with `--rescore`. Earlier runs (in `evals/itc-transfer/results/`) caught a value-coercion bug (38/39) and an ambiguous rule for missing FEOC evidence (42/43). Both are fixed, and the history is kept. `npm test` runs the free deterministic checks: the tax math against the gold scenarios, ingestion and quote verification, and highlight matching for every quote in the replay.
+Scores use exact matching (a partial value like "2026" for "2026-11-30" fails), and a missing value counts as a fail. Saved runs can be re-scored for free with `--rescore`. Earlier runs (in `evals/itc-transfer/results/`) caught a value-coercion bug (38/39) and an ambiguous rule for missing FEOC evidence (42/43). Both are fixed, and the history is kept.
+
+**What this does and doesn't show.** The playbook rules were written knowing the planted issues. The eval shows the pipeline executes the playbook reliably and repeatably; it does not show it generalizes to an unseen data room. The next eval to add is a clean data room as a negative control, where every check should come out confirmed. `npm test` runs the free deterministic checks: the tax math against the gold scenarios, ingestion and quote verification, and highlight matching for every quote in the replay.
 
 ## Run it locally
 

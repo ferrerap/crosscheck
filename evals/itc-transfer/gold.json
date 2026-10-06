@@ -313,6 +313,26 @@
       },
       "rate": 8,
       "credit": 10912000
+    },
+    "boc_2026_feoc_fails": {
+      "answers": {
+        "T3": true,
+        "T6": "2026-01-12",
+        "T8": false
+      },
+      "rate": 0,
+      "credit": 0,
+      "note": "Construction after 2025-12-31 with FEOC failure: not a qualified facility (§48E(b)(6))."
+    },
+    "boc_2025_feoc_fails": {
+      "answers": {
+        "T3": true,
+        "T6": "2025-12-22",
+        "T8": false
+      },
+      "rate": 50,
+      "credit": 68200000,
+      "note": "FEOC rules don't apply to a 2025 start."
     }
   },
   "rfis": {

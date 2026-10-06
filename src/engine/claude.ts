@@ -26,6 +26,8 @@ export function addUsage(a: RunUsage, b: RunUsage): RunUsage {
   return {
     calls: a.calls + b.calls,
     inputTokens: a.inputTokens + b.inputTokens,
+    cacheWriteTokens: (a.cacheWriteTokens ?? 0) + (b.cacheWriteTokens ?? 0),
+    cacheReadTokens: (a.cacheReadTokens ?? 0) + (b.cacheReadTokens ?? 0),
     outputTokens: a.outputTokens + b.outputTokens,
     costUsd: a.costUsd + b.costUsd,
   };
@@ -75,6 +77,8 @@ export async function ask<T extends z.ZodType>(opts: {
     usage: {
       calls: 1,
       inputTokens: u.input_tokens + cacheWrite + cacheRead,
+      cacheWriteTokens: cacheWrite,
+      cacheReadTokens: cacheRead,
       outputTokens: u.output_tokens,
       costUsd,
     },

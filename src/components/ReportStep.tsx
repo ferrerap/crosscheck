@@ -1,11 +1,10 @@
 "use client";
 import { Fragment, useState } from "react";
 import type { Finding, Label, Metric, Quote, Rfi, Risk, RunUsage } from "@/engine/types";
-import { LABEL_ORDER, fmtDelta, fmtMetric, fmtMoney } from "@/lib/format";
+import { LABEL_ORDER, fmtMetric, fmtMoney } from "@/lib/format";
 import { GROUPS, assumptionKind, assumptionName } from "@/lib/meta";
-import type { CreditRange } from "@/lib/scenarios";
+import type { CreditImpact, CreditRange } from "@/lib/scenarios";
 import { creditTag } from "@/lib/creditTag";
-import type { CreditImpact } from "@/lib/scenarios";
 import { Card, CreditPill, LabelChip, PriorityBadge, QuoteChip, StanceTag, cx, sortRfis } from "./ui";
 
 const COLS = "lg:grid-cols-[11rem_7rem_9rem_12rem_9.5rem_1fr]";
@@ -26,6 +25,7 @@ function CheckTags({ ids }: { ids: string[] }) {
 }
 
 export function ReportStep({
+  dealName,
   range,
   findings,
   impact,
@@ -36,9 +36,11 @@ export function ReportStep({
   onOpen,
   docName,
 }: {
+  /** The deal's name, from the project company check (falls back to the term sheet file). */
+  dealName: string;
   range: CreditRange;
   findings: Finding[];
-  /** Credit at risk per check (see creditAtRisk). */
+  /** Credit at risk per check and credit already cut by data room facts (see scenarios.ts). */
   impact: CreditImpact;
   /** The questions that were accepted for sending. */
   rfis: Rfi[];
@@ -58,13 +60,15 @@ export function ReportStep({
   const price = { signed: pick(range.asSigned, "price"), low: pick(range.low, "price"), high: pick(range.high, "price") };
   const rate = { signed: pick(range.asSigned, "rate"), low: pick(range.low, "rate"), high: pick(range.high, "rate") };
   const ins = pick(range.high, "insurance");
-  const requiredAtHigh = price.high?.current ?? 0;
+  const requiredAtHigh = price.high?.current ?? 0; // term sheet: 100% of the purchase price, at the high case
   const insGap = (ins?.current ?? 0) - requiredAtHigh;
+  const ifCleared = pick(range.lowIfCleared, "credit");
+  const clearNames = range.clearable.map((a) => assumptionName(a)).join(" and ");
   const facts = findings.filter((f) => f.label === "changed").map((f) => assumptionName(f.assumptionId).toLowerCase());
 
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Report &middot; Cottonwood Solar I</p>
+      <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Report &middot; {dealName}</p>
       <h2 className="mt-1 text-2xl font-semibold tracking-tight">Does the data room support the term sheet?</h2>
 
       <div className="mt-6" data-testid="metrics-strip">
@@ -83,6 +87,11 @@ export function ReportStep({
                 <div className="mt-1 text-3xl font-semibold tabular-nums tracking-tight text-slate-900" data-testid="metric-credit-range">
                   {credit.low && credit.high ? span(credit.low.current, credit.high.current, "money") : "–"}
                 </div>
+                {ifCleared && range.clearable.length > 0 && (
+                  <div className="mt-1 text-sm text-slate-600" data-testid="metric-credit-if-cleared">
+                    Low case {fmtMoney(ifCleared.current)} if {clearNames} is shown. A facility that fails the FEOC rules gets no credit.
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -107,27 +116,25 @@ export function ReportStep({
                 {rate.low && rate.high ? span(rate.low.current, rate.high.current, "percent") : "–"}
               </span>
             </div>
-            <div className="mt-1 text-xs text-slate-500">Depends on prevailing wage and the two bonuses</div>
+            <div className="mt-1 text-xs text-slate-500">Depends on prevailing wage, the two bonuses and FEOC</div>
           </div>
           {ins && (
             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Insurance limit vs. required</div>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-sm text-slate-400 line-through decoration-slate-300">{fmtMetric(ins.baseline, ins.format)}</span>
-                <span className="text-slate-300">&rarr;</span>
                 <span className="text-xl font-semibold tabular-nums tracking-tight text-slate-900" data-testid="metric-insurance">
                   {fmtMetric(ins.current, ins.format)}
                 </span>
-                <span className="text-xs font-medium text-slate-500">{fmtDelta(ins.baseline, ins.current, ins.format)}</span>
+                <span className="text-sm text-slate-500">bound vs {fmtMoney(requiredAtHigh)} required</span>
               </div>
               <div className={cx("mt-1 text-xs font-medium", insGap < 0 ? "text-red-700" : "text-emerald-700")}>
-                Required {fmtMoney(requiredAtHigh)} at the high-case price &middot; {insGap < 0 ? `shortfall ${fmtMoney(-insGap)}` : `covers requirement (+${fmtMoney(insGap)})`}
+                {insGap < 0 ? `Shortfall ${fmtMoney(-insGap)}` : `Covers the requirement (+${fmtMoney(insGap)})`} &middot; term sheet requires 100% of the purchase price (high case)
               </div>
             </div>
           )}
         </div>
         <p className="mt-2 text-xs text-slate-500">
-          Data room facts{facts.length ? ` (${facts.join(", ")})` : ""} are applied. The open questions could resolve either way, which sets the range. Computed in code, not by the model.
+          Data room facts{facts.length ? ` (${facts.join(", ")})` : ""} are applied. Each open question could resolve either way, which sets the range. Computed in code, not by the model.
         </p>
       </div>
 
@@ -271,7 +278,7 @@ export function ReportStep({
             {unverified ? `${unverified} quotes could not be verified` : "Every quote verified against source text"}
           </span>
           <span data-testid="usage">
-            {usage.calls} model calls &middot; {(usage.inputTokens / 1000).toFixed(1)}k input / {(usage.outputTokens / 1000).toFixed(1)}k output tokens &middot; ${usage.costUsd.toFixed(2)}
+            {usage.calls} model calls &middot; {(usage.inputTokens / 1000).toFixed(1)}k input{usage.cacheReadTokens ? ` (${(usage.cacheReadTokens / 1000).toFixed(1)}k from cache)` : ""} / {(usage.outputTokens / 1000).toFixed(1)}k output tokens &middot; ${usage.costUsd.toFixed(2)}
           </span>
           <span>Credit amounts computed in code, not by the model.</span>
         </div>

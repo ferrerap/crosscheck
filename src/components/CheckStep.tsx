@@ -32,6 +32,7 @@ const STANCE_RANK = { contradicts: 0, supports: 1, context: 2 } as const;
 const GRID = "grid grid-cols-[22px_250px_150px_118px_minmax(0,1fr)] items-center gap-3";
 
 export function CheckStep({
+  dealName,
   docs,
   baseline,
   classifications,
@@ -50,6 +51,7 @@ export function CheckStep({
   onOpenQuotes,
   onSend,
 }: {
+  dealName: string;
   docs: DocMeta[];
   baseline: BaselineAssumption[];
   classifications: DocClassification[];
@@ -210,6 +212,7 @@ export function CheckStep({
 
       {sending && (
         <SendModal
+          dealName={dealName}
           groups={sendGroups()}
           count={nAccepted}
           findings={findingBy}
@@ -594,6 +597,20 @@ function DocChips({ docs, classifications, phase }: { docs: DocMeta[]; classific
             <div className="flex flex-wrap gap-1">
               <span className={cx("rounded-full px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset", badge.cls)}>{badge.text}</span>
               <SourceTag role={c.sourceRole} />
+              {c.suspiciousInstructions && (
+                <span
+                  className="rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold text-red-800 ring-1 ring-inset ring-red-600/25"
+                  title={`Text addressed to automated reviewers was ignored: "${c.suspiciousInstructions}"`}
+                  data-testid={`instruction-ignored-${d.id}`}
+                >
+                  Instruction ignored
+                </span>
+              )}
+              {d.textless && (
+                <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 ring-1 ring-inset ring-amber-600/25" title="Pages with no extractable text, likely scanned images, were not read">
+                  Scanned pages not read
+                </span>
+              )}
             </div>
           </li>
         );

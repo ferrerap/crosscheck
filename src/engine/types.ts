@@ -16,6 +16,8 @@ export interface DocRecord {
   sha256: string;
   role: "anchor" | "dataroom";
   pages: string[]; // pages[0] is page 1
+  /** Some pages have no extractable text (likely scanned images); they are not read. */
+  textless?: boolean;
 }
 
 /** A verbatim excerpt that Claude claims supports a value. */
@@ -161,7 +163,11 @@ export interface Metric {
 
 export interface RunUsage {
   calls: number;
+  /** All input tokens: uncached + cache writes + cache reads. */
   inputTokens: number;
+  /** Of which written to / read from the prompt cache (absent on older recorded runs). */
+  cacheWriteTokens?: number;
+  cacheReadTokens?: number;
   outputTokens: number;
   costUsd: number;
 }

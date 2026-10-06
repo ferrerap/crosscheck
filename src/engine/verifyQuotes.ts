@@ -26,7 +26,11 @@ export function locate(doc: DocRecord, text: string, claimedPage?: number): numb
   return null;
 }
 
-export function verifyQuote(docs: Map<string, DocRecord>, quote: Omit<Quote, "verified">): Quote {
+/** Prompts escape document text (see renderDocs); quotes come back escaped and are restored here. */
+const unescapeText = (s: string) => s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+
+export function verifyQuote(docs: Map<string, DocRecord>, raw: Omit<Quote, "verified">): Quote {
+  const quote = { ...raw, text: unescapeText(raw.text) };
   const doc = docs.get(quote.docId);
   if (!doc) return { ...quote, verified: false };
   const page = locate(doc, quote.text, quote.page);

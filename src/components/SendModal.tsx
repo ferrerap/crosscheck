@@ -6,6 +6,7 @@ import { assumptionName } from "@/lib/meta";
 import { LabelChip, PriorityBadge } from "./ui";
 
 export function SendModal({
+  dealName,
   groups,
   count,
   findings,
@@ -14,6 +15,7 @@ export function SendModal({
   onBack,
   onConfirm,
 }: {
+  dealName: string;
   groups: { aid: string; rfis: Rfi[] }[];
   count: number;
   findings: Map<string, Finding>;
@@ -33,7 +35,7 @@ export function SendModal({
       <div role="dialog" aria-label="Questions to the seller" data-testid="send-modal" className="max-h-[calc(100vh-6rem)] w-[820px] max-w-full overflow-auto rounded-2xl bg-white px-6 py-5 shadow-2xl">
         <h3 className="text-[17px] font-semibold">Questions to the seller</h3>
         <div className="mt-0.5 text-[12.5px] text-slate-600">
-          {count} question{count === 1 ? "" : "s"} across {groups.length} check{groups.length === 1 ? "" : "s"} · Cottonwood Solar I
+          {count} question{count === 1 ? "" : "s"} across {groups.length} check{groups.length === 1 ? "" : "s"} · {dealName}
         </div>
         {groups.map((g) => (
           <div key={g.aid}>

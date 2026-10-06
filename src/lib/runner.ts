@@ -46,6 +46,8 @@ export function addUsage(a: RunUsage, b: RunUsage): RunUsage {
   return {
     calls: a.calls + b.calls,
     inputTokens: a.inputTokens + b.inputTokens,
+    cacheWriteTokens: (a.cacheWriteTokens ?? 0) + (b.cacheWriteTokens ?? 0),
+    cacheReadTokens: (a.cacheReadTokens ?? 0) + (b.cacheReadTokens ?? 0),
     outputTokens: a.outputTokens + b.outputTokens,
     costUsd: Math.round((a.costUsd + b.costUsd) * 100) / 100,
   };
@@ -83,7 +85,7 @@ function stepUsage(total: RunUsage, step: keyof typeof SPLIT): RunUsage {
 }
 
 export class ReplayRunner implements Runner {
-  private fx = replayFixture as unknown as Run;
+  private fx = replayFixture;
 
   async extractBaseline(): Promise<ExtractResult> {
     await sleep(jitter(1400, 500));
@@ -175,7 +177,7 @@ export function fileUrl(filename: string, runId?: string | null): string {
 }
 
 /** SHA-256 hashes of the bundled demo data room, used to recognise a dropped demo deal. */
-export const DEMO_HASHES: ReadonlySet<string> = new Set((replayFixture as unknown as Run).docs.map((d) => d.sha256));
+export const DEMO_HASHES: ReadonlySet<string> = new Set(replayFixture.docs.map((d) => d.sha256));
 
 export async function sha256Hex(file: File): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());

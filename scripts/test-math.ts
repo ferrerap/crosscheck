@@ -1,7 +1,7 @@
 // Deterministic checks: playbook math reproduces the gold scenarios. No API key needed.
 //   npx tsx scripts/test-math.ts
 import gold from "../evals/itc-transfer/gold.json";
-import { itcTransfer } from "../src/playbooks/itc-transfer";
+import { dcThreshold, itcTransfer } from "../src/playbooks/itc-transfer";
 
 const baseline = Object.fromEntries(Object.entries(gold.baseline).map(([k, v]) => [k, v.value]));
 const resolved = { T2: 136400000, T5: 47.8, T7: "2027-02-15", T9: 55000000 };
@@ -22,4 +22,7 @@ for (const [name, s] of Object.entries(gold.scenarios)) {
   check(`${name} rate`, m[0].current, s.rate);
   check(`${name} credit`, m[1].current, s.credit);
 }
+// §48E domestic content threshold by construction start (June 16, 2025 pivot).
+for (const [date, want] of [["2025-03-01", 40], ["2025-06-15", 40], ["2025-06-16", 45], ["2025-12", 45], ["2026-01-12", 50], ["2027-02-01", 55]] as const)
+  check(`dc threshold ${date}`, dcThreshold(date) ?? -1, want);
 process.exit(fail ? 1 : 0);
