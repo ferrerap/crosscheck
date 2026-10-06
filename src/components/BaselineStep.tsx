@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { BaselineAssumption } from "@/engine/types";
 import { GROUPS, assumptionKind, assumptionName } from "@/lib/meta";
 import { Card, PrimaryButton, cx } from "./ui";
@@ -19,20 +19,38 @@ export function BaselineStep({
   onConfirm: () => void;
 }) {
   const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
-  const [selected, setSelected] = useState<string | null>(baseline[0]?.id ?? null);
+  // Rows in the order they are shown, so "next" means the next one down the page.
+  const ordered = useMemo(() => GROUPS.flatMap((g) => baseline.filter((b) => assumptionKind(b.id) === g.kind)), [baseline]);
+  const [selected, setSelected] = useState<string | null>(ordered[0]?.id ?? null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const [focusContinue, setFocusContinue] = useState(false);
 
   const highlights = useMemo(
     () => baseline.flatMap((b) => (b.quote ? [{ page: b.quote.page, text: b.quote.text, id: b.id }] : [])),
     [baseline],
   );
   const all = confirmed.size === baseline.length;
-  const toggle = (id: string) =>
-    setConfirmed((s) => {
-      const n = new Set(s);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
-      return n;
-    });
+  // Confirming a row selects the next unconfirmed one (wrapping round); when none are left, focus moves to Continue.
+  const toggle = (id: string) => {
+    if (confirmed.has(id)) {
+      setConfirmed((s) => new Set([...s].filter((x) => x !== id)));
+      setSelected(id);
+      return;
+    }
+    const next = new Set(confirmed).add(id);
+    setConfirmed(next);
+    const at = ordered.findIndex((r) => r.id === id);
+    const after = [...ordered.slice(at + 1), ...ordered.slice(0, at)].find((r) => !next.has(r.id));
+    if (after) setSelected(after.id);
+    else setFocusContinue(true);
+  };
+  const confirmAll = () => {
+    setConfirmed(new Set(baseline.map((b) => b.id)));
+    setFocusContinue(true);
+  };
+  useEffect(() => {
+    if (focusContinue && all) continueRef.current?.focus();
+  }, [focusContinue, all]);
 
   return (
     <div>
@@ -49,13 +67,13 @@ export function BaselineStep({
             {confirmed.size} of {baseline.length} confirmed
           </span>
           <button
-            onClick={() => setConfirmed(new Set(baseline.map((b) => b.id)))}
+            onClick={confirmAll}
             disabled={all}
             className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Confirm all
           </button>
-          <PrimaryButton disabled={!all} onClick={onConfirm}>
+          <PrimaryButton ref={continueRef} disabled={!all} onClick={onConfirm}>
             Continue
           </PrimaryButton>
         </div>
@@ -84,12 +102,11 @@ export function BaselineStep({
                           data-testid={`baseline-${b.id}`}
                           className={cx(
                             "flex cursor-pointer items-start gap-3 border-l-4 px-4 py-3 transition",
-                            sel ? "border-orange-400 bg-orange-50/60" : "border-transparent hover:bg-slate-50",
-                            done && "bg-slate-50/70",
+                            sel ? "border-orange-500 bg-orange-50 shadow-[inset_0_0_0_1px_rgba(251,146,60,0.45)]" : "border-transparent hover:bg-slate-50",
+                            done && !sel && "bg-slate-50/70",
                           )}
                         >
-                          <span className="mt-0.5 w-7 shrink-0 font-mono text-xs font-semibold text-slate-400">{b.id}</span>
-                          <div className="min-w-0 flex-1">
+                                          <div className="min-w-0 flex-1">
                             <div className={cx("text-xs font-medium", done ? "text-slate-400" : "text-slate-500")}>{assumptionName(b.id)}</div>
                             <div className={cx("mt-0.5 text-sm leading-snug", done ? "text-slate-500" : "font-medium text-slate-900")}>{b.display}</div>
                             {!b.quote && <div className="mt-1 text-xs text-amber-700">Not found in the term sheet</div>}
@@ -104,7 +121,9 @@ export function BaselineStep({
                               "inline-flex shrink-0 items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold transition",
                               done
                                 ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                : "border-slate-300 bg-white text-slate-800 hover:border-slate-500",
+                                : sel
+                                  ? "border-slate-900 bg-slate-900 text-white hover:bg-slate-700"
+                                  : "border-slate-300 bg-white text-slate-800 hover:border-slate-500",
                             )}
                           >
                             {done ? (

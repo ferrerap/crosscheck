@@ -1,29 +1,43 @@
 "use client";
 import { Fragment, useState } from "react";
-import type { Finding, Label, Metric, Question, Quote, Rfi, Risk, RunUsage } from "@/engine/types";
-import { LABEL_ORDER, fmtMoney } from "@/lib/format";
+import type { Finding, Label, Metric, Quote, Rfi, Risk, RunUsage } from "@/engine/types";
+import { LABEL_ORDER, fmtDelta, fmtMetric, fmtMoney } from "@/lib/format";
 import { GROUPS, assumptionKind, assumptionName } from "@/lib/meta";
-import { Card, LabelChip, MetricsStrip, QuoteChip, StanceTag, cx } from "./ui";
-import { AssumptionChips, PriorityBadge, sortRfis } from "./ReviewStep";
+import type { CreditRange } from "@/lib/scenarios";
+import { Card, LabelChip, PriorityBadge, QuoteChip, StanceTag, cx, sortRfis } from "./ui";
 
 const COLS = "lg:grid-cols-[13rem_7.5rem_11rem_13rem_1fr]";
 
+const pick = (m: Metric[], id: string) => m.find((x) => x.id === id);
+const span = (lo: number, hi: number, f: Metric["format"]) => (Math.abs(hi - lo) < 1e-9 ? fmtMetric(lo, f) : `${fmtMetric(lo, f)}–${fmtMetric(hi, f)}`);
+
+function CheckTags({ ids }: { ids: string[] }) {
+  return (
+    <>
+      {ids.map((a) => (
+        <span key={a} className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-700">
+          {assumptionName(a)}
+        </span>
+      ))}
+    </>
+  );
+}
+
 export function ReportStep({
-  metrics,
+  range,
   findings,
-  questions,
-  answers,
   rfis,
+  edits,
   risks,
   usage,
   onOpen,
   docName,
 }: {
-  metrics: Metric[];
+  range: CreditRange;
   findings: Finding[];
-  questions: Question[];
-  answers: Record<string, string>;
+  /** The questions that were accepted for sending. */
   rfis: Rfi[];
+  edits: Record<string, string>;
   risks: Risk[];
   usage: RunUsage;
   onOpen: (q: Quote) => void;
@@ -31,34 +45,88 @@ export function ReportStep({
 }) {
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const counts = LABEL_ORDER.map((l) => [l, findings.filter((f) => f.label === l).length] as [Label, number]);
-  // Prefer the dedicated RFI list; older runs only carry per-finding follow-ups.
-  const requests: { key: string; priority?: Rfi["priority"]; text: string; reason?: string; ids: string[] }[] = rfis.length
-    ? sortRfis(rfis).map((r) => ({ key: r.id, priority: r.priority, text: r.request, reason: r.reason, ids: r.assumptionIds }))
-    : findings.filter((f) => f.followUp).map((f) => ({ key: f.assumptionId, text: f.followUp!, ids: [f.assumptionId] }));
+  const sent = sortRfis(rfis);
   const unverified = findings.flatMap((f) => f.evidence).filter((e) => !e.quote.verified).length;
-  const decisionFor = (f: Finding) => {
-    for (const qid of f.questionIds) {
-      const q = questions.find((x) => x.id === qid);
-      const o = q?.options.find((x) => x.id === answers[qid]);
-      if (o) return o.label;
-    }
-    return null;
-  };
+
+  const credit = { signed: pick(range.asSigned, "credit"), low: pick(range.low, "credit"), high: pick(range.high, "credit") };
+  const price = { signed: pick(range.asSigned, "price"), low: pick(range.low, "price"), high: pick(range.high, "price") };
+  const rate = { signed: pick(range.asSigned, "rate"), low: pick(range.low, "rate"), high: pick(range.high, "rate") };
+  const ins = pick(range.high, "insurance");
+  const requiredAtHigh = price.high?.current ?? 0;
+  const insGap = (ins?.current ?? 0) - requiredAtHigh;
+  const facts = findings.filter((f) => f.label === "changed").map((f) => assumptionName(f.assumptionId).toLowerCase());
 
   return (
     <div>
       <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Report &middot; Cottonwood Solar I</p>
       <h2 className="mt-1 text-2xl font-semibold tracking-tight">Does the data room support the term sheet?</h2>
 
-      <div className="mt-6">
-        <MetricsStrip metrics={metrics} />
+      <div className="mt-6" data-testid="metrics-strip">
+        <div className="grid gap-3 lg:grid-cols-[1fr_1fr_1fr]">
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-3">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Credit amount</div>
+            <div className="mt-3 grid gap-6 sm:grid-cols-2">
+              <div>
+                <div className="text-xs font-medium text-slate-500">As signed (term sheet)</div>
+                <div className="mt-1 text-3xl font-semibold tabular-nums tracking-tight text-slate-900" data-testid="metric-credit">
+                  {credit.signed ? fmtMoney(credit.signed.current) : "–"}
+                </div>
+              </div>
+              <div className="border-slate-200 sm:border-l sm:pl-6">
+                <div className="text-xs font-medium text-slate-500">Depending on the seller&apos;s answers</div>
+                <div className="mt-1 text-3xl font-semibold tabular-nums tracking-tight text-slate-900" data-testid="metric-credit-range">
+                  {credit.low && credit.high ? span(credit.low.current, credit.high.current, "money") : "–"}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Purchase price</div>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-sm text-slate-400">{price.signed ? fmtMoney(price.signed.current) : ""} signed</span>
+              <span className="text-slate-300">&rarr;</span>
+              <span className="text-xl font-semibold tabular-nums tracking-tight text-slate-900" data-testid="metric-price-range">
+                {price.low && price.high ? span(price.low.current, price.high.current, "money") : "–"}
+              </span>
+            </div>
+            {price.signed?.note && <div className="mt-1 text-xs text-slate-500">{price.signed.note}</div>}
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Credit rate</div>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-sm text-slate-400">{rate.signed ? fmtMetric(rate.signed.current, "percent") : ""} signed</span>
+              <span className="text-slate-300">&rarr;</span>
+              <span className="text-xl font-semibold tabular-nums tracking-tight text-slate-900" data-testid="metric-rate-range">
+                {rate.low && rate.high ? span(rate.low.current, rate.high.current, "percent") : "–"}
+              </span>
+            </div>
+            <div className="mt-1 text-xs text-slate-500">Depends on prevailing wage and the two bonuses</div>
+          </div>
+          {ins && (
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Insurance limit vs. required</div>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-sm text-slate-400 line-through decoration-slate-300">{fmtMetric(ins.baseline, ins.format)}</span>
+                <span className="text-slate-300">&rarr;</span>
+                <span className="text-xl font-semibold tabular-nums tracking-tight text-slate-900" data-testid="metric-insurance">
+                  {fmtMetric(ins.current, ins.format)}
+                </span>
+                <span className="text-xs font-medium text-slate-500">{fmtDelta(ins.baseline, ins.current, ins.format)}</span>
+              </div>
+              <div className={cx("mt-1 text-xs font-medium", insGap < 0 ? "text-red-700" : "text-emerald-700")}>
+                Required {fmtMoney(requiredAtHigh)} at the high-case price &middot; {insGap < 0 ? `shortfall ${fmtMoney(-insGap)}` : `covers requirement (+${fmtMoney(insGap)})`}
+              </div>
+            </div>
+          )}
+        </div>
         <p className="mt-2 text-xs text-slate-500">
-          Struck-through values are the term sheet; bold values reflect diligence findings and your recorded decisions. Computed deterministically.
+          Data room facts{facts.length ? ` (${facts.join(", ")})` : ""} are applied. The open questions could resolve either way, which sets the range. Computed in code, not by the model.
         </p>
       </div>
 
       <div className="mt-8 flex flex-wrap items-center gap-2" data-testid="label-summary">
-        <span className="mr-1 text-sm font-medium text-slate-700">{findings.length} assumptions:</span>
+        <span className="mr-1 text-sm font-medium text-slate-700">{findings.length} checks:</span>
         {counts
           .filter(([, n]) => n > 0)
           .map(([l, n]) => (
@@ -86,7 +154,6 @@ export function ReportStep({
               <ul className="divide-y divide-slate-100 border-b border-slate-100 last:border-b-0">
                 {rows.map((f) => {
                   const isOpen = !!open[f.assumptionId];
-                  const decision = decisionFor(f);
                   return (
                     <li key={f.assumptionId}>
                       <button
@@ -96,10 +163,7 @@ export function ReportStep({
                       >
                         <div className="flex items-start gap-2">
                           <span className={cx("mt-0.5 text-slate-400 transition", isOpen && "rotate-90")}>&#9656;</span>
-                          <div>
-                            <div className="text-sm font-semibold text-slate-900">{assumptionName(f.assumptionId)}</div>
-                            <div className="font-mono text-[11px] text-slate-400">{f.assumptionId}</div>
-                          </div>
+                          <div className="text-sm font-semibold text-slate-900">{assumptionName(f.assumptionId)}</div>
                         </div>
                         <div>
                           <LabelChip label={f.label} />
@@ -111,7 +175,6 @@ export function ReportStep({
                         <div className="text-sm font-medium text-slate-900">
                           <span className="mr-1 text-[11px] font-normal uppercase text-slate-400 lg:hidden">Current: </span>
                           {f.currentDisplay}
-                          {decision && <div className="mt-1 text-xs font-normal text-slate-600">Decision: {decision}</div>}
                         </div>
                         <div className="text-sm leading-relaxed text-slate-600">{f.summary}</div>
                       </button>
@@ -144,20 +207,21 @@ export function ReportStep({
         })}
       </Card>
 
-      {requests.length > 0 && (
-        <section className="mt-10" data-testid="report-rfis">
-          <h3 className="text-lg font-semibold tracking-tight">RFIs to the seller</h3>
+      {sent.length > 0 && (
+        <section className="mt-10" data-testid="report-questions">
+          <h3 className="text-lg font-semibold tracking-tight">Questions sent to the seller</h3>
           <ol className="mt-3 space-y-2">
-            {requests.map((r, i) => (
-              <li key={r.key} className="flex gap-3 rounded-lg border border-slate-200 bg-white p-3.5 text-sm">
-                <span className="font-mono text-xs font-semibold text-slate-400">{i + 1}</span>
+            {sent.map((r, i) => (
+              <li key={r.id} className="flex gap-3 rounded-lg border border-slate-200 bg-white p-3.5 text-sm">
+                <span className="text-xs font-semibold tabular-nums text-slate-400">{i + 1}</span>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    {r.priority && <PriorityBadge priority={r.priority} />}
-                    <AssumptionChips ids={r.ids} />
+                    <PriorityBadge priority={r.priority} />
+                    <CheckTags ids={r.assumptionIds} />
+                    {edits[r.id] && <span className="rounded bg-sky-100 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-sky-800">edited</span>}
                   </div>
-                  <div className="mt-1 font-medium text-slate-800">{r.text}</div>
-                  {r.reason && <div className="mt-0.5 text-[13px] text-slate-500">{r.reason}</div>}
+                  <div className="mt-1 font-medium text-slate-800">{edits[r.id] ?? r.request}</div>
+                  <div className="mt-0.5 text-[13px] text-slate-500">{r.reason}</div>
                 </div>
               </li>
             ))}
@@ -173,7 +237,7 @@ export function ReportStep({
               <li key={k.id} className="rounded-lg border border-slate-200 bg-white p-4 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold text-slate-900">{k.title}</span>
-                  <AssumptionChips ids={k.assumptionIds} />
+                  <CheckTags ids={k.assumptionIds} />
                 </div>
                 <p className="mt-1 leading-relaxed text-slate-600">{k.detail}</p>
                 <div className="mt-2 flex flex-col items-start gap-1.5">
@@ -187,28 +251,6 @@ export function ReportStep({
         </section>
       )}
 
-      {questions.length > 0 && (
-        <section className="mt-10">
-          <h3 className="text-lg font-semibold tracking-tight">Decisions recorded</h3>
-          <ul className="mt-3 space-y-2">
-            {questions.map((q) => {
-              const o = q.options.find((x) => x.id === answers[q.id]);
-              return (
-                <li key={q.id} className="rounded-lg border border-slate-200 bg-white p-4 text-sm">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{q.assumptionIds.join(", ")}</div>
-                  <div className="mt-1 font-medium text-slate-900">{q.prompt}</div>
-                  <div className="mt-1.5 text-slate-800">
-                    <span className="font-semibold">Chosen: </span>
-                    {o?.label ?? "No answer"}
-                  </div>
-                  {o && <div className="mt-0.5 text-slate-600">{o.consequence}</div>}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
-
       <footer className="mt-12 border-t border-slate-200 pt-5 text-xs text-slate-500">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
           <span className={cx("font-medium", unverified ? "text-amber-700" : "text-emerald-700")}>
@@ -217,7 +259,7 @@ export function ReportStep({
           <span data-testid="usage">
             {usage.calls} model calls &middot; {(usage.inputTokens / 1000).toFixed(1)}k input / {(usage.outputTokens / 1000).toFixed(1)}k output tokens &middot; ${usage.costUsd.toFixed(2)}
           </span>
-          <span>Credit amount {fmtMoney(metrics.find((m) => m.id === "credit")?.current ?? 0)} computed in code, not by the model.</span>
+          <span>Credit amounts computed in code, not by the model.</span>
         </div>
       </footer>
     </div>

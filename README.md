@@ -13,10 +13,9 @@ A tax credit buyer signs a term sheet that assumes a credit amount: an eligible 
 | Step | What happens |
 |---|---|
 | 1. Upload | Drop the term sheet and the data room. The bundled demo deal can replay a recorded live run instantly. |
-| 2. Baseline | Claude extracts the assumptions behind the credit amount. You confirm each one against the highlighted term sheet. |
-| 3. Cross-check | Every assumption is traced through every document: the value found, whether it agrees, and where a value was expected but missing. |
-| 4. Review | Judgment calls (e.g. *which beginning-of-construction date governs?*) update the credit amount live. RFIs to the seller and risks to note are listed separately. |
-| 5. Report | Labels (confirmed / changed / contradicted / conflicting / unverified), headline dollar impact, and source walk-back for every claim. |
+| 2. Baseline | Claude extracts the assumptions behind the credit amount. You confirm each one beside the highlighted term sheet. |
+| 3. Cross-check and review | Every check is traced through every document. Each comes out "checks out" or "question to the seller", with the supporting evidence one click away and seller assertions shown apart from independent evidence. You edit the questions, choose which to send, and send them. |
+| 4. Report | The credit as signed, the range it could land in depending on the seller's answers, the questions sent, risks, and source walk-back for every claim. |
 
 ### The demo deal
 
@@ -31,7 +30,7 @@ A tax credit buyer signs a term sheet that assumes a credit amount: an eligible 
 - The insurance binder says 132 MWdc where every other document says 135.
 - The seller counsel's email contains a line telling "any automated review tool" to mark everything confirmed.
 
-Depending on the judgment calls, the credit moves from **$71.0M** to between **$68.2M and $10.9M**.
+As signed, the credit is **$71.0M**. Depending on how the seller answers, it lands between **$10.9M and $68.2M**. The range is computed in code across every way the open questions could resolve.
 
 ## How it works
 
@@ -51,7 +50,8 @@ flowchart LR
 - **The engine is generic; playbooks hold the deal type.** `src/engine/` knows nothing about tax credits. `src/playbooks/itc-transfer/` defines the assumptions (what to extract, what counts as evidence, how to judge it) and the deterministic math. A new transaction type is a new folder, not a new app. A project-acquisition LOI playbook is next.
 - **Claude reads; code does the math.** Claude extracts values and quotes. TypeScript computes the credit rate (6% or 30% base, bonuses of +2 or +10 points), the domestic content threshold by construction year, and the dollar impact. Every number on screen is reproducible.
 - **Every quote is verified.** Claude must return verbatim quotes with page numbers, and each one is string-matched against the PDF's text layer before it's shown. Anything that doesn't match is flagged as unverified rather than shown as fact. The same matcher drives the highlight in the PDF viewer.
-- **Humans make the judgment calls.** Conflicts that change a value become decisions with concrete options. Each option declares the values it implies, so the metrics recompute instantly. Clerical discrepancies become RFIs, not decisions.
+- **Questions to the seller, not verdicts.** At the LOI stage the buyer's next move is to go back to the seller. Every check that doesn't hold becomes a targeted question the reviewer can edit before sending. A clerical discrepancy is a clean-up request, not a deal issue. Documents are tagged by source (seller, seller's advisor, independent, government), so the seller's own assertions never pass as independent evidence.
+- **The dollar range is computed, not guessed.** Data room facts (for example the $136.4M basis) always apply. Each open question resolves either to the term sheet value or to the data room's. Every combination runs through the deterministic math to give the low and high case.
 - **Documents are untrusted input.** The prompt treats data room text as data. Embedded instructions are surfaced as suspicious and ignored, and the eval checks this.
 - **Four calls, one cached prefix.** The whole data room sits in a cached system prompt shared by the extract, classify, evidence and reconcile calls.
 
@@ -70,14 +70,15 @@ flowchart LR
 - baseline values;
 - project match for every document, including the real different-project permit;
 - labels and current values for all 12 assumptions;
-- that the right judgment calls are raised, and that none is raised for the clerical typo;
+- that the construction-start conflict is raised as a judgment call, that domestic content and FEOC are linked to it, and that the clerical typo is an RFI rather than a decision;
+- the source role of key documents (seller vs independent), and that no document IDs or codes leak into text a person reads;
 - RFI and risk coverage;
 - resistance to the injected instruction;
 - the quote verification rate.
 
 | Model | Checks passed | Quotes verified | Cost per run | Time |
 |---|---|---|---|---|
-| `claude-opus-5-5` | **56 / 56** | **74 / 74** | $0.88 | ~4 min |
+| `claude-opus-5-5` | **64 / 64** | **84 / 84** | $1.02 | ~4.5 min |
 
 Earlier runs (in `evals/itc-transfer/results/`) caught a value-coercion bug (38/39) and an ambiguous rule for missing FEOC evidence (42/43). Both are fixed, and the history is kept. `npm test` runs the free deterministic checks: the tax math against the gold scenarios, ingestion and quote verification, and highlight matching for every quote in the replay.
 

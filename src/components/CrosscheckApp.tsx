@@ -4,24 +4,23 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BaselineAssumption, DocClassification, Evidence, Finding, Gap, Question, Quote, Rfi, Risk, RunUsage } from "@/engine/types";
 import type { Values } from "@/playbooks/types";
 import { itcTransfer } from "@/playbooks/itc-transfer";
-import { humanize } from "@/lib/meta";
+import { creditRange } from "@/lib/scenarios";
+import { docLabels } from "@/lib/meta";
 import { ZERO_USAGE, addUsage, fileUrl, makeRunner, type DocMeta, type Runner, type RunnerMode } from "@/lib/runner";
 import { cx } from "./ui";
 import type { ViewerTarget } from "./PdfViewer";
 import { UploadStep } from "./UploadStep";
 import { BaselineStep } from "./BaselineStep";
-import { ScanStep, type ScanPhase } from "./ScanStep";
-import { ReviewStep } from "./ReviewStep";
+import { CheckStep, type ScanPhase } from "./CheckStep";
 import { ReportStep } from "./ReportStep";
 
 const PdfViewer = dynamic(() => import("./PdfViewer"), { ssr: false });
 
-type Step = "upload" | "baseline" | "scan" | "review" | "report";
+type Step = "upload" | "baseline" | "check" | "report";
 const STEPS: { id: Step; label: string }[] = [
   { id: "upload", label: "Upload" },
   { id: "baseline", label: "Baseline" },
-  { id: "scan", label: "Cross-check" },
-  { id: "review", label: "Review" },
+  { id: "check", label: "Cross-check and review" },
   { id: "report", label: "Report" },
 ];
 
@@ -41,7 +40,9 @@ export default function CrosscheckApp() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [rfis, setRfis] = useState<Rfi[]>([]);
   const [risks, setRisks] = useState<Risk[]>([]);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [accepted, setAccepted] = useState<Set<string>>(new Set()); // questions to the seller that will be sent
+  const [edits, setEdits] = useState<Record<string, string>>({}); // reworded questions, by RFI id
+  const [toast, setToast] = useState<string | null>(null);
   const [usage, setUsage] = useState<RunUsage>(ZERO_USAGE);
   const [viewer, setViewer] = useState<ViewerTarget | null>(null);
   const gen = useRef(0);
@@ -52,13 +53,8 @@ export default function CrosscheckApp() {
 
   const docById = useMemo(() => new Map(docs.map((d) => [d.id, d])), [docs]);
   const clsById = useMemo(() => new Map(classifications.map((c) => [c.docId, c])), [classifications]);
-  const docName = useCallback(
-    (id: string) => {
-      const t = clsById.get(id)?.docType;
-      return t ? humanize(t) : (docById.get(id)?.filename ?? id);
-    },
-    [clsById, docById],
-  );
+  const labels = useMemo(() => docLabels(classifications), [classifications]);
+  const docName = useCallback((id: string) => labels.get(id) ?? docById.get(id)?.filename ?? id, [labels, docById]);
 
   /** Opens the drawer on the first quote's document with every quote of that document highlighted. */
   const openQuotes = useCallback(
@@ -68,7 +64,7 @@ export default function CrosscheckApp() {
       const same = quotes.filter((q) => q.docId === d.id);
       setViewer({
         url: fileUrl(d.filename, serverRunId),
-        title: `${d.id} · ${clsById.get(d.id)?.title ?? d.filename}`,
+        title: clsById.get(d.id)?.title ?? d.filename,
         highlights: same.map((q, i) => ({ page: q.page, text: q.text, id: `q${i}` })),
       });
     },
@@ -77,21 +73,25 @@ export default function CrosscheckApp() {
   const openQuote = useCallback((q: Quote) => openQuotes([q]), [openQuotes]);
   const closeViewer = useCallback(() => setViewer(null), []);
 
-  // ---- live metrics ----
+  // ---- credit range across the ways the open questions could resolve ----
   const baselineValues: Values = useMemo(() => Object.fromEntries(baseline.map((b) => [b.id, b.value])), [baseline]);
-  const currentValues: Values = useMemo(() => {
-    const v: Values = {};
-    // Assumptions tied to an unanswered judgment call stay at term-sheet values until the user decides.
-    const undecided = new Set(questions.filter((q) => !answers[q.id]).flatMap((q) => q.assumptionIds));
-    for (const f of findings)
-      if (f.currentValue !== undefined && f.currentValue !== null && !undecided.has(f.assumptionId)) v[f.assumptionId] = f.currentValue;
-    for (const q of questions) {
-      const opt = q.options.find((o) => o.id === answers[q.id]);
-      if (opt) Object.assign(v, opt.sets);
-    }
-    return v;
-  }, [findings, questions, answers]);
-  const metrics = useMemo(() => (baseline.length ? itcTransfer.metrics(baselineValues, currentValues) : []), [baseline, baselineValues, currentValues]);
+  const range = useMemo(
+    () => (baseline.length && findings.length ? creditRange(itcTransfer, baselineValues, findings, questions, evidence) : null),
+    [baseline, baselineValues, findings, questions, evidence],
+  );
+  // Questions that reach a check on the page; the accepted ones are the ones "sent".
+  const sentRfis = useMemo(
+    () => rfis.filter((r) => accepted.has(r.id) && r.assumptionIds.some((a) => findings.some((f) => f.assumptionId === a))),
+    [rfis, accepted, findings],
+  );
+  // The embedded-instruction flag stays off every page of the demo (Paul's decision), including the report.
+  const reportRisks = useMemo(() => risks.filter((k) => !/instruction/i.test(k.title)), [risks]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 4500);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   // ---- flow ----
   const reset = () => {
@@ -110,7 +110,9 @@ export default function CrosscheckApp() {
     setQuestions([]);
     setRfis([]);
     setRisks([]);
-    setAnswers({});
+    setAccepted(new Set());
+    setEdits({});
+    setToast(null);
     setUsage(ZERO_USAGE);
     setPhase("classifying");
     setViewer(null);
@@ -167,7 +169,7 @@ export default function CrosscheckApp() {
   const confirmBaseline = async () => {
     const my = gen.current;
     const runner: Runner = makeRunner(runMode ?? "replay", serverRunId ?? undefined);
-    setStep("scan");
+    setStep("check");
     setPhase("classifying");
     setClassifications([]);
     setError(null);
@@ -192,6 +194,8 @@ export default function CrosscheckApp() {
       setQuestions(r.questions);
       setRfis(r.rfis ?? []);
       setRisks(r.risks ?? []);
+      setAccepted(new Set((r.rfis ?? []).map((x) => x.id)));
+      setEdits({});
       setUsage((u) => addUsage(u, r.usage));
       setPhase("done");
     } catch (e) {
@@ -199,14 +203,13 @@ export default function CrosscheckApp() {
     }
   };
 
-  const allAnswered = questions.every((q) => answers[q.id]);
   const anchor = docs.find((d) => d.role === "anchor");
-  const wide = step === "baseline" || step === "scan";
+  const wide = step === "baseline" || step === "check";
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
       <Header step={step} runMode={runMode} wide={wide} onReset={reset} />
-      <main className={cx("mx-auto w-full flex-1 px-4 pb-20 pt-8 sm:px-6", wide ? "max-w-[1400px]" : "max-w-6xl")}>
+      <main className={cx("mx-auto w-full flex-1 px-4 pt-8 sm:px-6", step === "check" ? "pb-8" : "pb-20", wide ? "max-w-[1400px]" : "max-w-6xl")}>
         {error && (
           <div className="mb-6 flex items-start justify-between gap-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900" role="alert">
             <span>{error}</span>
@@ -229,8 +232,8 @@ export default function CrosscheckApp() {
           />
         )}
 
-        {step === "scan" && (
-          <ScanStep
+        {step === "check" && (
+          <CheckStep
             docs={docs}
             baseline={baseline}
             classifications={classifications}
@@ -238,35 +241,42 @@ export default function CrosscheckApp() {
             evidence={evidence}
             gaps={gaps}
             findings={findings}
-            reviewCount={questions.length}
+            questions={questions}
+            rfis={rfis}
+            risks={risks}
+            accepted={accepted}
+            edits={edits}
+            onAccept={(id, on) =>
+              setAccepted((s) => {
+                const n = new Set(s);
+                if (on) n.add(id);
+                else n.delete(id);
+                return n;
+              })
+            }
+            onEdit={(id, text) =>
+              setEdits((e) => {
+                const n = { ...e };
+                if (text === null) delete n[id];
+                else n[id] = text;
+                return n;
+              })
+            }
             onOpenQuotes={openQuotes}
-            onContinue={() => setStep("review")}
+            onSend={() => {
+              setToast("Questions ready to send. Nothing was sent in this demo.");
+              setStep("report");
+            }}
           />
         )}
 
-        {step === "review" && (
-          <ReviewStep
-            metrics={metrics}
-            questions={questions}
-            answers={answers}
-            rfis={rfis}
-            risks={risks}
-            allAnswered={allAnswered}
-            onAnswer={(qid, oid) => setAnswers((a) => ({ ...a, [qid]: oid }))}
-            onOpen={openQuote}
-            onBuild={() => setStep("report")}
-            docName={docName}
-          />
-        )}
-
-        {step === "report" && (
+        {step === "report" && range && (
           <ReportStep
-            metrics={metrics}
+            range={range}
             findings={findings}
-            questions={questions}
-            answers={answers}
-            rfis={rfis}
-            risks={risks}
+            rfis={sentRfis}
+            edits={edits}
+            risks={reportRisks}
             usage={usage}
             onOpen={openQuote}
             docName={docName}
@@ -274,6 +284,11 @@ export default function CrosscheckApp() {
         )}
       </main>
       <PdfViewer target={viewer} onClose={closeViewer} />
+      {toast && (
+        <div role="status" data-testid="toast" className="fixed bottom-7 left-1/2 z-[80] -translate-x-1/2 rounded-lg bg-slate-900 px-4 py-2.5 text-[13px] text-white shadow-xl">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

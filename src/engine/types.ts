@@ -57,6 +57,9 @@ export interface BaselineAssumption {
 
 export type ProjectMatch = "match" | "different_project" | "general_reference" | "unclear";
 
+/** Who produced a document: drives the "Evidence" vs "Seller says" split. */
+export type SourceRole = "seller" | "seller_advisor" | "independent" | "government" | "buyer" | "other";
+
 export interface DocClassification {
   docId: string;
   docType: string;
@@ -67,6 +70,8 @@ export interface DocClassification {
   relevantAssumptions: string[];
   /** Text in the document that tries to instruct an automated reviewer (ignored, but surfaced). */
   suspiciousInstructions?: string | null;
+  /** Who produced the document. */
+  sourceRole?: SourceRole;
 }
 
 export type Stance = "supports" | "contradicts" | "context";
@@ -134,6 +139,10 @@ export interface Finding {
   currentDisplay: string;
   /** Resolved current machine value when determinable without a human decision. */
   currentValue?: string | number | boolean | null;
+  /** Compact "what the data room says" for a table cell (at most ~40 characters). */
+  currentShort?: string;
+  /** Another assumption this one's outcome hangs on (e.g. domestic content hangs on construction start). */
+  dependsOn?: string | null;
   summary: string;
   evidence: Evidence[];
   questionIds: string[];

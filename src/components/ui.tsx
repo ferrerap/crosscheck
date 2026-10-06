@@ -1,7 +1,8 @@
 "use client";
-import type { ReactNode } from "react";
-import type { Label, Metric, Quote, Stance } from "@/engine/types";
-import { LABEL_STYLES, fmtDelta, fmtMetric, fmtMoney } from "@/lib/format";
+import type { ReactNode, Ref } from "react";
+import type { Label, Quote, Rfi, SourceRole, Stance } from "@/engine/types";
+import { LABEL_STYLES } from "@/lib/format";
+import { SOURCE_LABEL } from "@/lib/meta";
 
 export function cx(...parts: (string | false | null | undefined)[]) {
   return parts.filter(Boolean).join(" ");
@@ -36,9 +37,10 @@ export function Card({ children, className }: { children: ReactNode; className?:
   return <section className={cx("rounded-xl border border-slate-200 bg-white shadow-sm", className)}>{children}</section>;
 }
 
-export function PrimaryButton({ children, onClick, disabled, className }: { children: ReactNode; onClick?: () => void; disabled?: boolean; className?: string }) {
+export function PrimaryButton({ children, onClick, disabled, className, ref }: { children: ReactNode; onClick?: () => void; disabled?: boolean; className?: string; ref?: Ref<HTMLButtonElement> }) {
   return (
     <button
+      ref={ref}
       onClick={onClick}
       disabled={disabled}
       className={cx(
@@ -71,10 +73,10 @@ export function QuoteChip({
     <button
       onClick={() => onOpen(quote)}
       title={quote.text}
-      className="group inline-flex max-w-full items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-left text-xs text-slate-700 transition hover:border-slate-400 hover:bg-white"
+      className="group inline-flex max-w-full items-start gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-left text-xs text-slate-700 transition hover:border-slate-400 hover:bg-white"
     >
       <span className="shrink-0 rounded bg-slate-200 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-700 group-hover:bg-slate-900 group-hover:text-white">
-        {quote.docId} p.{quote.page}
+        p.{quote.page}
       </span>
       <span className={cx("min-w-0", full ? "" : "truncate")}>
         <span className="text-slate-500">{docName}: </span>
@@ -84,44 +86,27 @@ export function QuoteChip({
   );
 }
 
-function deltaTone(baseline: number, current: number) {
-  const d = current - baseline;
-  if (Math.abs(d) < 1e-9) return "text-slate-500";
-  return d < 0 ? "text-red-700" : "text-emerald-700";
+const SOURCE_STYLE: Record<SourceRole, string> = {
+  seller: "bg-amber-50 text-amber-800 ring-amber-600/30",
+  seller_advisor: "bg-slate-100 text-slate-700 ring-slate-400/50",
+  independent: "bg-sky-50 text-sky-800 ring-sky-700/30",
+  government: "bg-white text-slate-700 ring-slate-400/70",
+  buyer: "bg-white text-slate-700 ring-slate-400/70",
+  other: "bg-white text-slate-600 ring-slate-300",
+};
+/** Who produced a document: Seller / Seller's advisor / Independent / IRS or government. */
+export function SourceTag({ role }: { role?: SourceRole }) {
+  if (!role) return null;
+  return <span className={cx("inline-flex items-center whitespace-nowrap rounded px-1.5 py-px text-[10px] font-semibold ring-1 ring-inset", SOURCE_STYLE[role])}>{SOURCE_LABEL[role]}</span>;
 }
 
-export function MetricsStrip({ metrics, pending }: { metrics: Metric[]; pending?: boolean }) {
-  const by = Object.fromEntries(metrics.map((m) => [m.id, m]));
-  const order = ["credit", "price", "rate", "insurance"].map((id) => by[id]).filter(Boolean);
-  return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" data-testid="metrics-strip">
-      {order.map((m) => {
-        const isIns = m.id === "insurance";
-        const required = by.price?.current ?? 0;
-        const gap = m.current - required;
-        return (
-          <div key={m.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{m.label}</div>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-sm text-slate-400 line-through decoration-slate-300">{fmtMetric(m.baseline, m.format)}</span>
-              <span className="text-slate-300">&rarr;</span>
-              <span className="text-2xl font-semibold tracking-tight text-slate-900 tabular-nums" data-testid={`metric-${m.id}`}>
-                {fmtMetric(m.current, m.format)}
-              </span>
-            </div>
-            {isIns ? (
-              <div className={cx("mt-1 text-xs font-medium", gap < 0 ? "text-red-700" : "text-emerald-700")}>
-                Required {fmtMoney(required)} &middot; {gap < 0 ? `shortfall ${fmtMoney(-gap)}` : `covers requirement (+${fmtMoney(gap)})`}
-              </div>
-            ) : (
-              <div className={cx("mt-1 text-xs font-medium", deltaTone(m.baseline, m.current))}>
-                {fmtDelta(m.baseline, m.current, m.format)}
-                {pending && <span className="ml-1 font-normal text-slate-400">(undecided items at term sheet values)</span>}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
+const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 } as const;
+const PRIORITY_STYLE: Record<Rfi["priority"], string> = {
+  high: "bg-red-100 text-red-800",
+  medium: "bg-amber-100 text-amber-800",
+  low: "bg-slate-100 text-slate-600",
+};
+export const sortRfis = (rfis: Rfi[]) => [...rfis].sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);
+export function PriorityBadge({ priority }: { priority: Rfi["priority"] }) {
+  return <span className={cx("inline-block shrink-0 rounded px-1 py-px text-[9px] font-bold uppercase", PRIORITY_STYLE[priority])}>{priority}</span>;
 }

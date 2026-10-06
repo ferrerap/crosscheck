@@ -205,7 +205,7 @@
           "page": 1
         }
       ],
-      "question": true
+      "note": "Open question to the seller (cure payment proof). Since the G4 redesign, judgment-call options aren't shown, so a formal question isn't required; the report range treats contradicted findings as resolvable either way."
     },
     "T4": {
       "label": "confirmed",
@@ -328,5 +328,13 @@
     "mustMention": [
       "exclu"
     ]
+  },
+  "sourceRoles": {
+    "D07": "seller",
+    "D10": "seller",
+    "D12": "seller",
+    "D05": "independent",
+    "D06": "independent",
+    "D13": "government"
   }
 }
