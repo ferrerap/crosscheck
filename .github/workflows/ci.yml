@@ -17,6 +17,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npx next typegen # route types (LayoutProps etc.) that tsc needs on a fresh checkout
       - run: npx tsc --noEmit -p .
       - run: npm run lint
       - run: npm test
