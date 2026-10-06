@@ -6,6 +6,8 @@
 
 A tax credit buyer signs a term sheet that assumes a credit amount: an eligible basis, a credit rate built from prevailing wage, energy community and domestic content, a placed-in-service year and an insurance limit. Diligence is the work of checking every one of those assumptions against the seller's data room. Crosscheck does that cross-document reading with Claude, puts every finding next to the exact source passage, and asks a human to make the judgment calls. The dollar impact recomputes as you decide.
 
+![Cross-check and review: the construction-start check, its question to the seller, credit at risk, and evidence split between independent sources and the seller](docs/screenshot.png)
+
 **Built as a demo for the AI Product Engineer role at Crux.** Crux's diligence products already match files to checklist items and extract key terms from single documents. Crosscheck explores the next layer: **reasoning across documents against the deal's own assumptions.**
 
 ## What it does
