@@ -478,7 +478,7 @@ export function CheckStep({
       );
       return (
         <div className="mt-1 grid grid-cols-2 items-start gap-4" data-testid={`lanes-${aid}`}>
-          {lane((d) => clsById.get(d)?.sourceRole !== "seller", "Evidence", "independent, advisor, IRS")}
+          {lane((d) => clsById.get(d)?.sourceRole !== "seller", "Evidence", "independent, advisor, supplier, IRS")}
           {lane((d) => clsById.get(d)?.sourceRole === "seller", "Seller says", "Seller and its counsel")}
         </div>
       );
@@ -555,6 +555,7 @@ function Legend() {
       <b className="ml-2 font-semibold text-slate-600">Source</b>
       <SourceTag role="seller" />
       <SourceTag role="seller_advisor" />
+      <SourceTag role="supplier" />
       <SourceTag role="independent" />
       <SourceTag role="government" />
     </div>

@@ -82,7 +82,7 @@ flowchart LR
 
 | Model | Checks passed | Quotes verified | Cost per run | Time per run |
 |---|---|---|---|---|
-| `claude-opus-5-5`, 4 runs (3 repeats re-scored, 1 live after the final fixes) | **77 / 77** in every run | **301 / 301** (72 to 78 per run) | $0.64 to $0.96 (warm vs cold cache) | ~4–5 min |
+| `claude-opus-5-5`, 5 runs since the redesign | **77 / 77** in each of the first 4 (re-scored on the final checks); **78 / 78** on the latest, after a supplier source type was added | **374 / 374** (72 to 78 per run) | $0.64 to $0.96 (warm vs cold cache) | ~4–5 min |
 
 Scores use exact matching (a partial value like "2026" for "2026-11-30" fails), and a missing value counts as a fail. Saved runs can be re-scored for free with `--rescore`. Earlier runs (in `evals/itc-transfer/results/`) caught a value-coercion bug (38/39) and an ambiguous rule for missing FEOC evidence (42/43). Both are fixed, and the history is kept.
 
@@ -126,3 +126,7 @@ Built in about two days with Claude Code. I brought the domain judgment; the mod
 ## Limits
 
 This is a demo, not a reviewed diligence product. The gold answers and tax framing were written by the builder; a tax professional should review them. Live upload works locally; the public deployment is replay-only so no API key is exposed. All parties and figures in the synthetic documents are fictional.
+
+---
+
+© 2026 Paul. All rights reserved. The code is published so reviewers can read how it works; no license to reuse it is granted.

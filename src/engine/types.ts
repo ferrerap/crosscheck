@@ -60,7 +60,7 @@ export interface BaselineAssumption {
 export type ProjectMatch = "match" | "different_project" | "general_reference" | "unclear";
 
 /** Who produced a document: drives the "Evidence" vs "Seller says" split. */
-export type SourceRole = "seller" | "seller_advisor" | "independent" | "government" | "buyer" | "other";
+export type SourceRole = "seller" | "seller_advisor" | "supplier" | "independent" | "government" | "buyer" | "other";
 
 export interface DocClassification {
   docId: string;

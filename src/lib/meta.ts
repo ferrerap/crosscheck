@@ -38,6 +38,7 @@ export function docLabels(cls: DocClassification[]): Map<string, string> {
 export const SOURCE_LABEL: Record<SourceRole, string> = {
   seller: "Seller",
   seller_advisor: "Seller's advisor",
+  supplier: "Supplier",
   independent: "Independent",
   government: "IRS or government",
   buyer: "Buyer",

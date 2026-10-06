@@ -355,6 +355,7 @@
     "D12": "seller",
     "D05": "independent",
     "D06": "independent",
-    "D13": "government"
+    "D13": "government",
+    "D08": "supplier"
   }
 }

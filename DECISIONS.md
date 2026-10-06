@@ -50,9 +50,10 @@ Scores are from `npm run eval`, and the saved runs are in `evals/itc-transfer/re
 | Real documents added | 42/43 | FEOC was labeled "conflicting" instead of "unverified". The rule was tightened so missing evidence takes precedence. |
 | Rule fix | 43/43 | |
 | Identity checks, RFIs and risks added | 56/56 | The planted 132 MWdc typo was routed to an RFI, not a judgment call, as intended. |
-| Source roles, no-IDs rule | 64/65 | No question was raised for apprenticeship: Claude treated it as settled-contradicted, which is defensible. Under G4, judgment-call options aren't shown, so that check was removed from gold. This run is the replay fixture. |
+| Source roles, no-IDs rule | 64/65 | No question was raised for apprenticeship: Claude treated it as settled-contradicted, which is defensible. Under G4, judgment-call options aren't shown, so that check was removed from gold. |
 | 3 repeat runs | 64/64 each | 227/227 quotes verified. |
 | After the final review | 77/77 on every run since the redesign (re-scored) | Added checks: exact value matching, a missing value counts as a fail, evidence must come from the right documents, and the hidden instruction must be detected, not just disobeyed. |
+| Supplier source type added | 78/78 | The manufacturer's letter is now tagged "supplier" (under contract to the seller) rather than "independent", per Paul. The run also exposed that FEOC's zero-credit outcome depended on how Claude phrased the construction-start question; the range logic now keeps it regardless. This run is the replay fixture. |
 
 **Known limits of the eval.** The playbook rules were written knowing the planted issues, so the eval shows the pipeline executes the playbook reliably, not that it generalizes to new data rooms. A clean data-room negative control (about $1 per run) is the next eval to add.
 

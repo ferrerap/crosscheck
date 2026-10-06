@@ -52,9 +52,13 @@ function model(p: Playbook, baseline: Values, { findings, questions, evidence, s
     const id = f.assumptionId;
     const has = f.currentValue !== undefined && f.currentValue !== null;
     if ((f.label === "changed" || f.dependsOn) && has) facts[id] = f.currentValue;
-    else if (!OPEN.has(f.label) || inQuestion.has(id)) continue;
+    else if (!OPEN.has(f.label)) continue;
+    // An unverified yes/no assumption can always turn out "no", even when a judgment call also mentions it
+    // (an option that sets it explicitly is applied after this fork and wins).
+    else if (!has && kind.get(id) === "boolean" && baseline[id] === true)
+      forks.push({ ids: [id], outcomes: [{}, { [id]: false }], unverified: true });
+    else if (inQuestion.has(id)) continue;
     else if (has) forks.push({ ids: [id], outcomes: [{}, { [id]: f.currentValue }], unverified: false });
-    else if (kind.get(id) === "boolean" && baseline[id] === true) forks.push({ ids: [id], outcomes: [{}, { [id]: false }], unverified: true });
     else if (!f.dependsOn) {
       const values = [...new Set(evidence
         .filter((e) => e.assumptionId === id && e.stance !== "context" && e.value !== null && !sellerDocs?.has(e.docId))
@@ -110,7 +114,8 @@ export function creditAtRisk(p: Playbook, baseline: Values, input: ScenarioInput
     if (fork.ids.every((id) => parentOf.has(id))) continue; // dependents count toward their parent
     const children = forks.filter((f) => f !== fork && f.ids.some((id) => fork.ids.includes(parentOf.get(id) ?? "")));
     const worst = Math.min(...product([fork, ...children]).map((o) => valueOf(p.metrics(baseline, { ...facts, ...o }), metricId)));
-    for (const id of fork.ids) out[id] = Math.max(out[id] ?? 0, Math.round((top - worst) * 100) / 100);
+    for (const id of fork.ids)
+      if (!parentOf.has(id)) out[id] = Math.max(out[id] ?? 0, Math.round((top - worst) * 100) / 100);
   }
   return out;
 }

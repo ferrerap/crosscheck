@@ -89,6 +89,7 @@ export function QuoteChip({
 const SOURCE_STYLE: Record<SourceRole, string> = {
   seller: "bg-amber-50 text-amber-800 ring-amber-600/30",
   seller_advisor: "bg-slate-100 text-slate-700 ring-slate-400/50",
+  supplier: "bg-violet-50 text-violet-800 ring-violet-600/25",
   independent: "bg-sky-50 text-sky-800 ring-sky-700/30",
   government: "bg-white text-slate-700 ring-slate-400/70",
   buyer: "bg-white text-slate-700 ring-slate-400/70",
