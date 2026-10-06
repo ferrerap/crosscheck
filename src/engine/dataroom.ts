@@ -1,23 +1,32 @@
 // Loads a playbook's demo data room from public/demo-data/<playbookId>/.
 // Convention: the anchor document's filename starts with "01_"; docs get ids D01, D02, ... in filename order.
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { ingest } from "./ingest";
 import type { DocRecord } from "./types";
 
 const cache = new Map<string, DocRecord[]>();
 
-export async function loadDataRoom(playbookId: string): Promise<DocRecord[]> {
-  const hit = cache.get(playbookId);
+/** Folder for an uploaded data room (local/dev use; serverless instances don't share disk). */
+export function uploadDir(runId: string): string {
+  if (!/^[a-z0-9-]{8,64}$/i.test(runId)) throw new Error("Invalid run id");
+  return path.join(os.tmpdir(), "crosscheck-uploads", runId);
+}
+
+/** Loads the demo data room for a playbook, or an uploaded one when `runId` is given. */
+export async function loadDataRoom(playbookId: string, runId?: string): Promise<DocRecord[]> {
+  const key = runId ? `upload:${runId}` : playbookId;
+  const hit = cache.get(key);
   if (hit) return hit;
-  const dir = path.join(process.cwd(), "public", "demo-data", playbookId);
+  const dir = runId ? uploadDir(runId) : path.join(process.cwd(), "public", "demo-data", playbookId);
   const files = (await fs.readdir(dir)).filter((f) => f.toLowerCase().endsWith(".pdf")).sort();
   const docs: DocRecord[] = [];
   for (const [i, f] of files.entries()) {
     const bytes = new Uint8Array(await fs.readFile(path.join(dir, f)));
     docs.push(await ingest(`D${String(i + 1).padStart(2, "0")}`, f, bytes, i === 0 ? "anchor" : "dataroom"));
   }
-  cache.set(playbookId, docs);
+  cache.set(key, docs);
   return docs;
 }
 

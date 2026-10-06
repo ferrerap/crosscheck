@@ -60,3 +60,38 @@ export function matchQuote(items: string[], quote: string): Map<number, Range> {
   return out;
 }
 
+export interface HighlightQuote {
+  id: string;
+  text: string;
+}
+export interface ItemMark {
+  range: Range;
+  ids: string[]; // every quote covering this segment (quotes may overlap)
+}
+
+/**
+ * Locates several quotes on one page at once. Returns, per text item, non-overlapping segments to paint
+ * (sorted by start offset); where quotes overlap, the segment carries all of their ids.
+ */
+export function matchQuotes(items: string[], quotes: HighlightQuote[]): Map<number, ItemMark[]> {
+  const raw = new Map<number, { range: Range; id: string }[]>();
+  for (const q of quotes) {
+    for (const [item, range] of matchQuote(items, q.text)) {
+      const list = raw.get(item) ?? [];
+      list.push({ range, id: q.id });
+      raw.set(item, list);
+    }
+  }
+  const out = new Map<number, ItemMark[]>();
+  for (const [item, list] of raw) {
+    const cuts = [...new Set(list.flatMap((m) => m.range))].sort((x, y) => x - y);
+    const segs: ItemMark[] = [];
+    for (let i = 0; i + 1 < cuts.length; i++) {
+      const [lo, hi] = [cuts[i], cuts[i + 1]];
+      const ids = list.filter((m) => m.range[0] <= lo && m.range[1] >= hi).map((m) => m.id);
+      if (ids.length) segs.push({ range: [lo, hi], ids });
+    }
+    out.set(item, segs);
+  }
+  return out;
+}

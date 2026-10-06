@@ -22,8 +22,11 @@ async function main() {
     baselineConfirmed: false,
     classifications: r.cl.classifications,
     evidence: r.ev.evidence,
+    gaps: r.ev.gaps,
     findings: r.rc.findings,
     questions: r.rc.questions,
+    rfis: r.rc.rfis,
+    risks: r.rc.risks,
     usage,
   };
   const out = path.join(process.cwd(), "src", "fixtures", "replay-itc-transfer.json");

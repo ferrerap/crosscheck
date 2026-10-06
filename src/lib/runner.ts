@@ -4,7 +4,10 @@ import type {
   DocClassification,
   Evidence,
   Finding,
+  Gap,
   Question,
+  Rfi,
+  Risk,
   Run,
   RunUsage,
 } from "@/engine/types";
@@ -15,8 +18,8 @@ export type DocMeta = Run["docs"][number];
 
 export interface ExtractResult { docs: DocMeta[]; baseline: BaselineAssumption[]; usage: RunUsage }
 export interface ClassifyResult { classifications: DocClassification[]; usage: RunUsage }
-export interface EvidenceResult { evidence: Evidence[]; usage: RunUsage }
-export interface ReconcileResult { findings: Finding[]; questions: Question[]; usage: RunUsage }
+export interface EvidenceResult { evidence: Evidence[]; gaps: Gap[]; usage: RunUsage }
+export interface ReconcileResult { findings: Finding[]; questions: Question[]; rfis: Rfi[]; risks: Risk[]; usage: RunUsage }
 
 export interface Runner {
   extractBaseline(): Promise<ExtractResult>;
@@ -97,7 +100,7 @@ export class ReplayRunner implements Runner {
 
   async gatherEvidence(): Promise<EvidenceResult> {
     await sleep(jitter(1800, 600));
-    return { evidence: this.fx.evidence, usage: stepUsage(this.fx.usage, "evidence") };
+    return { evidence: this.fx.evidence, gaps: this.fx.gaps ?? [], usage: stepUsage(this.fx.usage, "evidence") };
   }
 
   async reconcile(): Promise<ReconcileResult> {
@@ -105,19 +108,22 @@ export class ReplayRunner implements Runner {
     return {
       findings: this.fx.findings,
       questions: this.fx.questions.map((q) => ({ ...q, answer: undefined })),
+      rfis: this.fx.rfis ?? [],
+      risks: this.fx.risks ?? [],
       usage: stepUsage(this.fx.usage, "reconcile"),
     };
   }
 }
 
 export class LiveRunner implements Runner {
-  constructor(private playbookId = "itc-transfer") {}
+  /** runId points at an uploaded data room on the server; omit it to analyse the bundled demo data room. */
+  constructor(private runId?: string, private playbookId = "itc-transfer") {}
 
   private async post<T>(step: string, body: Record<string, unknown>): Promise<T> {
     const res = await fetch(`/api/run/${step}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ playbookId: this.playbookId, ...body }),
+      body: JSON.stringify({ playbookId: this.playbookId, ...(this.runId ? { runId: this.runId } : {}), ...body }),
     });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
@@ -153,6 +159,21 @@ export class LiveRunner implements Runner {
   }
 }
 
-export function makeRunner(mode: RunnerMode): Runner {
-  return mode === "live" ? new LiveRunner() : new ReplayRunner();
+export function makeRunner(mode: RunnerMode, runId?: string): Runner {
+  return mode === "live" ? new LiveRunner(runId) : new ReplayRunner();
+}
+
+export const DEMO_BASE = "/demo-data/itc-transfer/";
+
+/** URL of a data room PDF: served from /public for the bundled demo, from the upload route otherwise. */
+export function fileUrl(filename: string, runId?: string | null): string {
+  return runId ? `/api/file/${encodeURIComponent(runId)}/${encodeURIComponent(filename)}` : DEMO_BASE + filename;
+}
+
+/** SHA-256 hashes of the bundled demo data room, used to recognise a dropped demo deal. */
+export const DEMO_HASHES: ReadonlySet<string> = new Set((replayFixture as unknown as Run).docs.map((d) => d.sha256));
+
+export async function sha256Hex(file: File): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
 }

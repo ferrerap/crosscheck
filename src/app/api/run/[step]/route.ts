@@ -11,7 +11,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ step: string }
   try {
     const body = await req.json();
     const p = getPlaybook(body.playbookId ?? "itc-transfer");
-    const docs = await loadDataRoom(p.id);
+    const docs = await loadDataRoom(p.id, body.runId);
 
     switch (step) {
       case "extract": {

@@ -31,3 +31,12 @@ body {
   border-radius: 2px;
   box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.55);
 }
+
+.react-pdf__Page__textContent mark[data-hl-ids] {
+  background: rgba(250, 204, 21, 0.4);
+  box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.4);
+}
+.react-pdf__Page__textContent mark.hl-active {
+  background: rgba(249, 115, 22, 0.5);
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.9);
+}

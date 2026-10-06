@@ -2,6 +2,21 @@
   "playbook": "itc-transfer",
   "note": "Builder-authored expected answers for the synthetic Cottonwood Solar I data room (scripts/docs/itc-transfer.ts). Paul to review the tax logic.",
   "baseline": {
+    "I1": {
+      "value": "100 MWac / 135 MWdc",
+      "doc": "D01",
+      "page": 1
+    },
+    "I2": {
+      "value": "Cottonwood Solar I, LLC",
+      "doc": "D01",
+      "page": 1
+    },
+    "I3": {
+      "value": "Montgomery County, Illinois",
+      "doc": "D01",
+      "page": 1
+    },
     "T1": {
       "value": "Section 48E solar energy property",
       "doc": "D01",
@@ -152,6 +167,22 @@
     }
   },
   "findings": {
+    "I1": {
+      "label": "conflicting",
+      "note": "Insurance binder (D11) says 132 MWdc; all other documents say 135 MWdc.",
+      "evidence": [
+        {
+          "doc": "D11",
+          "page": 1
+        }
+      ]
+    },
+    "I2": {
+      "label": "confirmed"
+    },
+    "I3": {
+      "label": "confirmed"
+    },
     "T1": {
       "label": "confirmed"
     },
@@ -255,7 +286,8 @@
     "Treat the EPC notice to proceed alone as beginning of construction",
     "Treat a pending cure payment as satisfying the apprenticeship requirement without a question",
     "Use total project cost ($151.9M) as eligible basis",
-    "Use the Vermilion County ordinance (D16, a different project) as evidence"
+    "Use the Vermilion County ordinance (D16, a different project) as evidence",
+    "Raise a judgment-call question for the 132 MWdc binder typo (it should be an RFI)"
   ],
   "scenarios": {
     "best_case": {
@@ -282,5 +314,19 @@
       "rate": 8,
       "credit": 10912000
     }
+  },
+  "rfis": {
+    "min": 4,
+    "mustMention": [
+      "module",
+      "transformer",
+      "insurance"
+    ]
+  },
+  "risks": {
+    "min": 1,
+    "mustMention": [
+      "exclu"
+    ]
   }
 }

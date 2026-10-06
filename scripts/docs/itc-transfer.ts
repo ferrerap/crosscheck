@@ -73,7 +73,7 @@ export const docs: SynthDoc[] = [
     filename: "02_Cost_Segregation_Report.pdf",
     letterhead: "Larkspur Valuation Advisors  |  Cost Segregation & Basis Studies",
     title: `Cost Segregation and Eligible Basis Report: ${PROJECT}`,
-    meta: ["Report date: August 28, 2026", `Prepared for: ${SELLER}`, "Basis: EPC contract, change orders through July 31, 2026, owner costs"],
+    meta: ["Report date: August 28, 2026", `Prepared for: ${SELLER}`, "Facility: 100 MWac / 135 MWdc solar PV", "Basis: EPC contract, change orders through July 31, 2026, owner costs"],
     blocks: [
       { h: "1. Summary of Conclusions" },
       "Based on our review of project cost records, we estimate total project costs of $151,900,000, of which $136,400,000 is eligible basis for purposes of the Section 48E credit.",
@@ -141,7 +141,7 @@ export const docs: SynthDoc[] = [
     meta: ["Report date: July 31, 2026", "Prepared for: prospective tax credit purchasers and lenders"],
     blocks: [
       { h: "1. Project Description" },
-      "The Project is a 100 MWac / 135 MWdc single-axis tracking solar photovoltaic facility with 27 central inverters and a 34.5/138 kV project substation. The design is consistent with the interconnection agreement.",
+      `The Project is a 100 MWac / 135 MWdc single-axis tracking solar photovoltaic facility in ${COUNTY}, owned by ${SELLER}, with 27 central inverters and a 34.5/138 kV project substation. The design is consistent with the interconnection agreement.`,
       { h: "2. Construction History" },
       "The EPC contractor received full notice to proceed on December 18, 2025. Mobilization occurred in early January 2026. On-site physical work of a significant nature, beginning with pile installation for the tracker foundations, commenced on January 12, 2026.",
       "The sponsor has advised that it also relies on off-site physical work on the custom main power transformer, performed under a binding written contract, as the start of construction. We have not reviewed the manufacturer's records and express no opinion on the tax treatment of off-site work.",
@@ -198,7 +198,7 @@ export const docs: SynthDoc[] = [
     filename: "09_Domestic_Content_Certification.pdf",
     letterhead: "Keystone Supply Chain Analytics",
     title: "Domestic Content Bonus Analysis and Certification",
-    meta: [`Project: ${PROJECT}`, "Date: August 15, 2026"],
+    meta: [`Project: ${PROJECT} (100 MWac / 135 MWdc)`, "Date: August 15, 2026"],
     blocks: [
       { h: "1. Results" },
       { table: [
@@ -235,7 +235,7 @@ export const docs: SynthDoc[] = [
     filename: "11_Tax_Credit_Insurance_Binder.pdf",
     letterhead: "Carrow & Lyle Specialty Risk  |  Insurance Brokers",
     title: "Binder of Coverage: Tax Credit Insurance",
-    meta: ["Binder date: September 18, 2026", `Named insured: ${BUYER}`, `Project: ${PROJECT}`],
+    meta: ["Binder date: September 18, 2026", `Named insured: ${BUYER}`, `Project: ${PROJECT}, a 100 MWac / 132 MWdc solar facility owned by ${SELLER}`],
     blocks: [
       { table: [
         ["Term", "Bound"],

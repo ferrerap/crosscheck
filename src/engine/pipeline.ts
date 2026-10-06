@@ -4,7 +4,7 @@ import { ask } from "./claude";
 import { renderDocs } from "./dataroom";
 import { verifyQuote } from "./verifyQuotes";
 import type {
-  AssumptionDef, BaselineAssumption, DocClassification, DocRecord, Evidence, Finding, Question, RunUsage,
+  AssumptionDef, BaselineAssumption, DocClassification, DocRecord, Evidence, Finding, Gap, Question, Rfi, Risk, RunUsage,
 } from "./types";
 import type { Playbook } from "@/playbooks/types";
 
@@ -12,7 +12,7 @@ import type { Playbook } from "@/playbooks/types";
 
 function instructions(p: Playbook): string {
   const defs = p.assumptions
-    .map((a) => `- ${a.id} ${a.name} [${a.valueType}${a.unit ? `, ${a.unit}` : ""}${a.kind === "term" ? ", deal term only" : ""}]
+    .map((a) => `- ${a.id} ${a.name} [${a.valueType}${a.unit ? `, ${a.unit}` : ""}${a.kind === "term" ? ", deal term only" : a.kind === "identity" ? ", identity fact" : ""}]
   In the ${p.anchorLabel.toLowerCase()}: ${a.extractionHint}
   Current evidence: ${a.evidenceHint}
   Judging rule: ${a.rule}`)
@@ -75,6 +75,7 @@ const BaselineSchema = z.object({
     found: z.boolean(),
     value: z.string().nullable().describe("Machine value: plain number for money/percent/number (no $ or commas), true/false for boolean, YYYY-MM-DD or YYYY-MM for dates."),
     display: z.string().describe("Short human-readable value, e.g. '$142.0M' or 'Yes, 30% rate'"),
+    short: z.string().describe("Compact value for a table cell, at most 18 characters, e.g. '$136.4M', '13.2% vs 15%', 'Jan 12, 2026', '132 MWdc', 'Not received'."),
     quote: QuoteSchema.nullable(),
   })),
 });
@@ -96,6 +97,7 @@ export async function extractBaseline(p: Playbook, docs: DocRecord[]) {
       found: a?.found ?? false,
       value: a ? coerce(defs.get(def.id)!, a.value) : null,
       display: a?.display ?? "Not stated",
+      short: a?.short,
       quote: a?.quote ? verifyQuote(byId, a.quote) : null,
     };
   });
@@ -142,10 +144,16 @@ Baseline facts for matching: ${JSON.stringify(baseline.map((b) => ({ id: b.id, d
 // ---------- 3. evidence gathering ----------
 
 const EvidenceSchema = z.object({
+  gaps: z.array(z.object({
+    assumptionId: z.string(),
+    docId: z.string(),
+    note: z.string().describe("What was expected here and is missing."),
+  })).describe("Documents that, given their type, should state an assumption's value but do not."),
   evidence: z.array(z.object({
     assumptionId: z.string(),
     value: z.string().nullable().describe("Machine value in the same format as the baseline value."),
     display: z.string(),
+    short: z.string().describe("Compact value for a table cell, at most 18 characters, e.g. '$136.4M', '13.2% vs 15%', 'Jan 12, 2026', '132 MWdc', 'Not received'."),
     stance: z.enum(["supports", "contradicts", "context"]),
     note: z.string().describe("Why this matters, one sentence."),
     quote: QuoteSchema,
@@ -158,7 +166,7 @@ export async function gatherEvidence(
   const excluded = classifications.filter((c) => c.projectMatch === "different_project").map((c) => c.docId);
   const { data, usage } = await ask({
     system: system(p, docs),
-    task: `For each assumption (not deal terms), collect the current evidence from data room documents: every passage that supports, contradicts, or is needed context (including anything that determines which rule applies, such as dates). Do not use the ${p.anchorLabel.toLowerCase()} as current evidence. Do not use documents about a different project: ${excluded.join(", ") || "none"}.
+    task: `For each assumption and identity fact (not deal terms), collect the current evidence from data room documents: every passage that supports, contradicts, or is needed context (including anything that determines which rule applies, such as dates). For identity facts, include every document that states the fact, so consistency can be checked document by document. Also list gaps: documents that should state a value given their type but don't. Do not use the ${p.anchorLabel.toLowerCase()} as current evidence. Do not use documents about a different project: ${excluded.join(", ") || "none"}.
 Baseline: ${JSON.stringify(baseline.map(({ id, value, display }) => ({ id, value, display })))}
 Classifications: ${JSON.stringify(classifications.map(({ docId, docType, relevantAssumptions, projectMatch }) => ({ docId, docType, relevantAssumptions, projectMatch })))}`,
     schema: EvidenceSchema,
@@ -173,16 +181,30 @@ Classifications: ${JSON.stringify(classifications.map(({ docId, docType, relevan
       docId: e.quote.docId,
       value: coerce(defs.get(e.assumptionId)!, e.value),
       display: e.display,
+      short: e.short,
       stance: e.stance,
       note: e.note,
       quote: verifyQuote(byId, e.quote),
     }));
-  return { evidence, usage };
+  const gaps: Gap[] = data.gaps.filter((g) => defs.has(g.assumptionId) && byId.has(g.docId) && !excluded.includes(g.docId));
+  return { evidence, gaps, usage };
 }
 
 // ---------- 4. reconciliation + questions ----------
 
 const ReconcileSchema = z.object({
+  rfis: z.array(z.object({
+    request: z.string().describe("The specific document or confirmation to request from the seller, imperative."),
+    reason: z.string(),
+    assumptionIds: z.array(z.string()),
+    priority: z.enum(["high", "medium", "low"]),
+  })).describe("Targeted requests to the seller. One per distinct request."),
+  risks: z.array(z.object({
+    title: z.string(),
+    detail: z.string(),
+    assumptionIds: z.array(z.string()),
+    evidence: z.array(QuoteSchema),
+  })).describe("Issues the buyer should know that need no decision now (e.g. coverage exclusions, schedule exposure). Do not repeat judgment calls."),
   findings: z.array(z.object({
     assumptionId: z.string(),
     label: z.enum(["confirmed", "changed", "contradicted", "conflicting", "unverified"]),
@@ -208,10 +230,10 @@ const ReconcileSchema = z.object({
 
 export async function reconcile(
   p: Playbook, docs: DocRecord[], baseline: BaselineAssumption[], evidence: Evidence[],
-): Promise<{ findings: Finding[]; questions: Question[]; usage: RunUsage }> {
+): Promise<{ findings: Finding[]; questions: Question[]; rfis: Rfi[]; risks: Risk[]; usage: RunUsage }> {
   const { data, usage } = await ask({
     system: system(p, docs),
-    task: `Reconcile each assumption (not deal terms) against the gathered evidence, applying the judging rules. Where the answer requires a human judgment call or depends on a conflict between sources, label it "conflicting" or "contradicted" as appropriate and raise a question with 2-3 concrete options; each option's "sets" gives the resolved current values that answer implies (use machine value formats). Raise at most 3 questions and combine assumptions that hinge on the same decision into one question. Unverified quotes are marked verified:false; do not rely on them alone.
+    task: `Reconcile each assumption and identity fact (not deal terms) against the gathered evidence, applying the judging rules. Where the answer requires a human judgment call or depends on a conflict between sources, label it "conflicting" or "contradicted" as appropriate and raise a question with 2-3 concrete options; each option's "sets" gives the resolved current values that answer implies (use machine value formats). Raise at most 3 questions and combine assumptions that hinge on the same decision into one question. Questions are judgment calls: raise one only when the buyer's decision changes an assumption's value; a clerical or descriptive discrepancy gets an RFI instead. Write an RFI for every missing document, certification or confirmation the buyer should request, and list risks separately. Unverified quotes are marked verified:false; do not rely on them alone.
 Baseline: ${JSON.stringify(baseline.map(({ id, value, display }) => ({ id, value, display })))}
 Evidence: ${JSON.stringify(evidence.map((e) => ({ assumptionId: e.assumptionId, docId: e.docId, value: e.value, display: e.display, stance: e.stance, note: e.note, quote: e.quote.text, page: e.quote.page, verified: e.quote.verified })))}`,
     schema: ReconcileSchema,
@@ -250,5 +272,13 @@ Evidence: ${JSON.stringify(evidence.map((e) => ({ assumptionId: e.assumptionId, 
       followUp: f.followUp ?? undefined,
     }));
 
-  return { findings, questions, usage };
+  const rfis: Rfi[] = data.rfis.map((r, i) => ({ id: `R${i + 1}`, ...r }));
+  const risks: Risk[] = data.risks.map((r, i) => ({
+    id: `K${i + 1}`,
+    title: r.title,
+    detail: r.detail,
+    assumptionIds: r.assumptionIds,
+    evidence: r.evidence.map((e) => verifyQuote(byId, e)),
+  }));
+  return { findings, questions, rfis, risks, usage };
 }

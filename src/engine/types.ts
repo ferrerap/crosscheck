@@ -32,8 +32,11 @@ export interface AssumptionDef {
   name: string;
   valueType: ValueType;
   unit?: string;
-  /** "term" = a deal term read from the anchor doc but not diligenced (e.g. price). */
-  kind?: "assumption" | "term";
+  /**
+   * "identity" = a project fact checked for consistency across every document (capacity, entity, site).
+   * "term" = a deal term read from the anchor doc but not diligenced (e.g. price).
+   */
+  kind?: "identity" | "assumption" | "term";
   /** What to look for in the anchor document. */
   extractionHint: string;
   /** What counts as current evidence in the data room. */
@@ -46,6 +49,8 @@ export interface BaselineAssumption {
   id: string;
   value: string | number | boolean | null;
   display: string;
+  /** Compact value for table cells (at most ~18 characters). */
+  short?: string;
   quote: Quote | null;
   found: boolean;
 }
@@ -71,9 +76,36 @@ export interface Evidence {
   docId: string;
   value: string | number | boolean | null;
   display: string;
+  /** Compact value for table cells (at most ~18 characters). */
+  short?: string;
   stance: Stance;
   note: string;
   quote: Quote;
+}
+
+/** A document that should have stated an assumption's value but didn't (shown as "not stated"). */
+export interface Gap {
+  assumptionId: string;
+  docId: string;
+  note: string;
+}
+
+/** A targeted request to the seller. */
+export interface Rfi {
+  id: string;
+  request: string;
+  reason: string;
+  assumptionIds: string[];
+  priority: "high" | "medium" | "low";
+}
+
+/** A flagged issue that needs no decision now but should be known (e.g. an insurance exclusion). */
+export interface Risk {
+  id: string;
+  title: string;
+  detail: string;
+  assumptionIds: string[];
+  evidence: Quote[];
 }
 
 export interface QuestionOption {
@@ -135,7 +167,10 @@ export interface Run {
   baselineConfirmed: boolean;
   classifications: DocClassification[];
   evidence: Evidence[];
+  gaps?: Gap[];
   findings: Finding[];
   questions: Question[];
+  rfis?: Rfi[];
+  risks?: Risk[];
   usage: RunUsage;
 }

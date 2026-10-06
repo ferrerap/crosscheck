@@ -65,3 +65,27 @@ Decisions made autonomously on 2026-10-05 while Paul was away. Each one can be r
 - **Light mode only**; removed dark-mode CSS and the Next template. Mode toggle labels "Demo replay" / "Live (Claude API)".
 - **eslint** now ignores `public/**` (the minified worker produced errors). One remaining lint warning is in another agent's `src/app/api/run/[step]/route.ts`.
 - `.claude/launch.json` was created in the crosscheck folder as asked, but the preview tool looks for it one level up (`LOI App/.claude`), so the dev server was run via `npm run dev` and driven in the browser pane instead.
+
+## Round 2 engine changes (2026-10-05 night, per Paul's review)
+- **Identity facts I1–I3** (capacity, project company, site), `kind: "identity"`. They're checked for consistency in every document and excluded from the metrics.
+- **Planted clerical mismatch:** the insurance binder says 132 MWdc where every other document says 135. Expected handling is a conflicting label plus an RFI, not a judgment call. The eval checks this.
+- **New pipeline outputs:**
+  - `gaps`: documents that should state a value but don't. These power the matrix's "not stated" cells.
+  - `rfis`: requests to the seller, with priority.
+  - `risks`: flags that need no decision now, with verified quotes.
+- **Naming, agreed with Paul:** Judgment calls / RFIs / Risks. The word "questions" is gone from the UI.
+- **Upload:** `POST /api/upload` (multipart) saves to the OS temp folder under a runId, and the pipeline routes accept `runId`. `GET /api/file/<runId>/<name>` serves the PDFs back. This works locally; serverless instances don't share disk, so the public deployment stays replay-only.
+- **Live eval: 56/56 checks, 74/74 quotes verified, $0.91, about 4.6 minutes.** The replay was regenerated from that run.
+
+## UI round 2 (subagent)
+
+- **Flow is now Upload -> Baseline -> Cross-check -> Review -> Report.** The header mode toggle is gone; a small header badge ("Recorded run" or "Live") appears once a run starts. Replay vs live is chosen on a choice card that shows when the dropped files hash to the fixture's `docs[].sha256` set (SHA-256 via `crypto.subtle` in the browser) or when "Or load the demo deal" is clicked. Non-demo files get a "Start diligence" button and live only. For a recognised demo deal the choice card replaces the Start button rather than appearing next to it.
+- **Live with uploaded files**: POST `/api/upload`, then `LiveRunner(runId)` sends `runId` in every step body. `fileUrl(filename, runId)` in `src/lib/runner.ts` builds `/api/file/<runId>/<filename>` for uploads and `/demo-data/itc-transfer/<filename>` otherwise. Live on the bundled demo sends no runId (the server loads the demo data room).
+- **PdfPane** (`src/components/PdfPane.tsx`) renders all pages stacked, measures its container width, has zoom controls, paints any number of highlights, emphasizes `activeId` (orange) and smooth-scrolls it into view. `PdfViewer` is now a thin drawer around it. `ViewerTarget` is `{url, title, highlights[]}`; a matrix cell opens the doc with every quote of that cell highlighted, a QuoteChip opens one.
+- **Overlapping quotes**: baseline quotes overlap on the term sheet (I3 contains T2, I1 overlaps T1), so `matchQuotes` in `src/lib/highlight.ts` splits each text item into segments that carry every covering quote id (`data-hl-ids`). `matchQuote`'s signature is unchanged. Selecting a row therefore also lights the shared part of an overlapping row's quote.
+- **Text-layer gotcha**: react-pdf re-renders the text layer whenever `customTextRenderer` changes identity, which looped when the renderer was created inline. Renderers are memoized per page and the active highlight is toggled by CSS class in an effect rather than through the renderer.
+- **Evidence matrix**: columns are the data room docs with at least one evidence item (14 in the demo, including the three IRS excerpts), sorted by doc id, so it scrolls horizontally with a sticky first column at 1440px. A cell's primary item is the first contradicting one, else the first supporting one, else the first item. "not stated" shows only where a gap exists and the cell has no evidence. The injection doc has evidence, so it is a column (with an "INSTRUCTION IGNORED" tag) and also appears under "Also checked" with "embedded instruction ignored". The different-project doc (D16) has no evidence and appears there with "different project, excluded".
+- **Review step** replaces "Questions". UI copy says "judgment calls" everywhere. The only remaining "question" in the report is inside model-generated finding text in the read-only fixture ("beginning-of-construction question (Q1)").
+- **Report**: assumption table is grouped Project identity / Credit assumptions; "RFIs to the seller" uses `run.rfis` (priority sorted) with a fallback to `findings[].followUp`; "Risks to note" added; Decisions recorded and usage footer kept.
+- **Layout**: baseline and cross-check use a wider container (1400px) so the split view and matrix breathe; other steps stay at 6xl.
+- **Copy RFI list** writes a numbered plain-text list (priority, request, reason, related assumptions) and shows "Copied" for 2 seconds.

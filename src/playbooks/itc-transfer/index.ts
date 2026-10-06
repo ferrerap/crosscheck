@@ -4,7 +4,37 @@
 import type { AssumptionDef, Metric } from "@/engine/types";
 import type { Playbook, Values } from "../types";
 
+const identityRule =
+  "Check every document that states this fact. Confirmed if all agree. If any document differs, label conflicting and name the outlier; a likely clerical discrepancy needs an RFI to correct it, not a judgment call.";
+
 const assumptions: AssumptionDef[] = [
+  {
+    id: "I1",
+    name: "Nameplate capacity",
+    kind: "identity",
+    valueType: "text",
+    extractionHint: "Project capacity in MWac and MWdc.",
+    evidenceHint: "Any document that states the project's AC or DC capacity.",
+    rule: identityRule,
+  },
+  {
+    id: "I2",
+    name: "Project company",
+    kind: "identity",
+    valueType: "text",
+    extractionHint: "The legal entity that owns the project and sells the credit.",
+    evidenceHint: "Any document naming the project owner or seller entity.",
+    rule: identityRule,
+  },
+  {
+    id: "I3",
+    name: "Site location",
+    kind: "identity",
+    valueType: "text",
+    extractionHint: "County and state of the project site.",
+    evidenceHint: "Any document stating where the project is located.",
+    rule: identityRule,
+  },
   {
     id: "T1",
     name: "Credit section and technology",
