@@ -14,11 +14,14 @@ function safeName(name: string) {
 }
 
 export async function POST(req: Request) {
+  if (process.env.NEXT_PUBLIC_REPLAY_ONLY === "1")
+    return Response.json({ error: "This public demo is replay-only. Run Crosscheck locally to analyze documents live." }, { status: 403 });
   try {
     const form = await req.formData();
     const termSheet = form.get("termSheet");
     const room = form.getAll("dataRoom").filter((f): f is File => f instanceof File);
-    if (!(termSheet instanceof File)) return Response.json({ error: "Add a term sheet PDF." }, { status: 400 });
+    if (!(termSheet instanceof File) || !termSheet.name.toLowerCase().endsWith(".pdf"))
+      return Response.json({ error: "The term sheet must be a PDF." }, { status: 400 });
     const files = [termSheet, ...room];
     if (files.length > MAX_FILES) return Response.json({ error: `At most ${MAX_FILES} files.` }, { status: 400 });
 

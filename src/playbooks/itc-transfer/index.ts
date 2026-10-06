@@ -37,7 +37,7 @@ const assumptions: AssumptionDef[] = [
   },
   {
     id: "T1",
-    name: "Credit section and technology",
+    name: "Credit type",
     valueType: "text",
     extractionHint: "The Code section of the credit being transferred and the type of energy property.",
     evidenceHint: "Any document that names the credit section or describes the energy property.",
@@ -54,7 +54,7 @@ const assumptions: AssumptionDef[] = [
   },
   {
     id: "T3",
-    name: "Prevailing wage & apprenticeship met",
+    name: "Prevailing wage & apprenticeship",
     valueType: "boolean",
     extractionHint: "Whether the credit rate assumes the prevailing wage and apprenticeship (PWA) requirements are satisfied (the 5x multiplier).",
     evidenceHint: "PWA compliance reports, certified payroll summaries, apprenticeship labor-hour percentages, cure or penalty payment records.",
@@ -78,7 +78,7 @@ const assumptions: AssumptionDef[] = [
   },
   {
     id: "T6",
-    name: "Beginning of construction",
+    name: "Beginning of construction date",
     valueType: "date",
     extractionHint: "The date or period construction is assumed to have begun for tax purposes.",
     evidenceHint: "Notices to proceed, physical work records (on-site or off-site under binding written contract), independent engineer reports, manufacturer letters.",
@@ -94,7 +94,7 @@ const assumptions: AssumptionDef[] = [
   },
   {
     id: "T8",
-    name: "FEOC / material assistance compliance",
+    name: "FEOC compliance",
     valueType: "boolean",
     extractionHint: "Whether the term sheet assumes compliance with prohibited foreign entity (FEOC) material assistance rules, or that they do not apply.",
     evidenceHint: "Supplier certifications, material assistance cost ratio calculations, and anything that determines whether the rules apply (construction start date).",
@@ -102,7 +102,7 @@ const assumptions: AssumptionDef[] = [
   },
   {
     id: "T9",
-    name: "Tax credit insurance limit",
+    name: "Insurance limit",
     valueType: "money",
     unit: "USD",
     extractionHint: "The required tax credit insurance coverage (often as a percentage of purchase price).",

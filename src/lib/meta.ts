@@ -1,18 +1,10 @@
 // Small display helpers shared by the step components.
 import type { DocClassification, SourceRole } from "@/engine/types";
-import { itcTransfer } from "@/playbooks/itc-transfer";
+import { activePlaybook } from "./activePlaybook";
 
-// Check names say what is being checked; the Term sheet column carries the value (UI round 3, G4).
-const CHECK_NAMES: Record<string, string> = {
-  T1: "Credit type",
-  T3: "Prevailing wage & apprenticeship",
-  T5: "Domestic content bonus",
-  T6: "Beginning of construction date",
-  T8: "FEOC compliance",
-  T9: "Insurance limit",
-};
-export const assumptionName = (id: string) => CHECK_NAMES[id] ?? itcTransfer.assumptions.find((a) => a.id === id)?.name ?? id;
-export const assumptionKind = (id: string) => itcTransfer.assumptions.find((a) => a.id === id)?.kind ?? "assumption";
+// Names and kinds come from the active playbook; check names say what is being checked (G4).
+export const assumptionName = (id: string) => activePlaybook.assumptions.find((a) => a.id === id)?.name ?? id;
+export const assumptionKind = (id: string) => activePlaybook.assumptions.find((a) => a.id === id)?.kind ?? "assumption";
 
 /** "cost_segregation_report" -> "Cost segregation report" */
 export const humanize = (t: string) => {

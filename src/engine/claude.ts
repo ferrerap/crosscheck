@@ -44,7 +44,8 @@ export async function ask<T extends z.ZodType>(opts: {
 }): Promise<{ data: z.infer<T>; usage: RunUsage }> {
   const response = await getClient().messages.parse({
     model: MODEL,
-    max_tokens: opts.maxTokens ?? 16000,
+    // Thinking counts against max_tokens; 20k leaves headroom and stays under the SDK's non-streaming limit.
+    max_tokens: opts.maxTokens ?? 20000,
     system: opts.system.map((text, i) => ({
       type: "text" as const,
       text,

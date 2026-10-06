@@ -27,6 +27,9 @@ export async function loadDataRoom(playbookId: string, runId?: string): Promise<
     docs.push(await ingest(`D${String(i + 1).padStart(2, "0")}`, f, bytes, i === 0 ? "anchor" : "dataroom"));
   }
   cache.set(key, docs);
+  // Keep only the most recent uploaded data rooms in memory (the demo data room always stays).
+  const uploads = [...cache.keys()].filter((k) => k.startsWith("upload:"));
+  for (const k of uploads.slice(0, Math.max(0, uploads.length - 3))) cache.delete(k);
   return docs;
 }
 

@@ -29,7 +29,8 @@ const OPEN = new Set(["contradicted", "conflicting", "unverified"]);
 function model(findings: Finding[], questions: Question[], evidence: Evidence[]) {
   const facts: Values = {};
   const forks: Fork[] = [];
-  const inQuestion = new Set(questions.flatMap((q) => q.assumptionIds));
+  // Only questions with options model an assumption; an option-less question must not hide it from the range.
+  const inQuestion = new Set(questions.filter((q) => q.options.length).flatMap((q) => q.assumptionIds));
   for (const f of findings) {
     const has = f.currentValue !== undefined && f.currentValue !== null;
     if ((f.label === "changed" || f.dependsOn) && has) facts[f.assumptionId] = f.currentValue;
@@ -92,4 +93,35 @@ export function creditAtRisk(
     for (const id of fork.ids) out[id] = Math.max(out[id] ?? 0, Math.round((top - worst) * 100) / 100);
   }
   return out;
+}
+
+/**
+ * Credit already lost to data room facts: for each "changed" finding, how much lower the credit is with
+ * that fact than with the term sheet value (every other fact applied, open questions for the seller).
+ */
+export function creditCutByFacts(
+  p: Playbook,
+  baseline: Values,
+  findings: Finding[],
+  questions: Question[],
+  evidence: Evidence[],
+  metricId = "credit",
+): Record<string, number> {
+  const { facts } = model(findings, questions, evidence);
+  const withAll = valueOf(p.metrics(baseline, facts), metricId);
+  const out: Record<string, number> = {};
+  for (const f of findings) {
+    if (f.label !== "changed" || !(f.assumptionId in facts)) continue;
+    const rest = { ...facts };
+    delete rest[f.assumptionId];
+    const cut = Math.round((valueOf(p.metrics(baseline, rest), metricId) - withAll) * 100) / 100;
+    if (cut > 0) out[f.assumptionId] = cut;
+  }
+  return out;
+}
+
+/** Everything the UI needs to tag each check with its credit impact. */
+export interface CreditImpact {
+  atRisk: Record<string, number>;
+  cut: Record<string, number>;
 }

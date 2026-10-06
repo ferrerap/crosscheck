@@ -111,13 +111,17 @@ export function PriorityBadge({ priority }: { priority: Rfi["priority"] }) {
   return <span className={cx("inline-block shrink-0 rounded px-1 py-px text-[9px] font-bold uppercase", PRIORITY_STYLE[priority])}>{priority}</span>;
 }
 
-export function CreditPill({ tag, wrap }: { tag: { kind: "risk" | "part" | "none"; text: string }; wrap?: boolean }) {
+export function CreditPill({ tag, wrap }: { tag: { kind: "risk" | "cut" | "part" | "none"; text: string }; wrap?: boolean }) {
   return (
     <span
       className={cx(
         "inline-flex items-center px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset",
         wrap ? "rounded-lg leading-tight" : "whitespace-nowrap rounded-full",
-        tag.kind === "risk" ? "bg-red-50 text-red-800 ring-red-600/20" : "bg-slate-100 text-slate-600 ring-slate-500/20",
+        tag.kind === "risk"
+          ? "bg-red-50 text-red-800 ring-red-600/20"
+          : tag.kind === "cut"
+            ? "bg-amber-50 text-amber-800 ring-amber-600/25"
+            : "bg-slate-100 text-slate-600 ring-slate-500/20",
       )}
     >
       {tag.text}

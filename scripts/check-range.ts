@@ -1,7 +1,7 @@
 // Prints the credit range for the replay fixture (no API calls).  npx tsx scripts/check-range.ts
 import fs from "node:fs";
 import path from "node:path";
-import { creditAtRisk, creditRange } from "../src/lib/scenarios";
+import { creditAtRisk, creditCutByFacts, creditRange } from "../src/lib/scenarios";
 import { itcTransfer } from "../src/playbooks/itc-transfer";
 import type { Run } from "../src/engine/types";
 
@@ -11,8 +11,9 @@ const r = creditRange(itcTransfer, baseline, run.findings, run.questions, run.ev
 const credit = (m: { id: string; current: number }[]) => m.find((x) => x.id === "credit")!.current;
 console.log(`as signed ${credit(r.asSigned)}  facts-only ${credit(r.dataRoomFacts)}  range ${credit(r.low)} – ${credit(r.high)}  (${r.scenarios} scenarios)`);
 const risk = creditAtRisk(itcTransfer, baseline, run.findings, run.questions, run.evidence);
-console.log("at risk by check", risk);
+const cut = creditCutByFacts(itcTransfer, baseline, run.findings, run.questions, run.evidence);
+console.log("at risk by check", risk, "cut by facts", cut);
 const ok = credit(r.asSigned) === 71000000 && credit(r.high) === 68200000 && credit(r.low) === 10912000
-  && risk.T6 === 13640000 && risk.T3 === 54560000;
+  && risk.T6 === 13640000 && risk.T3 === 54560000 && cut.T2 === 2800000;
 console.log(ok ? "PASS range matches gold scenarios" : "FAIL range");
 process.exit(ok ? 0 : 1);

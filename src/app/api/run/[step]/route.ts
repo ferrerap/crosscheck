@@ -8,6 +8,8 @@ export const maxDuration = 300;
 
 export async function POST(req: Request, ctx: { params: Promise<{ step: string }> }) {
   const { step } = await ctx.params;
+  if (process.env.NEXT_PUBLIC_REPLAY_ONLY === "1")
+    return Response.json({ error: "This public demo is replay-only. Run Crosscheck locally to analyze documents live." }, { status: 403 });
   try {
     const body = await req.json();
     const p = getPlaybook(body.playbookId ?? "itc-transfer");

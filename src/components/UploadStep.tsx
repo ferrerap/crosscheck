@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { itcTransfer } from "@/playbooks/itc-transfer";
+import { activePlaybook, replayOnly } from "@/lib/activePlaybook";
 import { DEMO_HASHES, sha256Hex } from "@/lib/runner";
 import { PrimaryButton, Spinner, cx } from "./ui";
 
@@ -148,7 +148,7 @@ export function UploadStep({
 
   return (
     <div className="mx-auto max-w-4xl pt-6 sm:pt-12">
-      <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">{itcTransfer.name}</p>
+      <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">{activePlaybook.name}</p>
       <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-5xl">Does the data room support the term sheet?</h1>
       <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-600">
         Crosscheck reads the buyer&apos;s term sheet, scans the seller&apos;s data room, and tests each assumption behind the credit amount against
@@ -169,18 +169,21 @@ export function UploadStep({
               {busy ? <Spinner className="border-slate-500 border-t-white" /> : null}
               Replay recorded run (instant)
             </PrimaryButton>
-            <button
+            {!replayOnly && <button
               onClick={onLiveDemo}
               disabled={!!busy}
               className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Run live with Claude (about 4 min, about $0.90)
-            </button>
+            </button>}
+            {replayOnly && (
+              <span className="text-sm text-slate-500">Live analysis runs locally with your own API key. See the README.</span>
+            )}
           </div>
         </div>
       ) : (
         <div className="mt-8 flex flex-wrap items-center gap-4">
-          {ready && (
+          {ready && !replayOnly && (
             <PrimaryButton onClick={() => onLiveUpload(term[0].file, room.map((r) => r.file))} disabled={!!busy || !hashed} className="px-6 py-3 text-base">
               {busy ? <Spinner className="border-slate-500 border-t-white" /> : null}
               Start diligence
@@ -188,7 +191,9 @@ export function UploadStep({
           )}
           <p className="text-sm text-slate-500">
             {ready
-              ? "These are your own documents, so live analysis with Claude will run (a few minutes)."
+              ? replayOnly
+                ? "This public demo replays a recorded run of the bundled deal. To analyze your own documents, run Crosscheck locally with an API key (see the README)."
+                : "These are your own documents, so live analysis with Claude will run (a few minutes)."
               : "Add a term sheet and at least one data room document to begin."}
           </p>
         </div>

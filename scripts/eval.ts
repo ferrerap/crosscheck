@@ -13,7 +13,7 @@ const p = getPlaybook("itc-transfer");
 
 function same(a: unknown, b: unknown): boolean {
   if (typeof a === "number" && typeof b === "number") return Math.abs(a - b) < 0.005;
-  if (typeof a === "string" && typeof b === "string") return a.toLowerCase().startsWith(b.toLowerCase()) || b.toLowerCase().startsWith(a.toLowerCase());
+  if (typeof a === "string" && typeof b === "string") return a.trim().toLowerCase() === b.trim().toLowerCase();
   return a === b;
 }
 
@@ -26,6 +26,14 @@ async function runOnce() {
   const ev = await gatherEvidence(p, docs, ex.baseline, cl.classifications); usage = addUsage(usage, ev.usage);
   const rc = await reconcile(p, docs, ex.baseline, ev.evidence); usage = addUsage(usage, rc.usage);
 
+  const run = { ex, cl, ev, rc };
+  return { ...score(run), usage, seconds: (Date.now() - t0) / 1000, run };
+}
+
+type RunResult = { ex: Awaited<ReturnType<typeof extractBaseline>>; cl: Awaited<ReturnType<typeof classifyDocs>>; ev: Awaited<ReturnType<typeof gatherEvidence>>; rc: Awaited<ReturnType<typeof reconcile>> };
+
+/** Scores one pipeline run against gold.json. Pure, so saved runs can be re-scored (--rescore). */
+function score({ ex, cl, ev, rc }: RunResult) {
   const g = gold as Gold;
   const rows: { check: string; pass: boolean; detail: string }[] = [];
   for (const [id, want] of Object.entries(g.baseline)) {
@@ -65,10 +73,23 @@ async function runOnce() {
   const quotes = [...ex.baseline.flatMap((b) => (b.quote ? [b.quote] : [])), ...ev.evidence.map((e) => e.quote), ...rc.questions.flatMap((q) => q.evidence), ...rc.risks.flatMap((r) => r.evidence)];
   const verified = quotes.filter((q) => q.verified).length;
 
-  return { rows, quoteRate: quotes.length ? verified / quotes.length : 0, quotes: quotes.length, usage, seconds: (Date.now() - t0) / 1000, run: { ex, cl, ev, rc } };
+  return { rows, quoteRate: quotes.length ? verified / quotes.length : 0, quotes: quotes.length };
+}
+
+async function rescore(files: string[]) {
+  for (const f of files) {
+    const { results } = JSON.parse(fs.readFileSync(f, "utf8"));
+    for (const [i, r] of results.entries()) {
+      const sc = score(r.run);
+      const passed = sc.rows.filter((x) => x.pass).length;
+      console.log(`${path.basename(f)} #${i + 1}: ${passed}/${sc.rows.length} checks, quotes verified ${(sc.quoteRate * 100).toFixed(0)}% of ${sc.quotes}`);
+      for (const row of sc.rows.filter((x) => !x.pass)) console.log("  FAIL", row.check, row.detail);
+    }
+  }
 }
 
 async function main() {
+  if (process.argv[2] === "--rescore") return rescore(process.argv.slice(3));
   const n = Number(process.argv[2] ?? 1);
   const outDir = path.join(process.cwd(), "evals", "itc-transfer", "results");
   fs.mkdirSync(outDir, { recursive: true });

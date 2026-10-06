@@ -11,7 +11,10 @@ import type {
   Run,
   RunUsage,
 } from "@/engine/types";
-import replayFixture from "@/fixtures/replay-itc-transfer.json";
+import { replayFixtures } from "@/fixtures";
+import { activePlaybook } from "./activePlaybook";
+
+const replayFixture = replayFixtures[activePlaybook.id];
 
 export type RunnerMode = "replay" | "live";
 export type DocMeta = Run["docs"][number];
@@ -49,12 +52,13 @@ export function addUsage(a: RunUsage, b: RunUsage): RunUsage {
 }
 export const ZERO_USAGE: RunUsage = { calls: 0, inputTokens: 0, outputTokens: 0, costUsd: 0 };
 
-// Split the fixture's total usage across the four steps so the footer sums to the recorded totals.
+// Split the fixture's total usage across the four steps (one Claude call each) so the footer sums to the
+// recorded totals; token and cost shares approximate the recorded run.
 const SPLIT = {
-  extract: { calls: 1, share: 0.1 },
-  classify: { calls: 4, share: 0.3 },
-  evidence: { calls: 6, share: 0.4 },
-  reconcile: { calls: 3, share: 0.2 },
+  extract: { calls: 1, share: 0.15 },
+  classify: { calls: 1, share: 0.15 },
+  evidence: { calls: 1, share: 0.4 },
+  reconcile: { calls: 1, share: 0.3 },
 } as const;
 function stepUsage(total: RunUsage, step: keyof typeof SPLIT): RunUsage {
   const s = SPLIT[step];
@@ -117,7 +121,7 @@ export class ReplayRunner implements Runner {
 
 export class LiveRunner implements Runner {
   /** runId points at an uploaded data room on the server; omit it to analyse the bundled demo data room. */
-  constructor(private runId?: string, private playbookId = "itc-transfer") {}
+  constructor(private runId?: string, private playbookId = activePlaybook.id) {}
 
   private async post<T>(step: string, body: Record<string, unknown>): Promise<T> {
     const res = await fetch(`/api/run/${step}`, {
@@ -163,7 +167,7 @@ export function makeRunner(mode: RunnerMode, runId?: string): Runner {
   return mode === "live" ? new LiveRunner(runId) : new ReplayRunner();
 }
 
-export const DEMO_BASE = "/demo-data/itc-transfer/";
+export const DEMO_BASE = `/demo-data/${activePlaybook.id}/`;
 
 /** URL of a data room PDF: served from /public for the bundled demo, from the upload route otherwise. */
 export function fileUrl(filename: string, runId?: string | null): string {

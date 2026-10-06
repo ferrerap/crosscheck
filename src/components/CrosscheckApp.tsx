@@ -3,8 +3,9 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BaselineAssumption, DocClassification, Evidence, Finding, Gap, Question, Quote, Rfi, Risk, RunUsage } from "@/engine/types";
 import type { Values } from "@/playbooks/types";
-import { itcTransfer } from "@/playbooks/itc-transfer";
-import { creditAtRisk, creditRange } from "@/lib/scenarios";
+import { activePlaybook } from "@/lib/activePlaybook";
+import { creditAtRisk, creditCutByFacts, creditRange, type CreditImpact } from "@/lib/scenarios";
+import { readerRisks, sendableRfis } from "@/lib/questions";
 import { docLabels } from "@/lib/meta";
 import { ZERO_USAGE, addUsage, fileUrl, makeRunner, type DocMeta, type Runner, type RunnerMode } from "@/lib/runner";
 import { cx } from "./ui";
@@ -76,20 +77,21 @@ export default function CrosscheckApp() {
   // ---- credit range across the ways the open questions could resolve ----
   const baselineValues: Values = useMemo(() => Object.fromEntries(baseline.map((b) => [b.id, b.value])), [baseline]);
   const range = useMemo(
-    () => (baseline.length && findings.length ? creditRange(itcTransfer, baselineValues, findings, questions, evidence) : null),
+    () => (baseline.length && findings.length ? creditRange(activePlaybook, baselineValues, findings, questions, evidence) : null),
     [baseline, baselineValues, findings, questions, evidence],
   );
-  const atRisk = useMemo(
-    () => (baseline.length && findings.length ? creditAtRisk(itcTransfer, baselineValues, findings, questions, evidence) : {}),
+  const impact: CreditImpact = useMemo(
+    () =>
+      baseline.length && findings.length
+        ? {
+            atRisk: creditAtRisk(activePlaybook, baselineValues, findings, questions, evidence),
+            cut: creditCutByFacts(activePlaybook, baselineValues, findings, questions, evidence),
+          }
+        : { atRisk: {}, cut: {} },
     [baseline, baselineValues, findings, questions, evidence],
   );
-  // Questions that reach a check on the page; the accepted ones are the ones "sent".
-  const sentRfis = useMemo(
-    () => rfis.filter((r) => accepted.has(r.id) && r.assumptionIds.some((a) => findings.some((f) => f.assumptionId === a))),
-    [rfis, accepted, findings],
-  );
-  // The embedded-instruction flag stays off every page of the demo (Paul's decision), including the report.
-  const reportRisks = useMemo(() => risks.filter((k) => !/instruction/i.test(k.title)), [risks]);
+  const sentRfis = useMemo(() => sendableRfis(rfis, findings, accepted), [rfis, findings, accepted]);
+  const shownRisks = useMemo(() => readerRisks(risks, classifications), [risks, classifications]);
 
   useEffect(() => {
     if (!toast) return;
@@ -247,8 +249,8 @@ export default function CrosscheckApp() {
             findings={findings}
             questions={questions}
             rfis={rfis}
-            risks={risks}
-            atRisk={atRisk}
+            risks={shownRisks}
+            impact={impact}
             accepted={accepted}
             edits={edits}
             onAccept={(id, on) =>
@@ -278,11 +280,11 @@ export default function CrosscheckApp() {
         {step === "report" && range && (
           <ReportStep
             range={range}
-            atRisk={atRisk}
+            impact={impact}
             findings={findings}
             rfis={sentRfis}
             edits={edits}
-            risks={reportRisks}
+            risks={shownRisks}
             usage={usage}
             onOpen={openQuote}
             docName={docName}

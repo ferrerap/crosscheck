@@ -5,6 +5,7 @@ import { LABEL_ORDER, fmtDelta, fmtMetric, fmtMoney } from "@/lib/format";
 import { GROUPS, assumptionKind, assumptionName } from "@/lib/meta";
 import type { CreditRange } from "@/lib/scenarios";
 import { creditTag } from "@/lib/creditTag";
+import type { CreditImpact } from "@/lib/scenarios";
 import { Card, CreditPill, LabelChip, PriorityBadge, QuoteChip, StanceTag, cx, sortRfis } from "./ui";
 
 const COLS = "lg:grid-cols-[11rem_7rem_9rem_12rem_9.5rem_1fr]";
@@ -27,7 +28,7 @@ function CheckTags({ ids }: { ids: string[] }) {
 export function ReportStep({
   range,
   findings,
-  atRisk,
+  impact,
   rfis,
   edits,
   risks,
@@ -38,7 +39,7 @@ export function ReportStep({
   range: CreditRange;
   findings: Finding[];
   /** Credit at risk per check (see creditAtRisk). */
-  atRisk: Record<string, number>;
+  impact: CreditImpact;
   /** The questions that were accepted for sending. */
   rfis: Rfi[];
   edits: Record<string, string>;
@@ -185,7 +186,7 @@ export function ReportStep({
                         <div data-testid={`report-risk-${f.assumptionId}`}>
                           <span className="mr-1 text-[11px] uppercase text-slate-400 lg:hidden">Credit at risk: </span>
                           {(() => {
-                            const t = creditTag(f, atRisk, findingBy);
+                            const t = creditTag(f, impact, findingBy);
                             return t ? <CreditPill tag={t} wrap /> : <span className="text-sm text-slate-400">–</span>;
                           })()}
                         </div>

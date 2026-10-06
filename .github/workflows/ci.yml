@@ -1,0 +1,25 @@
+name: CI
+
+# Deterministic checks on every push: types, lint, tax math, ingestion and quote verification,
+# highlight matching for every recorded quote, the credit range, and a production build.
+# The live Claude eval (npm run eval) costs money, so it runs manually, not here.
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit -p .
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_REPLAY_ONLY: "1"

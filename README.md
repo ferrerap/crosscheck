@@ -1,5 +1,7 @@
 # Crosscheck
 
+[![CI](https://github.com/ferrerap/crosscheck/actions/workflows/ci.yml/badge.svg)](https://github.com/ferrerap/crosscheck/actions/workflows/ci.yml)
+
 **Does the data room support the term sheet?**
 
 A tax credit buyer signs a term sheet that assumes a credit amount: an eligible basis, a credit rate built from prevailing wage, energy community and domestic content, a placed-in-service year and an insurance limit. Diligence is the work of checking every one of those assumptions against the seller's data room. Crosscheck does that cross-document reading with Claude, puts every finding next to the exact source passage, and asks a human to make the judgment calls. The dollar impact recomputes as you decide.
@@ -76,11 +78,11 @@ flowchart LR
 - resistance to the injected instruction;
 - the quote verification rate.
 
-| Model | Checks passed | Quotes verified | Cost per run | Time |
+| Model | Checks passed | Quotes verified | Cost per run | Time per run |
 |---|---|---|---|---|
-| `claude-opus-5-5` | **64 / 64** | **84 / 84** | $1.02 | ~4.5 min |
+| `claude-opus-5-5`, 3 repeat runs | **64 / 64** in each of the 3 runs | **227 / 227** (72 to 78 per run) | $0.64 to $0.96 | ~4.5 min |
 
-Earlier runs (in `evals/itc-transfer/results/`) caught a value-coercion bug (38/39) and an ambiguous rule for missing FEOC evidence (42/43). Both are fixed, and the history is kept. `npm test` runs the free deterministic checks: the tax math against the gold scenarios, ingestion and quote verification, and highlight matching for every quote in the replay.
+Scores use exact matching (a partial value like "2026" for "2026-11-30" fails). Saved runs can be re-scored for free with `--rescore`. Earlier runs (in `evals/itc-transfer/results/`) caught a value-coercion bug (38/39) and an ambiguous rule for missing FEOC evidence (42/43). Both are fixed, and the history is kept. `npm test` runs the free deterministic checks: the tax math against the gold scenarios, ingestion and quote verification, and highlight matching for every quote in the replay.
 
 ## Run it locally
 
@@ -88,14 +90,26 @@ Earlier runs (in `evals/itc-transfer/results/`) caught a value-coercion bug (38/
 npm install
 cp .env.example .env.local   # add ANTHROPIC_API_KEY for live mode
 npm run dev                  # http://localhost:3000
+# Public demo deploys set NEXT_PUBLIC_REPLAY_ONLY=1: no live calls, no uploads, no key needed.
 ```
 
 | Command | What it does |
 |---|---|
-| `npm test` | Deterministic checks (no API calls) |
-| `npm run eval` | Live pipeline + scoring (~$0.90) |
+| `npm test` | Deterministic checks (no API calls); also run in CI on every push |
+| `npm run eval` | Live pipeline + scoring (~$1 per run; `npm run eval -- 3` for repeats) |
+| `npx tsx scripts/eval.ts --rescore <results.json>` | Re-score saved runs against the current gold (free) |
 | `npm run docs` | Regenerate the synthetic PDFs from `scripts/docs/itc-transfer.ts` |
 | `npx tsx scripts/save-replay.ts` | Turn the latest eval run into the replay fixture |
+
+## How I built it
+
+Built in about two days with Claude Code. I brought the domain judgment; the models did most of the typing.
+
+- **Domain first.** I spent years in solar and storage investment and diligence (a project finance fund, PwC valuations, Euclid project diligence). I chose what a buyer's counsel actually chases on an ITC transfer, planted those issues in the data room, and wrote the expected answers before any prompt ran.
+- **Models by stage.** Opus planned the architecture, wrote the engine and prompts, and owned the money logic. Sonnet subagents built UI rounds in parallel from written specs. Fable generated ten standalone prototypes of the key screen from the real run data, and I iterated with it until one design held up.
+- **Product calls made by looking at it.** The first cross-check screen was an evidence matrix. It was accurate but mostly empty cells, because most documents speak to one or two assumptions. After several prototype rounds it became "checks and questions to the seller", because at the LOI stage the buyer's next move is going back to the seller, not writing a verdict.
+- **Eval-driven loop.** Every prompt or schema change was followed by a live eval run. The history is in `evals/itc-transfer/results/`, and so are the misses it caught: a value-coercion bug, an ambiguous rule for missing FEOC evidence, document IDs leaking into prose, and a run that stopped raising a question for apprenticeship. A final code review pass caught the eligible-basis row claiming "no credit impact" while the basis cut was costing $2.8M.
+- **Decisions are written down.** `DECISIONS.md` is the build log: what was decided, why, and by whom.
 
 ## What I'd build next at Crux
 

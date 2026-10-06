@@ -5,8 +5,10 @@ import type { BaselineAssumption, DocClassification, Evidence, Finding, Gap, Lab
 import { assumptionName, docLabels, isInjectedEvidence, shortType } from "@/lib/meta";
 import type { DocMeta } from "@/lib/runner";
 import { creditTag } from "@/lib/creditTag";
+import type { CreditImpact } from "@/lib/scenarios";
 import { Card, CreditPill, LabelChip, PriorityBadge, PrimaryButton, SourceTag, Spinner, cx, sortRfis } from "./ui";
 import { SendModal } from "./SendModal";
+import { reachableRfis } from "@/lib/questions";
 
 export type ScanPhase = "classifying" | "evidence" | "reconcile" | "done";
 
@@ -40,7 +42,7 @@ export function CheckStep({
   questions,
   rfis,
   risks,
-  atRisk,
+  impact,
   accepted,
   edits,
   onAccept,
@@ -58,8 +60,8 @@ export function CheckStep({
   questions: Question[];
   rfis: Rfi[];
   risks: Risk[];
-  /** Credit at risk per check (see creditAtRisk). */
-  atRisk: Record<string, number>;
+  /** Credit at risk per check and credit already cut by data room facts (see scenarios.ts). */
+  impact: CreditImpact;
   accepted: Set<string>;
   edits: Record<string, string>;
   onAccept: (id: string, on: boolean) => void;
@@ -104,8 +106,12 @@ export function CheckStep({
     [findings, qCount, evidenceBy],
   );
   // Open checks: biggest credit at risk first; ties keep the severity order above (the sort is stable).
-  const need = order.filter((a) => findingBy.get(a)!.label !== "confirmed").sort((a, b) => (atRisk[b] ?? 0) - (atRisk[a] ?? 0));
-  const good = order.filter((a) => findingBy.get(a)!.label === "confirmed");
+  const need = useMemo(
+    () => order.filter((a) => findingBy.get(a)!.label !== "confirmed")// Biggest credit at risk first, then credit already cut by data room facts; ties keep severity order.
+      .sort((a, b) => (impact.atRisk[b] ?? 0) - (impact.atRisk[a] ?? 0) || (impact.cut[b] ?? 0) - (impact.cut[a] ?? 0)),
+    [order, findingBy, impact],
+  );
+  const good = useMemo(() => order.filter((a) => findingBy.get(a)!.label === "confirmed"), [order, findingBy]);
 
   // Default: expand the check that other checks hang on (construction start), else the first open one.
   const defaultOpen = useMemo(() => {
@@ -134,7 +140,7 @@ export function CheckStep({
   }, [openSet]);
 
   // Questions that reach a check on this page, each counted once.
-  const visibleRfis = useMemo(() => rfis.filter((r) => r.assumptionIds.some((a) => findingBy.has(a))), [rfis, findingBy]);
+  const visibleRfis = useMemo(() => reachableRfis(rfis, findings), [rfis, findings]);
   const nAccepted = visibleRfis.filter((r) => accepted.has(r.id)).length;
 
   const excluded = classifications.filter((c) => c.projectMatch === "different_project").length;
@@ -239,7 +245,7 @@ export function CheckStep({
     const rf = rfiFor(aid);
     const isOpen = openSet.has(aid);
     const acc = rf.filter((r) => accepted.has(r.id)).length;
-    const tag = creditTag(f, atRisk, findingBy);
+    const tag = creditTag(f, impact, findingBy);
     return (
       <div key={aid} data-testid={`check-${aid}`} className="scroll-mt-20 border-t border-slate-100 first:border-t-0">
         <button
