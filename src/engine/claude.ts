@@ -4,10 +4,12 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { z } from "zod";
 import type { RunUsage } from "./types";
 
-export const MODEL = process.env.CROSSCHECK_MODEL ?? "claude-opus-5-5";
+const PRICED_MODEL = "claude-opus-5-5";
+export const MODEL = process.env.CROSSCHECK_MODEL ?? PRICED_MODEL;
 
-// USD per million tokens (claude-opus-5-5). Update if MODEL changes.
+// USD per million tokens for PRICED_MODEL. Cost figures are only right for that model.
 const PRICE = { input: 4, output: 20, cacheWrite: 5, cacheRead: 0.2 };
+if (MODEL !== PRICED_MODEL) console.warn(`CROSSCHECK_MODEL=${MODEL}: cost figures use ${PRICED_MODEL} prices and will be wrong for this model.`);
 
 let client: Anthropic | null = null;
 function getClient() {
@@ -51,7 +53,8 @@ export async function ask<T extends z.ZodType>(opts: {
     system: opts.system.map((text, i) => ({
       type: "text" as const,
       text,
-      // Cache breakpoint after the last system block (documents), shared across calls in a run.
+      // Cache breakpoint after the documents. Each step has its own output schema and effort level after this
+      // point, so caches are per step: a step's cache is reused when that step runs again (see README).
       ...(i === opts.system.length - 1 ? { cache_control: { type: "ephemeral" as const } } : {}),
     })),
     messages: [{ role: "user", content: opts.task }],
