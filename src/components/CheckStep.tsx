@@ -290,7 +290,7 @@ export function CheckStep({
         {isOpen && (
           <div className="border-t border-dashed border-slate-200 bg-white px-3.5 pb-3.5 pl-12 pt-2.5">
             {renderShow(aid, f)}
-            {ok ? renderGood(rf) : renderAsk(f, rf)}
+            {ok ? renderGood(aid, rf) : renderAsk(f, rf)}
             <div className="mt-3.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
               Supporting evidence <span className="font-medium normal-case tracking-normal text-slate-400">· one line per fact · click a page to open the document</span>
             </div>
@@ -321,8 +321,12 @@ export function CheckStep({
     );
   }
 
-  function startEdit(r: Rfi) {
-    setEditingId(r.id);
+  // A question can sit under several checks; the editor opens only under the check where Edit was clicked.
+  function editKey(aid: string, r: Rfi) {
+    return `${aid}:${r.id}`;
+  }
+  function startEdit(r: Rfi, aid: string) {
+    setEditingId(editKey(aid, r));
     setDraft(rfiText(r));
   }
   function saveEdit(r: Rfi) {
@@ -331,9 +335,9 @@ export function CheckStep({
     setEditingId(null);
   }
 
-  function rfiLine(r: Rfi, small?: boolean) {
+  function rfiLine(r: Rfi, aid: string, small?: boolean) {
     const on = accepted.has(r.id);
-    const editing = editingId === r.id;
+    const editing = editingId === editKey(aid, r);
     const edited = !!edits[r.id];
     return (
       <div key={r.id} className={cx("mt-1.5 grid grid-cols-[18px_auto_minmax(0,1fr)] items-start gap-2.5", !on && !editing && "opacity-60")}>
@@ -392,7 +396,7 @@ export function CheckStep({
               {edited && <span className="ml-1.5 rounded bg-sky-100 px-1.5 py-px align-[2px] text-[10px] font-bold uppercase tracking-wide text-sky-800 no-underline">edited</span>}
             </span>
             <button
-              onClick={() => startEdit(r)}
+              onClick={() => startEdit(r, aid)}
               title="Edit this question"
               aria-label="Edit this question"
               className="mt-px shrink-0 rounded p-0.5 text-slate-400 transition hover:bg-amber-100 hover:text-amber-800"
@@ -413,7 +417,7 @@ export function CheckStep({
       <div className="mt-3 rounded-[10px] border border-l-4 border-amber-600/45 border-l-amber-500 bg-amber-50 px-4 py-3">
         <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-amber-800">Our question{rf.length === 1 ? "" : "s"} to the seller</div>
         {rf.length === 0 && <div className="text-[13px] text-slate-600">No question was drafted for this check.</div>}
-        {rf.map((r) => rfiLine(r))}
+        {rf.map((r) => rfiLine(r, f.assumptionId))}
         {dep && (
           <div className="mt-2.5 border-t border-amber-600/25 pt-2 text-xs text-slate-600">
             <button onClick={() => jumpTo(dep)} className="text-left font-semibold text-slate-800 underline decoration-amber-600/50 underline-offset-2 hover:decoration-amber-700">
@@ -425,14 +429,14 @@ export function CheckStep({
     );
   }
 
-  function renderGood(rf: Rfi[]) {
+  function renderGood(aid: string, rf: Rfi[]) {
     return (
       <div className="mt-3 rounded-[10px] border border-emerald-600/25 bg-emerald-50 px-3.5 py-2.5 text-[12.5px] text-emerald-800">
         <b className="font-semibold">Checks out.</b>
         {rf.length > 0 && (
           <>
             <div className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-emerald-800">Minor clean-up to ask for</div>
-            {rf.map((r) => rfiLine(r, true))}
+            {rf.map((r) => rfiLine(r, aid, true))}
           </>
         )}
       </div>
