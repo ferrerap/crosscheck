@@ -283,7 +283,11 @@ export function CheckStep({
               </span>
             ) : (
               <span className="inline-flex items-center rounded-md border border-amber-600/30 bg-amber-50 px-2.5 py-[3px] text-[11px] font-semibold text-amber-800">
-                {rf.length === 0 ? "No question drafted" : `${acc} of ${rf.length} question${rf.length === 1 ? "" : "s"} to send`}
+                {rf.length === 0
+                  ? f.label === "changed"
+                    ? "Fact · no question needed"
+                    : "No question drafted"
+                  : `${acc} of ${rf.length} question${rf.length === 1 ? "" : "s"} to send`}
               </span>
             )}
           </span>
@@ -427,7 +431,13 @@ export function CheckStep({
     return (
       <div className="mt-3 rounded-[10px] border border-l-4 border-amber-600/45 border-l-amber-500 bg-amber-50 px-4 py-3">
         <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-amber-800">Our question{rf.length === 1 ? "" : "s"} to the seller</div>
-        {rf.length === 0 && <div className="text-[13px] text-slate-600">No question was drafted for this check.</div>}
+        {rf.length === 0 && (
+          <div className="text-[13px] text-slate-600">
+            {f.label === "changed"
+              ? "The data room states a different value and the documents support it. It is applied as a fact; there is nothing to ask the seller."
+              : "No question was drafted for this check."}
+          </div>
+        )}
         {rf.map((r) => rfiLine(r, f.assumptionId))}
         {dep && (
           <div className="mt-2.5 border-t border-amber-600/25 pt-2 text-xs text-slate-600">
