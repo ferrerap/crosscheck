@@ -430,7 +430,7 @@ export function CheckStep({
     const dep = f.dependsOn && findingBy.has(f.dependsOn) ? f.dependsOn : null;
     return (
       <div className="mt-3 rounded-[10px] border border-l-4 border-amber-600/45 border-l-amber-500 bg-amber-50 px-4 py-3">
-        <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-amber-800">Our question{rf.length === 1 ? "" : "s"} to the seller</div>
+        <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-amber-800">{rf.length === 0 ? "Nothing to ask the seller" : `Our question${rf.length === 1 ? "" : "s"} to the seller`}</div>
         {rf.length === 0 && (
           <div className="text-[13px] text-slate-600">
             {f.label === "changed"
