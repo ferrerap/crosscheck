@@ -14,12 +14,16 @@ export function uploadDir(runId: string): string {
   return path.join(os.tmpdir(), "crosscheck-uploads", runId);
 }
 
-/** Loads the demo data room for a playbook, or an uploaded one when `runId` is given. */
-export async function loadDataRoom(playbookId: string, runId?: string): Promise<DocRecord[]> {
-  const key = runId ? `upload:${runId}` : playbookId;
+/**
+ * Loads a bundled data room (public/demo-data/<room>, the playbook's own room by default), or an uploaded one
+ * when `runId` is given. Evals pass other rooms built for the same playbook.
+ */
+export async function loadDataRoom(playbookId: string, runId?: string, room = playbookId): Promise<DocRecord[]> {
+  if (!/^[a-z0-9-]+$/i.test(room)) throw new Error("Invalid room name");
+  const key = runId ? `upload:${runId}` : `room:${room}`;
   const hit = cache.get(key);
   if (hit) return hit;
-  const dir = runId ? uploadDir(runId) : path.join(process.cwd(), "public", "demo-data", playbookId);
+  const dir = runId ? uploadDir(runId) : path.join(process.cwd(), "public", "demo-data", room);
   const files = (await fs.readdir(dir)).filter((f) => f.toLowerCase().endsWith(".pdf")).sort();
   const docs: DocRecord[] = [];
   for (const [i, f] of files.entries()) {

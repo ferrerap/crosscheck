@@ -184,6 +184,20 @@ check("fmtMoney NaN → —", fmtMoney(NaN) === "—");
   check("matchQuote still ignores a near miss", matchQuote(items, "cost allocation report").size === 0);
 }
 
+// ---- Eval rooms: the expected ranges in each room's gold come from the deterministic math ----
+{
+  const goldRange = (room: string) => JSON.parse(fs.readFileSync(path.join(process.cwd(), "evals", room, "gold.json"), "utf8")).range as { low: number; high: number };
+  const clean = goldRange("itc-transfer-clean");
+  const asSigned = credit(itcTransfer.metrics(baseline, {})).current;
+  check("clean room: range is the credit as signed", clean.low === asSigned && clean.high === asSigned, JSON.stringify(clean));
+  const perturbed = goldRange("itc-transfer-perturbed");
+  // Perturbed facts: basis cut to $136.4M; PWA met; 2025-12-22 start so 47.8% clears 45% and FEOC does not apply.
+  const got = credit(itcTransfer.metrics(baseline, { T2: 136400000, T5: 47.8, T6: "2025-12-22", T7: "2027-02-15" })).current;
+  check("perturbed room: range is $68.2M at both ends", perturbed.low === got && perturbed.high === got && got === 68200000, JSON.stringify({ perturbed, got }));
+  const withFeocFail = credit(itcTransfer.metrics(baseline, { T2: 136400000, T5: 47.8, T6: "2025-12-22", T8: false })).current;
+  check("perturbed room: a missing FEOC certificate is not a cliff on a 2025 start", withFeocFail === 68200000, String(withFeocFail));
+}
+
 if (failures) {
   console.log(`\n${failures} engine check(s) failed`);
   process.exit(1);
