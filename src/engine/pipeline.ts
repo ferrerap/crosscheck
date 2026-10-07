@@ -1,7 +1,7 @@
 // The four pipeline steps. Claude reads and judges; code verifies quotes and does the math.
 import { z } from "zod";
 import { ask } from "./claude";
-import { renderDocs } from "./dataroom";
+import { escapeText, renderDocs } from "./dataroom";
 import { verifyQuote } from "./verifyQuotes";
 import { toIsoDate } from "@/lib/dates";
 import type {
@@ -91,6 +91,11 @@ export function coerce(def: AssumptionDef, raw: string | null): string | number 
 
 function defsById(p: Playbook) {
   return new Map(p.assumptions.map((a) => [a.id, a]));
+}
+
+/** Baseline values as they re-enter a prompt: display text came from the model and may echo document text. */
+function baselineForPrompt(baseline: BaselineAssumption[]) {
+  return baseline.map(({ id, value, display }) => ({ id, value: typeof value === "string" ? escapeText(value) : value, display: escapeText(display) }));
 }
 
 // ---------- 1. baseline extraction ----------
@@ -195,8 +200,8 @@ export async function gatherEvidence(
   const { data, usage } = await ask({
     system: system(p, docs),
     task: `For each assumption and identity fact (not deal terms), collect the current evidence from data room documents: every passage that supports, contradicts, or is needed context (including anything that determines which rule applies, such as dates). For identity facts, include every document that states the fact, so consistency can be checked document by document. Also list gaps: documents that should state a value given their type but don't. Do not use the ${p.anchorLabel.toLowerCase()} as current evidence. Do not use documents about a different project: ${excluded.join(", ") || "none"}.
-Baseline: ${JSON.stringify(baseline.map(({ id, value, display }) => ({ id, value, display })))}
-Classifications: ${JSON.stringify(classifications.map(({ docId, docType, relevantAssumptions, projectMatch }) => ({ docId, docType, relevantAssumptions, projectMatch })))}`,
+Baseline: ${JSON.stringify(baselineForPrompt(baseline))}
+Classifications: ${JSON.stringify(classifications.map(({ docId, docType, relevantAssumptions, projectMatch }) => ({ docId, docType: escapeText(docType), relevantAssumptions, projectMatch })))}`,
     schema: EvidenceSchema,
     effort: "medium",
   });
@@ -261,18 +266,39 @@ const ReconcileSchema = z.object({
 export async function reconcile(
   p: Playbook, docs: DocRecord[], baseline: BaselineAssumption[], evidence: Evidence[], classifications: DocClassification[] = [],
 ): Promise<{ findings: Finding[]; questions: Question[]; rfis: Rfi[]; risks: Risk[]; usage: RunUsage }> {
-  const sourceOf = new Map(classifications.map((c) => [c.docId, c.sourceRole]));
   const { data, usage } = await ask({
     system: system(p, docs),
-    task: `Reconcile each assumption and identity fact (not deal terms) against the gathered evidence, applying the judging rules. Where the answer requires a human judgment call or depends on a conflict between sources, label it "conflicting" or "contradicted" as appropriate and raise a question with 2-3 concrete options; each option's "sets" gives the resolved current values that answer implies (use machine value formats). Raise at most 3 questions and combine assumptions that hinge on the same decision into one question. Questions are judgment calls: raise one only when the buyer's decision changes an assumption's value; a clerical or descriptive discrepancy gets an RFI instead. Write an RFI for every missing document, certification or confirmation the buyer should request, and list risks separately. Unverified quotes are marked verified:false; do not rely on them alone.
-Baseline: ${JSON.stringify(baseline.map(({ id, value, display }) => ({ id, value, display })))}
-Evidence from a document whose source is "seller" is the seller's own assertion, not independent evidence: it cannot by itself confirm an assumption the seller benefits from.
-Evidence: ${JSON.stringify(evidence.map((e) => ({ assumptionId: e.assumptionId, docId: e.docId, source: sourceOf.get(e.docId) ?? "unknown", value: e.value, display: e.display, stance: e.stance, note: e.note, quote: e.quote.text, page: e.quote.page, verified: e.quote.verified })))}`,
+    task: buildReconcileTask(baseline, evidence, classifications),
     schema: ReconcileSchema,
     effort: "high",
   });
 
   return { ...shapeReconcile(p, docs, baseline, evidence, data), usage };
+}
+
+/**
+ * The reconcile instruction. Evidence quotes, displays and notes came back from the model unescaped (the UI
+ * needs them that way), so they are escaped again here: a document that contains prompt markup must not be able
+ * to smuggle it into this call.
+ */
+export function buildReconcileTask(baseline: BaselineAssumption[], evidence: Evidence[], classifications: DocClassification[]): string {
+  const sourceOf = new Map(classifications.map((c) => [c.docId, c.sourceRole]));
+  const safe = evidence.map((e) => ({
+    assumptionId: e.assumptionId,
+    docId: e.docId,
+    source: sourceOf.get(e.docId) ?? "unknown",
+    value: typeof e.value === "string" ? escapeText(e.value) : e.value,
+    display: escapeText(e.display),
+    stance: e.stance,
+    note: escapeText(e.note),
+    quote: escapeText(e.quote.text),
+    page: e.quote.page,
+    verified: e.quote.verified,
+  }));
+  return `Reconcile each assumption and identity fact (not deal terms) against the gathered evidence, applying the judging rules. Where the answer requires a human judgment call or depends on a conflict between sources, label it "conflicting" or "contradicted" as appropriate and raise a question with 2-3 concrete options; each option's "sets" gives the resolved current values that answer implies (use machine value formats). Raise at most 3 questions and combine assumptions that hinge on the same decision into one question. Questions are judgment calls: raise one only when the buyer's decision changes an assumption's value; a clerical or descriptive discrepancy gets an RFI instead. Write an RFI for every missing document, certification or confirmation the buyer should request, and list risks separately. Unverified quotes are marked verified:false; do not rely on them alone.
+Baseline: ${JSON.stringify(baselineForPrompt(baseline))}
+Evidence from a document whose source is "seller" is the seller's own assertion, not independent evidence: it cannot by itself confirm an assumption the seller benefits from.
+Evidence: ${JSON.stringify(safe)}`;
 }
 
 /** Turns the reconcile call's output into typed findings, questions, RFIs and risks. Pure, so it can be tested. */

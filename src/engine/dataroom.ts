@@ -33,8 +33,11 @@ export async function loadDataRoom(playbookId: string, runId?: string): Promise<
   return docs;
 }
 
-/** Document text is untrusted: escape markup so a PDF cannot close a <page> tag and impersonate another document. */
-const escapeText = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+/**
+ * Document text is untrusted: escape markup so a PDF cannot close a <page> tag and impersonate another document.
+ * Anything that re-enters a prompt after passing through the model (quotes, displays, notes) goes through it too.
+ */
+export const escapeText = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 /** Render documents as page-tagged text for prompts. Page tags let Claude cite pages we can verify. */
 export function renderDocs(docs: DocRecord[]): string {
