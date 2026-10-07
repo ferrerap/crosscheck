@@ -1,4 +1,12 @@
-import type { DocClassification, Finding, Rfi, Risk } from "@/engine/types";
+import type { DocClassification, Finding, Quote, Rfi, Risk } from "@/engine/types";
+
+/**
+ * Quotes a reader can open (the evidence under each check and the quotes behind each risk) that were not found on
+ * the page they cite. The check page and the report both count from here, so they report the same number.
+ */
+export function unverifiedQuotes(findings: Finding[], risks: Risk[]): Quote[] {
+  return [...findings.flatMap((f) => f.evidence.map((e) => e.quote)), ...risks.flatMap((k) => k.evidence)].filter((q) => !q.verified);
+}
 
 /** Questions to the seller that belong to a check on the page (each counted once). */
 export function reachableRfis(rfis: Rfi[], findings: Finding[]): Rfi[] {

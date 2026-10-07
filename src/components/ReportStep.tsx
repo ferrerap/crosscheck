@@ -5,6 +5,7 @@ import { LABEL_ORDER, NO_FIGURE, fmtMetric, fmtMoney } from "@/lib/format";
 import { GROUPS, assumptionKind, assumptionName } from "@/lib/meta";
 import type { CreditImpact, CreditRange } from "@/lib/scenarios";
 import { creditTag } from "@/lib/creditTag";
+import { unverifiedQuotes } from "@/lib/questions";
 import { Card, CreditPill, LabelChip, PriorityBadge, QuoteChip, StanceTag, cx, sortRfis } from "./ui";
 
 const COLS = "lg:grid-cols-[11rem_7rem_9rem_12rem_9.5rem_1fr]";
@@ -66,7 +67,7 @@ export function ReportStep({
   const counts = LABEL_ORDER.map((l) => [l, findings.filter((f) => f.label === l).length] as [Label, number]);
   const sent = sortRfis(rfis);
   const findingBy = new Map(findings.map((f) => [f.assumptionId, f]));
-  const unverified = findings.flatMap((f) => f.evidence).filter((e) => !e.quote.verified).length;
+  const unverified = unverifiedQuotes(findings, risks).length;
 
   const credit = { signed: pick(range.asSigned, "credit"), low: pick(range.low, "credit"), high: pick(range.high, "credit") };
   const price = { signed: pick(range.asSigned, "price"), low: pick(range.low, "price"), high: pick(range.high, "price") };
@@ -294,7 +295,7 @@ export function ReportStep({
       <footer className="mt-12 border-t border-slate-200 pt-5 text-xs text-slate-500">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
           <span className={cx("font-medium", unverified ? "text-amber-700" : "text-emerald-700")}>
-            {unverified ? `${unverified} quotes could not be verified` : "Every quote verified against source text"}
+            {unverified ? `${unverified} quote${unverified === 1 ? "" : "s"} could not be verified` : "Every quote verified against source text"}
           </span>
           <span data-testid="usage">
             {usage.calls} model calls &middot; {(usage.inputTokens / 1000).toFixed(1)}k input{usage.cacheReadTokens ? ` (${(usage.cacheReadTokens / 1000).toFixed(1)}k from cache)` : ""} / {(usage.outputTokens / 1000).toFixed(1)}k output tokens &middot; ${usage.costUsd.toFixed(2)}

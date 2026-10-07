@@ -8,7 +8,7 @@ import { creditTag } from "@/lib/creditTag";
 import type { CreditImpact } from "@/lib/scenarios";
 import { Card, CreditPill, LabelChip, PriorityBadge, PrimaryButton, SourceTag, Spinner, cx, sortRfis } from "./ui";
 import { SendModal } from "./SendModal";
-import { reachableRfis } from "@/lib/questions";
+import { reachableRfis, unverifiedQuotes } from "@/lib/questions";
 
 /** "error": a step failed; the banner above says why, so no progress is shown. */
 export type ScanPhase = "classifying" | "evidence" | "reconcile" | "done" | "error";
@@ -148,7 +148,7 @@ export function CheckStep({
   const nAccepted = visibleRfis.filter((r) => accepted.has(r.id)).length;
 
   const excluded = classifications.filter((c) => c.projectMatch === "different_project").length;
-  const unverified = evidence.filter((e) => !e.quote.verified).length;
+  const unverified = unverifiedQuotes(findings, risks).length;
   const status =
     phase === "classifying"
       ? `Classifying documents (${classifications.length} of ${docs.length})...`
