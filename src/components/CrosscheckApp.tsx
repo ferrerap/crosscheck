@@ -283,8 +283,8 @@ export default function CrosscheckApp() {
               })
             }
             onOpenQuotes={openQuotes}
-            onSend={() => {
-              setToast("Questions ready to send. Nothing was sent in this demo.");
+            onSend={(count) => {
+              if (count > 0) setToast("Questions ready to send. Nothing was sent in this demo.");
               setStep("report");
             }}
           />

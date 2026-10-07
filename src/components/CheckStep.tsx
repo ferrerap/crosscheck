@@ -180,8 +180,9 @@ export function CheckStep({
             )}
           </div>
         </div>
-        <PrimaryButton disabled={!done || nAccepted === 0} onClick={() => setSending(true)}>
-          {done ? `Send ${nAccepted} question${nAccepted === 1 ? "" : "s"} to seller` : "Send questions to seller"}
+        {/* With no question to send there is nothing to confirm: go straight to the report. */}
+        <PrimaryButton disabled={!done} onClick={() => (nAccepted === 0 ? onSend(0) : setSending(true))}>
+          {!done ? "Send questions to seller" : nAccepted === 0 ? "Continue to report" : `Send ${nAccepted} question${nAccepted === 1 ? "" : "s"} to seller`}
         </PrimaryButton>
       </div>
 
