@@ -250,7 +250,7 @@ export function ReportStep({
 
       {sent.length > 0 && (
         <section className="mt-10" data-testid="report-questions">
-          <h3 className="text-lg font-semibold tracking-tight">Questions sent to the seller</h3>
+          <h3 className="text-lg font-semibold tracking-tight">Questions prepared for the seller</h3>
           <ol className="mt-3 space-y-2">
             {sent.map((r, i) => (
               <li key={r.id} className="flex gap-3 rounded-lg border border-slate-200 bg-white p-3.5 text-sm">

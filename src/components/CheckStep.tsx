@@ -2,7 +2,7 @@
 // Cross-check and review (design G4): checks as collapsed rows, every open check is a question to the seller.
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { BaselineAssumption, DocClassification, Evidence, Finding, Gap, Label, Quote, Question, Rfi, Risk } from "@/engine/types";
-import { assumptionName, docLabels, isInjectedEvidence, shortType } from "@/lib/meta";
+import { assumptionName, docLabels, shortType } from "@/lib/meta";
 import type { DocMeta, RunnerMode } from "@/lib/runner";
 import { creditTag } from "@/lib/creditTag";
 import type { CreditImpact } from "@/lib/scenarios";
@@ -91,7 +91,7 @@ export function CheckStep({
   const baseBy = useMemo(() => new Map(baseline.map((b) => [b.id, b])), [baseline]);
   const evidenceBy = useMemo(() => {
     const m = new Map<string, Evidence[]>();
-    for (const e of evidence) if (!isInjectedEvidence(e.display)) m.set(e.assumptionId, [...(m.get(e.assumptionId) ?? []), e]);
+    for (const e of evidence) m.set(e.assumptionId, [...(m.get(e.assumptionId) ?? []), e]);
     return m;
   }, [evidence]);
   const rfiFor = useCallback((aid: string) => sortRfis(rfis.filter((r) => r.assumptionIds.includes(aid))), [rfis]);
@@ -174,7 +174,7 @@ export function CheckStep({
               <p className="flex flex-wrap items-center gap-x-2">
                 <span className="text-emerald-600">✓</span>
                 <span>
-                  {docs.length} documents read{excluded > 0 && ` · ${excluded} excluded as a different project`} · {evidence.filter((e) => !isInjectedEvidence(e.display)).length} facts,{" "}
+                  {docs.length} documents read{excluded > 0 && ` · ${excluded} excluded as a different project`} · {evidence.length} facts,{" "}
                   {unverified ? `${unverified} quote${unverified === 1 ? "" : "s"} not verified` : "every quote verified"}
                 </span>
                 <button onClick={() => setShowDocs((s) => !s)} className="ml-1 font-medium text-slate-500 underline decoration-slate-300 underline-offset-2 hover:text-slate-900">

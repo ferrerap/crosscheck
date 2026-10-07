@@ -54,42 +54,13 @@ export function addUsage(a: RunUsage, b: RunUsage): RunUsage {
 }
 export const ZERO_USAGE: RunUsage = { calls: 0, inputTokens: 0, outputTokens: 0, costUsd: 0 };
 
-// Split the fixture's total usage across the four steps (one Claude call each) so the footer sums to the
-// recorded totals; token and cost shares approximate the recorded run.
-const SPLIT = {
-  extract: { calls: 1, share: 0.15 },
-  classify: { calls: 1, share: 0.15 },
-  evidence: { calls: 1, share: 0.4 },
-  reconcile: { calls: 1, share: 0.3 },
-} as const;
-function stepUsage(total: RunUsage, step: keyof typeof SPLIT): RunUsage {
-  const s = SPLIT[step];
-  const round = (n: number) => Math.round(n);
-  if (step === "reconcile") {
-    // remainder so totals are exact
-    const others = (["extract", "classify", "evidence"] as const).map((k) => stepUsage(total, k));
-    const sum = others.reduce(addUsage, ZERO_USAGE);
-    return {
-      calls: total.calls - sum.calls,
-      inputTokens: total.inputTokens - sum.inputTokens,
-      outputTokens: total.outputTokens - sum.outputTokens,
-      costUsd: Math.round((total.costUsd - sum.costUsd) * 100) / 100,
-    };
-  }
-  return {
-    calls: s.calls,
-    inputTokens: round(total.inputTokens * s.share),
-    outputTokens: round(total.outputTokens * s.share),
-    costUsd: Math.round(total.costUsd * s.share * 100) / 100,
-  };
-}
-
+/** Plays back the recorded run. The recording keeps only the run's total usage, so it is reported once, by the last step. */
 export class ReplayRunner implements Runner {
   private fx = replayFixture;
 
   async extractBaseline(): Promise<ExtractResult> {
     await sleep(jitter(1400, 500));
-    return { docs: this.fx.docs, baseline: this.fx.baseline, usage: stepUsage(this.fx.usage, "extract") };
+    return { docs: this.fx.docs, baseline: this.fx.baseline, usage: ZERO_USAGE };
   }
 
   async classifyDocs(
@@ -101,12 +72,12 @@ export class ReplayRunner implements Runner {
       await sleep(jitter(420, 380));
       onDoc?.(list[i], i, list.length);
     }
-    return { classifications: list, usage: stepUsage(this.fx.usage, "classify") };
+    return { classifications: list, usage: ZERO_USAGE };
   }
 
   async gatherEvidence(): Promise<EvidenceResult> {
     await sleep(jitter(1800, 600));
-    return { evidence: this.fx.evidence, gaps: this.fx.gaps ?? [], usage: stepUsage(this.fx.usage, "evidence") };
+    return { evidence: this.fx.evidence, gaps: this.fx.gaps ?? [], usage: ZERO_USAGE };
   }
 
   async reconcile(): Promise<ReconcileResult> {
@@ -116,7 +87,7 @@ export class ReplayRunner implements Runner {
       questions: this.fx.questions.map((q) => ({ ...q, answer: undefined })),
       rfis: this.fx.rfis ?? [],
       risks: this.fx.risks ?? [],
-      usage: stepUsage(this.fx.usage, "reconcile"),
+      usage: this.fx.usage,
     };
   }
 }

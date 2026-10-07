@@ -19,15 +19,6 @@ export function fmtMetric(n: number | null | undefined, format: Metric["format"]
   return n.toLocaleString("en-US");
 }
 
-export function fmtDelta(baseline: number, current: number, format: Metric["format"]): string {
-  const d = current - baseline;
-  if (Math.abs(d) < 1e-9) return "no change";
-  const sign = d > 0 ? "+" : "-";
-  if (format === "percent") return `${sign}${Math.abs(d).toFixed(Math.abs(d) % 1 ? 1 : 0)} pts`;
-  if (format === "money") return `${sign}${fmtMoney(Math.abs(d))}`;
-  return `${sign}${Math.abs(d).toLocaleString("en-US")}`;
-}
-
 export const LABEL_STYLES: Record<Label, { chip: string; dot: string; text: string }> = {
   confirmed: { chip: "bg-emerald-50 text-emerald-800 ring-emerald-600/20", dot: "bg-emerald-500", text: "Confirmed" },
   changed: { chip: "bg-amber-50 text-amber-800 ring-amber-600/25", dot: "bg-amber-500", text: "Changed" },
