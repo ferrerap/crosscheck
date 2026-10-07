@@ -9,7 +9,8 @@ async function main() {
   const dir = path.join(process.cwd(), "evals", "itc-transfer", "results");
   const file = process.argv[2] ?? path.join(dir, fs.readdirSync(dir).filter((f) => f.endsWith(".json")).sort().at(-1)!);
   const { results } = JSON.parse(fs.readFileSync(file, "utf8"));
-  const { run: r, usage } = results[0];
+  // The first run in the latest results file: the latest run, not the best one.
+  const { run: r, usage, seconds } = results[0];
   const docs = await loadDataRoom("itc-transfer");
 
   const run: Run = {
@@ -28,6 +29,7 @@ async function main() {
     rfis: r.rc.rfis,
     risks: r.rc.risks,
     usage,
+    durationSec: typeof seconds === "number" ? Math.round(seconds) : undefined,
   };
   const out = path.join(process.cwd(), "src", "fixtures", "replay-itc-transfer.json");
   fs.writeFileSync(out, JSON.stringify(run, null, 2));

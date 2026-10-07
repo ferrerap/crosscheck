@@ -193,4 +193,6 @@ export interface Run {
   rfis?: Rfi[];
   risks?: Risk[];
   usage: RunUsage;
+  /** Wall-clock seconds the recorded live run took (set by scripts/save-replay.ts). */
+  durationSec?: number;
 }
