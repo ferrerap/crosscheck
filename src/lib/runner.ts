@@ -14,7 +14,8 @@ import type {
 import { replayFixtures } from "@/fixtures";
 import { activePlaybook } from "./activePlaybook";
 
-const replayFixture = replayFixtures[activePlaybook.id];
+/** The recorded run behind replay mode, demo detection and the upload page's description of the demo deal. */
+export const replayFixture = replayFixtures[activePlaybook.id];
 
 export type RunnerMode = "replay" | "live";
 export type DocMeta = Run["docs"][number];

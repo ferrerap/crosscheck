@@ -1,10 +1,16 @@
 // Small display helpers shared by the step components.
-import type { DocClassification, SourceRole } from "@/engine/types";
+import type { BaselineAssumption, DocClassification, SourceRole } from "@/engine/types";
 import { activePlaybook } from "./activePlaybook";
 
 // Names and kinds come from the active playbook; check names say what is being checked (G4).
 export const assumptionName = (id: string) => activePlaybook.assumptions.find((a) => a.id === id)?.name ?? id;
 export const assumptionKind = (id: string) => activePlaybook.assumptions.find((a) => a.id === id)?.kind ?? "assumption";
+
+/** The deal's name: the value of the playbook's naming assumption (e.g. the project company) without a trailing ", LLC". */
+export function dealNameOf(baseline: BaselineAssumption[], fallback: string): string {
+  const row = baseline.find((b) => b.id === activePlaybook.dealNameFrom);
+  return (row?.short ?? row?.display ?? fallback).replace(/,?\s+(LLC|Inc\.?|L\.P\.|LP)$/i, "");
+}
 
 /** "cost_segregation_report" -> "Cost segregation report" */
 export const humanize = (t: string) => {

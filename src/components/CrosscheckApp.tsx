@@ -6,7 +6,7 @@ import type { Values } from "@/playbooks/types";
 import { activePlaybook } from "@/lib/activePlaybook";
 import { creditAtRisk, creditCutByFacts, creditRange, type CreditImpact } from "@/lib/scenarios";
 import { readerRisks, sendableRfis } from "@/lib/questions";
-import { docLabels } from "@/lib/meta";
+import { dealNameOf, docLabels } from "@/lib/meta";
 import { ZERO_USAGE, addUsage, fileUrl, makeRunner, type DocMeta, type Runner, type RunnerMode } from "@/lib/runner";
 import { cx } from "./ui";
 import type { ViewerTarget } from "./PdfViewer";
@@ -223,8 +223,7 @@ export default function CrosscheckApp() {
   };
 
   const anchor = docs.find((d) => d.role === "anchor");
-  const nameRow = baseline.find((b) => b.id === activePlaybook.dealNameFrom);
-  const dealName = (nameRow?.short ?? nameRow?.display ?? anchor?.filename ?? "this deal").replace(/,?\s+(LLC|Inc\.?|L\.P\.|LP)$/i, "");
+  const dealName = dealNameOf(baseline, anchor?.filename ?? "this deal");
   const wide = step === "baseline" || step === "check";
 
   return (

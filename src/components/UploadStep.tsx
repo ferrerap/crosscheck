@@ -1,8 +1,27 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { activePlaybook, replayOnly } from "@/lib/activePlaybook";
-import { DEMO_HASHES, sha256Hex } from "@/lib/runner";
+import { dealNameOf } from "@/lib/meta";
+import { DEMO_HASHES, replayFixture, sha256Hex } from "@/lib/runner";
 import { PrimaryButton, Spinner, cx } from "./ui";
+
+// What this page says about the bundled demo deal is read from its recorded run, not written in.
+const demoRoom = replayFixture.docs.filter((d) => d.role !== "anchor");
+// scripts/excerpt-real-docs.ts names the excerpts of real public documents *_excerpt.pdf; the rest are synthetic.
+const demoExcerpts = demoRoom.filter((d) => /_excerpt\.pdf$/i.test(d.filename)).length;
+const demoSynthetic = demoRoom.length - demoExcerpts;
+const DEMO = {
+  name: dealNameOf(replayFixture.baseline, "The demo deal"),
+  room: `${demoSynthetic} synthetic document${demoSynthetic === 1 ? "" : "s"}`,
+  excerpts: demoExcerpts > 0 ? ` plus ${demoExcerpts} excerpt${demoExcerpts === 1 ? "" : "s"} of real public IRS and county documents` : "",
+  // What the recorded live run took; minutes only when the recording kept its duration.
+  liveCost: [
+    replayFixture.durationSec ? `about ${Math.max(1, Math.round(replayFixture.durationSec / 60))} min` : null,
+    `about $${replayFixture.usage.costUsd.toFixed(2)}`,
+  ]
+    .filter(Boolean)
+    .join(", "),
+};
 
 export interface PickedFile {
   key: string;
@@ -196,7 +215,10 @@ export function UploadStep({
       {showChoice ? (
         <div className="fade-in mt-8 rounded-xl border border-slate-300 bg-white p-6 shadow-sm" data-testid="demo-choice">
           <div className="text-sm font-semibold text-slate-900">This is the bundled demo deal. A recorded run is available.</div>
-          <p className="mt-1 text-sm text-slate-600">Cottonwood Solar I: 12 synthetic documents plus 4 excerpts of real public IRS and county documents.</p>
+          <p className="mt-1 text-sm text-slate-600" data-testid="demo-description">
+            {DEMO.name}: a term sheet and a data room of {DEMO.room}
+            {DEMO.excerpts}.
+          </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <PrimaryButton onClick={onReplay} disabled={!!busy}>
               {busy ? <Spinner className="border-slate-500 border-t-white" /> : null}
@@ -207,7 +229,7 @@ export function UploadStep({
               disabled={!!busy}
               className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Run live with Claude (about 4 min, about $0.90)
+              Run live with Claude ({DEMO.liveCost})
             </button>}
             {replayOnly && (
               <span className="text-sm text-slate-500">Live analysis runs locally with your own API key. See the README.</span>
@@ -238,7 +260,7 @@ export function UploadStep({
           Or load the demo deal
         </button>
         <span className="ml-2">
-          The demo data room is 12 synthetic documents (fictional parties) plus 4 excerpts of real public IRS and county documents.
+          The demo data room is {DEMO.room} (fictional parties){DEMO.excerpts}.
         </span>
       </div>
     </div>
