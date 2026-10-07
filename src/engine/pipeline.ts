@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ask } from "./claude";
 import { renderDocs } from "./dataroom";
 import { verifyQuote } from "./verifyQuotes";
+import { toIsoDate } from "@/lib/dates";
 import type {
   AssumptionDef, BaselineAssumption, DocClassification, DocRecord, Evidence, Finding, Gap, Question, Rfi, Risk, RunUsage,
 } from "./types";
@@ -43,9 +44,29 @@ const QuoteSchema = z.object({ docId: z.string(), page: z.number().int(), text: 
 
 // ---------- value coercion (strings from the model → typed values) ----------
 
+const SCALE: Record<string, number> = { k: 1e3, m: 1e6, mm: 1e6, b: 1e9, bn: 1e9 };
+
+/** "$142,000,000", "142.0M", "47.8%", "(1,000)" → a number; anything else → null, never the raw string. */
+export function parseNumber(raw: string): number | null {
+  let s = raw.trim().replace(/^(usd|us\$)/i, "").replace(/[$,%\s]/g, "");
+  let negative = false;
+  if (/^\(.*\)$/.test(s)) {
+    negative = true;
+    s = s.slice(1, -1);
+  }
+  const m = s.match(/^(-?\d+(?:\.\d+)?)(k|mm|m|bn|b)?$/i);
+  if (!m) return null;
+  const n = Number(m[1]) * (m[2] ? SCALE[m[2].toLowerCase()] : 1);
+  return Number.isFinite(n) ? (negative ? -n : n) : null;
+}
+
+const NOTHING = /^(n\/a|na|none|null|unknown|not stated|not applicable|-|—)$/i;
+
+/** Typed value from the model's string. A value that cannot be typed is null, so no figure is ever computed from it. */
 export function coerce(def: AssumptionDef, raw: string | null): string | number | boolean | null {
-  if (raw === null || raw.trim() === "") return null;
+  if (raw === null) return null;
   const s = raw.trim();
+  if (s === "" || NOTHING.test(s)) return null;
   switch (def.valueType) {
     case "money":
     case "number":
@@ -53,13 +74,16 @@ export function coerce(def: AssumptionDef, raw: string | null): string | number 
       // A yes/no assumption can be stated as a flag (e.g. "bonus assumed") rather than a figure.
       if (/^(true|yes)$/i.test(s)) return true;
       if (/^(false|no)$/i.test(s)) return false;
-      const n = Number(s.replace(/[$,%\s]/g, ""));
-      return isNaN(n) ? s : n;
+      return parseNumber(s);
     }
     case "boolean":
       if (/^(true|yes)$/i.test(s)) return true;
       if (/^(false|no)$/i.test(s)) return false;
-      return s;
+      return null;
+    case "date":
+      // Normalised to a canonical form that keeps its precision; an unparseable date stays as text so the
+      // rule that needs it can say so.
+      return toIsoDate(s)?.iso ?? s;
     default:
       return s;
   }
@@ -248,6 +272,13 @@ Evidence: ${JSON.stringify(evidence.map((e) => ({ assumptionId: e.assumptionId, 
     effort: "high",
   });
 
+  return { ...shapeReconcile(p, docs, baseline, evidence, data), usage };
+}
+
+/** Turns the reconcile call's output into typed findings, questions, RFIs and risks. Pure, so it can be tested. */
+export function shapeReconcile(
+  p: Playbook, docs: DocRecord[], baseline: BaselineAssumption[], evidence: Evidence[], data: z.infer<typeof ReconcileSchema>,
+): { findings: Finding[]; questions: Question[]; rfis: Rfi[]; risks: Risk[] } {
   const byId = new Map(docs.map((d) => [d.id, d]));
   const defs = defsById(p);
   const questions: Question[] = data.questions.map((q) => ({
@@ -260,15 +291,27 @@ Evidence: ${JSON.stringify(evidence.map((e) => ({ assumptionId: e.assumptionId, 
       id: o.id,
       label: o.label,
       consequence: o.consequence,
+      // An option value that cannot be typed is dropped rather than leaked as text into the math.
       sets: Object.fromEntries(
-        o.sets.filter((s) => defs.has(s.assumptionId)).map((s) => [s.assumptionId, coerce(defs.get(s.assumptionId)!, s.value) ?? s.value]),
+        o.sets
+          .filter((s) => defs.has(s.assumptionId))
+          .map((s) => [s.assumptionId, coerce(defs.get(s.assumptionId)!, s.value)] as const)
+          .filter((entry): entry is readonly [string, string | number | boolean] => entry[1] !== null),
       ),
     })),
   }));
 
-  const findings: Finding[] = data.findings
-    .filter((f) => defs.has(f.assumptionId))
-    .map((f) => ({
+  // One finding per assumption: the first wins if the model repeats one.
+  const seen = new Set<string>();
+  const findings: Finding[] = [];
+  for (const f of data.findings) {
+    if (!defs.has(f.assumptionId)) continue;
+    if (seen.has(f.assumptionId)) {
+      console.warn(`reconcile: duplicate finding for ${f.assumptionId} dropped`);
+      continue;
+    }
+    seen.add(f.assumptionId);
+    findings.push({
       assumptionId: f.assumptionId,
       label: f.label,
       baselineDisplay: baseline.find((b) => b.id === f.assumptionId)?.display ?? "",
@@ -280,7 +323,8 @@ Evidence: ${JSON.stringify(evidence.map((e) => ({ assumptionId: e.assumptionId, 
       evidence: evidence.filter((e) => e.assumptionId === f.assumptionId),
       questionIds: questions.filter((q) => q.assumptionIds.includes(f.assumptionId)).map((q) => q.id),
       followUp: f.followUp ?? undefined,
-    }));
+    });
+  }
 
   const rfis: Rfi[] = data.rfis.map((r, i) => ({ id: `R${i + 1}`, ...r }));
   const risks: Risk[] = data.risks.map((r, i) => ({
@@ -290,5 +334,5 @@ Evidence: ${JSON.stringify(evidence.map((e) => ({ assumptionId: e.assumptionId, 
     assumptionIds: r.assumptionIds,
     evidence: r.evidence.map((e) => verifyQuote(byId, e)),
   }));
-  return { findings, questions, rfis, risks, usage };
+  return { findings, questions, rfis, risks };
 }
