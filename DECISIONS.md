@@ -6,7 +6,7 @@ How Crosscheck was built over 5–6 October 2026: the decisions, who made them, 
 
 ## Product
 
-- **Transaction type (Paul).** The first idea was a project-acquisition LOI tool. Paul switched to a §48E ITC transfer term sheet because that is Crux's core business. The LOI tool becomes a second playbook on the same engine (`../plans/LOI_TOOL_PLAN.md`).
+- **Transaction type (Paul).** The first idea was a project-acquisition LOI tool. Paul switched to a §48E ITC transfer term sheet because that is Crux's core business. The LOI tool becomes a second playbook on the same engine (planned in internal notes, not in the repo).
 - **The question the app answers (Paul):** does the data room still support the term sheet's credit amount?
 - **Scenario (drafted by Claude, approved by Paul).** The deal is the fictional Cottonwood Solar I: 100 MWac / 135 MWdc in Montgomery County, IL, credit price $0.935. There are 12 synthetic documents. The planted issues are:
   - eligible basis cut by excluded network upgrades;
@@ -22,7 +22,7 @@ How Crosscheck was built over 5–6 October 2026: the decisions, who made them, 
 - **Screens (Paul, iterating on what Claude built and prototyped):**
   - drag-and-drop upload with instant replay for the bundled deal;
   - baseline confirmation beside the highlighted term sheet, with auto-advance.
-  - **The cross-check page went through three designs.** The first, an evidence matrix, was accurate but mostly empty, because most documents speak to one or two assumptions. Ten Fable prototypes followed, and Paul chose "checks and questions to the seller" (G4, `../plans/crosscheck-prototypes/NOTES.md`): at the LOI stage the buyer's next move is going back to the seller, not writing a verdict.
+  - **The cross-check page went through three designs.** The first, an evidence matrix, was accurate but mostly empty, because most documents speak to one or two assumptions. Ten Fable prototypes followed, and Paul chose "checks and questions to the seller" (design G4; the prototype notes are internal, not in the repo): at the LOI stage the buyer's next move is going back to the seller, not writing a verdict.
   - Two-line rows with a credit-at-risk tag and in-place question editing came from Paul's review of G4.
 - **Risk framing.** Claude proposed showing the credit as a range across how the open questions could resolve; Paul accepted. The final review then found the range omitted the FEOC cliff, and Paul decided to model it. The range is now $0–$68.2M, or $10.9M if FEOC compliance is shown.
 - **The hidden instruction is shown only as an "Instruction ignored" tag** on the counsel email's document card. That was Claude's call, delegated by Paul.
@@ -67,7 +67,7 @@ Scores are from `npm run eval`, and the saved runs are in `evals/itc-transfer/re
   - the injection filter could hide a legitimate risk;
   - output-token headroom;
   - duplicated question logic.
-- **Final review (Fable, decisions by Paul in `../plans/FINAL_REVIEW.md`):**
+- **Final review (Fable; Paul's decisions are recorded in internal notes, not in the repo):**
   - FEOC modeled in the range;
   - caching claim corrected and cache usage recorded;
   - hard-coded deal name removed;
