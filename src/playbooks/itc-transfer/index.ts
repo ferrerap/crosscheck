@@ -83,7 +83,7 @@ const assumptions: AssumptionDef[] = [
     valueType: "date",
     extractionHint: "The date or period construction is assumed to have begun for tax purposes.",
     evidenceHint: "Notices to proceed, physical work records (on-site or off-site under binding written contract), independent engineer reports, manufacturer letters.",
-    rule: "Under the Physical Work Test, construction begins when physical work of a significant nature starts, on site or off site under a binding written contract (not from inventory). A notice to proceed or other preliminary activity is not physical work. If off-site work is claimed, the open question is evidentiary: is it substantiated (binding written contract and its terms, significance of the work, not inventory, continuity)? Mark conflicting while that is unresolved and ask for the substantiating documents; do not pick the latest or earliest file automatically.",
+    rule: "Under the Physical Work Test, construction begins when physical work of a significant nature starts, on site or off site under a binding written contract (not from inventory). A notice to proceed or other preliminary activity is not physical work. Off-site work is substantiated when an independent party (for example the independent engineer) states that it reviewed the contract or the manufacturer's production records and confirms the start date: then confirm that date and do not ask for the underlying records again. If the only support for an off-site start is the seller's or the supplier's own statement, or the independent engineer reviewed nothing and gives no opinion, or documents disagree, mark conflicting and ask for the substantiating documents (the binding written contract and its terms, evidence that the work was significant and not from inventory, continuity). Do not pick the latest or earliest file automatically.",
   },
   {
     id: "T7",
@@ -99,7 +99,7 @@ const assumptions: AssumptionDef[] = [
     valueType: "boolean",
     extractionHint: "Whether the term sheet assumes compliance with prohibited foreign entity (FEOC) material assistance rules, or that they do not apply.",
     evidenceHint: "Supplier certifications, material assistance cost ratio calculations, and anything that determines whether the rules apply (construction start date).",
-    rule: "The material assistance rules apply to facilities whose construction begins after December 31, 2025; a facility that fails them is not a qualified facility (no credit). Label unverified if any supplier certification or the material assistance cost ratio is missing, even if applicability is also in question (missing evidence takes precedence over 'conflicting'). If applicability depends on the beginning-of-construction date, say so and link to that question.",
+    rule: "The material assistance rules apply only to facilities whose construction begins after December 31, 2025; a facility that fails them is not a qualified facility (no credit). If the construction start is substantiated before January 1, 2026, the rules do not apply: confirm the assumption, and treat supplier certifications and any cost ratio as informational (their absence is not a gap). If the start is unresolved or falls in 2026, label unverified if any supplier certification or the material assistance cost ratio is missing (missing evidence takes precedence over 'conflicting'), and say that applicability depends on the beginning-of-construction check.",
   },
   {
     id: "T9",

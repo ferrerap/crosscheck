@@ -248,13 +248,13 @@
       ]
     },
     "T8": {
-      "label": "unverified",
+      "label": "confirmed",
       "evidence": [
         {
           "doc": "D10"
         }
       ],
-      "note": "The module supplier certification is still missing (a gap), but the rules do not apply to a 2025 start, so there is no credit cliff."
+      "note": "With a substantiated 2025 start the rules do not apply, so the term sheet assumption holds. The missing module certification remains visible as a gap, not a cliff."
     },
     "T9": {
       "label": "confirmed",
@@ -266,9 +266,9 @@
     }
   },
   "rfis": {
-    "min": 2,
+    "min": 1,
     "mustMention": [
-      "module"
+      "mwdc"
     ]
   },
   "risks": {
