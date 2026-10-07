@@ -24,6 +24,13 @@ body {
 }
 .fade-in { animation: fade-in 0.35s ease-out both; }
 
+/* Indeterminate progress (a step with no measurable progress): a segment sweeping across the track. */
+@keyframes progress-indeterminate {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}
+.progress-indeterminate { animation: progress-indeterminate 1.4s ease-in-out infinite; }
+
 /* PDF text layer highlight: text itself stays transparent; the mark paints the highlight. */
 .react-pdf__Page__textContent mark {
   background: rgba(250, 204, 21, 0.55);

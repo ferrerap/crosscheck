@@ -200,7 +200,7 @@ export function UploadStep({
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <PrimaryButton onClick={onReplay} disabled={!!busy}>
               {busy ? <Spinner className="border-slate-500 border-t-white" /> : null}
-              Replay recorded run (instant)
+              Replay recorded run
             </PrimaryButton>
             {!replayOnly && <button
               onClick={onLiveDemo}

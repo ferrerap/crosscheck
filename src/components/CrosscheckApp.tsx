@@ -160,7 +160,7 @@ export default function CrosscheckApp() {
   const startDemo = (mode: RunnerMode) => {
     gen.current++;
     setError(null);
-    return begin(mode, null, mode === "replay" ? "Reading the term sheet and extracting assumptions..." : "Claude is reading the term sheet...");
+    return begin(mode, null, mode === "replay" ? "Replaying recorded run — reading the term sheet..." : "Claude is reading the term sheet...");
   };
 
   const startUpload = async (termSheet: File, dataRoom: File[]) => {
@@ -196,6 +196,7 @@ export default function CrosscheckApp() {
       });
       if (my !== gen.current) return;
       const cls = c.classifications;
+      setClassifications(cls); // a live run returns them all at once; a replay has already streamed the same list
       setUsage((u) => addUsage(u, c.usage));
       setPhase("evidence");
       const e = await runner.gatherEvidence({ baseline, classifications: cls });
@@ -255,6 +256,7 @@ export default function CrosscheckApp() {
         {step === "check" && (
           <CheckStep
             dealName={dealName}
+            mode={runMode ?? "replay"}
             docs={docs}
             baseline={baseline}
             classifications={classifications}

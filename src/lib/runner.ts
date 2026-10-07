@@ -26,7 +26,7 @@ export interface ReconcileResult { findings: Finding[]; questions: Question[]; r
 
 export interface Runner {
   extractBaseline(): Promise<ExtractResult>;
-  /** onDoc fires as each document is classified so the UI can stream progress. */
+  /** Replay calls onDoc as it replays each recorded classification; a live run classifies all documents in one call. */
   classifyDocs(
     input: { docs: DocMeta[]; baseline: BaselineAssumption[] },
     onDoc?: (c: DocClassification, index: number, total: number) => void,
@@ -150,18 +150,9 @@ export class LiveRunner implements Runner {
     return this.post<ExtractResult>("extract", {});
   }
 
-  async classifyDocs(
-    input: { docs: DocMeta[]; baseline: BaselineAssumption[] },
-    onDoc?: (c: DocClassification, index: number, total: number) => void,
-  ): Promise<ClassifyResult> {
-    // The classify route returns everything at once; reveal results progressively so the UI still streams.
-    const res = await this.post<ClassifyResult>("classify", input);
-    const list = res.classifications;
-    for (let i = 0; i < list.length; i++) {
-      onDoc?.(list[i], i, list.length);
-      await sleep(120);
-    }
-    return res;
+  /** One call classifies every document, so there is no per-document progress to report (onDoc is not called). */
+  classifyDocs(input: { docs: DocMeta[]; baseline: BaselineAssumption[] }) {
+    return this.post<ClassifyResult>("classify", input);
   }
 
   gatherEvidence(input: { baseline: BaselineAssumption[]; classifications: DocClassification[] }) {

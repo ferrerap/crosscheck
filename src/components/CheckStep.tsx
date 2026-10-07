@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { BaselineAssumption, DocClassification, Evidence, Finding, Gap, Label, Quote, Question, Rfi, Risk } from "@/engine/types";
 import { assumptionName, docLabels, isInjectedEvidence, shortType } from "@/lib/meta";
-import type { DocMeta } from "@/lib/runner";
+import type { DocMeta, RunnerMode } from "@/lib/runner";
 import { creditTag } from "@/lib/creditTag";
 import type { CreditImpact } from "@/lib/scenarios";
 import { Card, CreditPill, LabelChip, PriorityBadge, PrimaryButton, SourceTag, Spinner, cx, sortRfis } from "./ui";
@@ -34,6 +34,7 @@ const GRID = "grid grid-cols-[22px_250px_150px_118px_minmax(0,1fr)] items-center
 
 export function CheckStep({
   dealName,
+  mode,
   docs,
   baseline,
   classifications,
@@ -53,6 +54,8 @@ export function CheckStep({
   onSend,
 }: {
   dealName: string;
+  /** A replay plays back a recorded run; a live run calls Claude (classification is one call for all documents). */
+  mode: RunnerMode;
   docs: DocMeta[];
   baseline: BaselineAssumption[];
   classifications: DocClassification[];
@@ -149,12 +152,16 @@ export function CheckStep({
 
   const excluded = classifications.filter((c) => c.projectMatch === "different_project").length;
   const unverified = unverifiedQuotes(findings, risks).length;
-  const status =
-    phase === "classifying"
-      ? `Classifying documents (${classifications.length} of ${docs.length})...`
+  const live = mode === "live";
+  const status = !live
+    ? `Replaying recorded run — ${phase === "classifying" ? `classifying documents (${classifications.length} of ${docs.length})` : phase === "evidence" ? "gathering evidence" : "reconciling"}...`
+    : phase === "classifying"
+      ? `Classifying ${docs.length} documents...`
       : phase === "evidence"
         ? "Gathering evidence and verifying quotes against source text..."
         : "Reconciling evidence against the baseline...";
+  // Live classification is one call with no per-document progress, so its bar is indeterminate.
+  const indeterminate = live && phase === "classifying";
 
 
   return (
@@ -190,14 +197,18 @@ export function CheckStep({
 
       {!done && !failed && (
         <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-200">
-          <div
-            className="h-full rounded-full bg-slate-900 transition-all duration-500"
-            style={{ width: `${phase === "classifying" ? (classifications.length / Math.max(1, docs.length)) * 60 : phase === "evidence" ? 80 : 92}%` }}
-          />
+          {indeterminate ? (
+            <div className="progress-indeterminate h-full w-2/5 rounded-full bg-slate-900" />
+          ) : (
+            <div
+              className="h-full rounded-full bg-slate-900 transition-all duration-500"
+              style={{ width: `${phase === "classifying" ? (classifications.length / Math.max(1, docs.length)) * 60 : phase === "evidence" ? 80 : 92}%` }}
+            />
+          )}
         </div>
       )}
 
-      {(!done || showDocs) && <DocChips docs={docs} classifications={classifications} phase={phase} />}
+      {(!done || showDocs) && <DocChips docs={docs} classifications={classifications} phase={phase} live={live} />}
 
       {done && (
         <div className="fade-in">
@@ -574,19 +585,22 @@ function Legend() {
   );
 }
 
-function DocChips({ docs, classifications, phase }: { docs: DocMeta[]; classifications: DocClassification[]; phase: ScanPhase }) {
+function DocChips({ docs, classifications, phase, live }: { docs: DocMeta[]; classifications: DocClassification[]; phase: ScanPhase; live: boolean }) {
   const byId = new Map(classifications.map((c) => [c.docId, c]));
   return (
     <ul className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-4" data-testid="doc-chips">
       {docs.map((d, idx) => {
         const c = byId.get(d.id);
         if (!c) {
-          const next = phase === "classifying" && classifications.length === idx;
+          // A replay reveals one recorded document at a time; a live run reads them all in one call.
+          const next = phase === "classifying" && (live || classifications.length === idx);
           return (
             <li key={d.id} className="flex items-center gap-2 rounded-lg border border-dashed border-slate-200 bg-white/50 px-3 py-2 text-xs text-slate-400">
               <span className="font-medium">Document {idx + 1}</span>
               <span className="ml-auto flex items-center gap-1.5">
-                {next ? (
+                {next && live ? (
+                  "Reading"
+                ) : next ? (
                   <>
                     <Spinner className="h-3 w-3" /> Reading
                   </>
