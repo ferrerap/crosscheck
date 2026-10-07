@@ -2,26 +2,42 @@
 // A quote that can't be found is kept but marked unverified, and the UI says so.
 import type { DocRecord, Quote } from "./types";
 
-/** Normalize for matching: case, whitespace, quote marks, dashes, and line-break hyphenation. */
+/**
+ * Normalize for matching: case, whitespace, quote marks and dashes. Hyphens and any whitespace after them are
+ * removed on both sides, so "cost-segregation", "cost- segregation" and a PDF's "cost-\nsegregation" all match.
+ * src/lib/highlight.ts applies the same rules character by character for the viewer.
+ */
 export function normalize(s: string): string {
   return s
     .toLowerCase()
     .replace(/[‘’‛]/g, "'")
     .replace(/[“”]/g, '"')
     .replace(/[‐-―]/g, "-")
-    .replace(/-\s*\n\s*/g, "")
+    .replace(/-\s*/g, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+// Normalised page text, computed once per document.
+const normalizedPages = new WeakMap<DocRecord, string[]>();
+function pagesOf(doc: DocRecord): string[] {
+  let pages = normalizedPages.get(doc);
+  if (!pages) {
+    pages = doc.pages.map(normalize);
+    normalizedPages.set(doc, pages);
+  }
+  return pages;
 }
 
 /** Returns the page (1-indexed) where the quote appears, preferring the claimed page, or null. */
 export function locate(doc: DocRecord, text: string, claimedPage?: number): number | null {
   const q = normalize(text);
   if (q.length < 4) return null;
-  const order = claimedPage ? [claimedPage, ...doc.pages.map((_, i) => i + 1).filter((p) => p !== claimedPage)] : doc.pages.map((_, i) => i + 1);
+  const pages = pagesOf(doc);
+  const order = claimedPage ? [claimedPage, ...pages.map((_, i) => i + 1).filter((p) => p !== claimedPage)] : pages.map((_, i) => i + 1);
   for (const p of order) {
-    const page = doc.pages[p - 1];
-    if (page !== undefined && normalize(page).includes(q)) return p;
+    const page = pages[p - 1];
+    if (page !== undefined && page.includes(q)) return p;
   }
   return null;
 }

@@ -10,14 +10,24 @@ function normChar(c: string): string {
   return c.toLowerCase();
 }
 
-/** Normalizes text (case, whitespace, quotes, dashes) while recording where each char came from. */
+/**
+ * Normalizes text (case, whitespace, quotes, dashes) while recording where each char came from. Mirrors
+ * `normalize` in src/engine/verifyQuotes.ts: a hyphen and the whitespace after it are dropped, so a word a PDF
+ * broke across lines ("cost-" / "segregation") still matches the quote.
+ */
 function normalizeWithMap(parts: string[]) {
   const chars: string[] = [];
   const map: { item: number; off: number }[] = [];
+  let afterHyphen = false;
   const push = (ch: string, item: number, off: number) => {
-    if (ch === " ") {
-      if (chars.length === 0 || chars[chars.length - 1] === " ") return;
+    if (ch === "-") {
+      afterHyphen = true;
+      return;
     }
+    if (ch === " ") {
+      if (afterHyphen || chars.length === 0 || chars[chars.length - 1] === " ") return;
+    }
+    afterHyphen = false;
     chars.push(ch);
     map.push({ item, off });
   };
