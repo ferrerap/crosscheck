@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { uploadDir } from "@/engine/dataroom";
+import { serverReplayOnly } from "@/lib/activePlaybook";
 
 const MAX_FILES = 30;
 const MAX_BYTES = 20 * 1024 * 1024;
@@ -23,7 +24,7 @@ function safeName(name: string) {
 }
 
 export async function POST(req: Request) {
-  if (process.env.NEXT_PUBLIC_REPLAY_ONLY === "1")
+  if (serverReplayOnly())
     return Response.json({ error: "This public demo is replay-only. Run Crosscheck locally to analyze documents live." }, { status: 403 });
   try {
     const form = await req.formData();
