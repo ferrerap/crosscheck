@@ -133,7 +133,15 @@ export class LiveRunner implements Runner {
     });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new Error(`Live run failed at "${step}" (${res.status}). ${text.slice(0, 300)}`);
+      // The routes answer with { error }; show that message rather than the raw body.
+      let detail = text.slice(0, 300);
+      try {
+        const body: unknown = JSON.parse(text);
+        if (body && typeof body === "object" && typeof (body as { error?: unknown }).error === "string") detail = (body as { error: string }).error;
+      } catch {
+        // not JSON: keep the raw text
+      }
+      throw new Error(`Live run failed at "${step}" (${res.status}). ${detail}`.trim());
     }
     return (await res.json()) as T;
   }

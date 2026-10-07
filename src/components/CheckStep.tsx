@@ -10,7 +10,8 @@ import { Card, CreditPill, LabelChip, PriorityBadge, PrimaryButton, SourceTag, S
 import { SendModal } from "./SendModal";
 import { reachableRfis } from "@/lib/questions";
 
-export type ScanPhase = "classifying" | "evidence" | "reconcile" | "done";
+/** "error": a step failed; the banner above says why, so no progress is shown. */
+export type ScanPhase = "classifying" | "evidence" | "reconcile" | "done" | "error";
 
 const MATCH_BADGE: Record<string, { text: string; cls: string }> = {
   match: { text: "Match", cls: "bg-emerald-50 text-emerald-800 ring-emerald-600/20" },
@@ -72,6 +73,7 @@ export function CheckStep({
   onSend: (count: number) => void;
 }) {
   const done = phase === "done";
+  const failed = phase === "error";
   const [showDocs, setShowDocs] = useState(false);
   const [open, setOpen] = useState<Set<string> | null>(null); // null = the default (the check others hang on)
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -172,7 +174,7 @@ export function CheckStep({
                   {showDocs ? "Hide documents" : "Show documents"}
                 </button>
               </p>
-            ) : (
+            ) : failed ? null : (
               <p className="flex items-center gap-2">
                 <Spinner />
                 {status}
@@ -186,7 +188,7 @@ export function CheckStep({
         </PrimaryButton>
       </div>
 
-      {!done && (
+      {!done && !failed && (
         <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-200">
           <div
             className="h-full rounded-full bg-slate-900 transition-all duration-500"
@@ -584,6 +586,8 @@ function DocChips({ docs, classifications, phase }: { docs: DocMeta[]; classific
                   <>
                     <Spinner className="h-3 w-3" /> Reading
                   </>
+                ) : phase === "error" ? (
+                  "Not read"
                 ) : (
                   "Queued"
                 )}

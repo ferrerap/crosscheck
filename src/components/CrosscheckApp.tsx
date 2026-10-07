@@ -215,6 +215,8 @@ export default function CrosscheckApp() {
       setUsage((u) => addUsage(u, r.usage));
       setPhase("done");
     } catch (e) {
+      if (my !== gen.current) return; // a run the user already left
+      setPhase("error");
       fail(e);
     }
   };
