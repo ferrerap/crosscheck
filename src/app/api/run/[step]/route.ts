@@ -4,6 +4,7 @@ import { z } from "zod";
 import { loadDataRoom } from "@/engine/dataroom";
 import { classifyDocs, extractBaseline, gatherEvidence, reconcile } from "@/engine/pipeline";
 import type { BaselineAssumption, DocClassification, Evidence } from "@/engine/types";
+import { serverReplayOnly } from "@/lib/activePlaybook";
 import { getPlaybook } from "@/playbooks";
 
 export const maxDuration = 300;
@@ -21,7 +22,7 @@ const Body = z.object({
 
 export async function POST(req: Request, ctx: { params: Promise<{ step: string }> }) {
   const { step } = await ctx.params;
-  if (process.env.NEXT_PUBLIC_REPLAY_ONLY === "1")
+  if (serverReplayOnly())
     return Response.json({ error: "This public demo is replay-only. Run Crosscheck locally to analyze documents live." }, { status: 403 });
   try {
     const parsed = Body.safeParse(await req.json());
