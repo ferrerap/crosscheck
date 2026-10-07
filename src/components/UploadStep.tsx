@@ -135,12 +135,18 @@ export function UploadStep({
     }
   }, [term, room]);
 
-  const addTerm = (files: File[]) => setTerm(files.slice(0, 1).map((file) => ({ key: keyOf(file), file })));
-  const addRoom = (files: File[]) =>
+  // Adding files drops an earlier "load the demo deal" choice: what is shown follows the files (demo set or not).
+  const addTerm = (files: File[]) => {
+    setDemoChoice(false);
+    setTerm(files.slice(0, 1).map((file) => ({ key: keyOf(file), file })));
+  };
+  const addRoom = (files: File[]) => {
+    setDemoChoice(false);
     setRoom((cur) => {
       const have = new Set(cur.map((c) => c.key));
       return [...cur, ...files.filter((f) => !have.has(keyOf(f))).map((file) => ({ key: keyOf(file), file }))];
     });
+  };
 
   const ready = term.length === 1 && room.length > 0;
   const hashed = ready && [...term, ...room].every((f) => f.hash);
