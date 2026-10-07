@@ -11,6 +11,13 @@ export interface PickedFile {
 }
 const keyOf = (f: File) => `${f.name}|${f.size}|${f.lastModified}`;
 
+// The upload route's checks (src/app/api/upload/route.ts), applied as files are added so a file it would refuse is
+// named now rather than after uploading.
+const MAX_FILES = 30; // term sheet included
+const MAX_MB = 20;
+const refusal = (f: File) =>
+  !f.name.toLowerCase().endsWith(".pdf") ? `${f.name} (not a .pdf file)` : f.size > MAX_MB * 1024 * 1024 ? `${f.name} (over ${MAX_MB} MB)` : null;
+
 function DropZone({
   title,
   hint,
@@ -31,9 +38,7 @@ function DropZone({
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const take = (list: FileList | null) => {
-    if (!list) return;
-    const pdfs = Array.from(list).filter((f) => f.name.toLowerCase().endsWith(".pdf") || f.type === "application/pdf");
-    if (pdfs.length) onAdd(multiple ? pdfs : pdfs.slice(0, 1));
+    if (list?.length) onAdd(Array.from(list));
   };
   return (
     <div className="flex flex-col">
@@ -135,17 +140,32 @@ export function UploadStep({
     }
   }, [term, room]);
 
-  // Adding files drops an earlier "load the demo deal" choice: what is shown follows the files (demo set or not).
+  // Files the upload would refuse are named in a notice instead of being added. Adding files drops an earlier
+  // "load the demo deal" choice: what is shown follows the files (demo set or not).
+  const [notice, setNotice] = useState<string | null>(null);
+  const screen = (files: File[]) => {
+    const refused = files.map(refusal).filter((r): r is string => r !== null);
+    return { ok: files.filter((f) => !refusal(f)), refused };
+  };
+  const report = (refused: string[]) => setNotice(refused.length ? `Not added: ${refused.join("; ")}.` : null);
   const addTerm = (files: File[]) => {
+    const { ok, refused } = screen(files);
+    report(refused);
+    if (!ok.length) return;
     setDemoChoice(false);
-    setTerm(files.slice(0, 1).map((file) => ({ key: keyOf(file), file })));
+    setTerm([{ key: keyOf(ok[0]), file: ok[0] }]);
   };
   const addRoom = (files: File[]) => {
+    const { ok, refused } = screen(files);
+    const have = new Set(room.map((r) => r.key));
+    const fresh = ok.filter((f) => !have.has(keyOf(f)));
+    const added = fresh.slice(0, Math.max(0, MAX_FILES - 1 - room.length)); // one place is the term sheet's
+    const over = fresh.length - added.length;
+    if (over > 0) refused.push(`${over} more file${over === 1 ? "" : "s"} (at most ${MAX_FILES} per upload, term sheet included)`);
+    report(refused);
+    if (!added.length) return;
     setDemoChoice(false);
-    setRoom((cur) => {
-      const have = new Set(cur.map((c) => c.key));
-      return [...cur, ...files.filter((f) => !have.has(keyOf(f))).map((file) => ({ key: keyOf(file), file }))];
-    });
+    setRoom([...room, ...added.map((file) => ({ key: keyOf(file), file }))]);
   };
 
   const ready = term.length === 1 && room.length > 0;
@@ -164,9 +184,14 @@ export function UploadStep({
       </p>
 
       <div className="mt-10 grid gap-6 md:grid-cols-2">
-        <DropZone title="1 · Term sheet" hint="One PDF" multiple={false} files={term} onAdd={addTerm} onRemove={(k) => setTerm((l) => l.filter((x) => x.key !== k))} testId="term-input" />
-        <DropZone title="2 · Data room" hint="Any number of PDFs" multiple files={room} onAdd={addRoom} onRemove={(k) => setRoom((l) => l.filter((x) => x.key !== k))} testId="room-input" />
+        <DropZone title="1 · Term sheet" hint={`One PDF, up to ${MAX_MB} MB`} multiple={false} files={term} onAdd={addTerm} onRemove={(k) => setTerm((l) => l.filter((x) => x.key !== k))} testId="term-input" />
+        <DropZone title="2 · Data room" hint={`Up to ${MAX_FILES - 1} PDFs, ${MAX_MB} MB each`} multiple files={room} onAdd={addRoom} onRemove={(k) => setRoom((l) => l.filter((x) => x.key !== k))} testId="room-input" />
       </div>
+      {notice && (
+        <p className="mt-3 text-sm text-amber-800" role="status" data-testid="upload-notice">
+          {notice}
+        </p>
+      )}
 
       {showChoice ? (
         <div className="fade-in mt-8 rounded-xl border border-slate-300 bg-white p-6 shadow-sm" data-testid="demo-choice">
