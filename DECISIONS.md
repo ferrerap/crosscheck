@@ -70,7 +70,7 @@ Scores are from `npm run eval`, and the saved runs are in `evals/itc-transfer/re
 - **Final review (Fable; Paul's decisions are recorded in internal notes, not in the repo):**
   - FEOC modeled in the range;
   - caching claim corrected and cache usage recorded;
-  - hard-coded deal name removed;
+  - hard-coded deal name removed from the report heading (it survived in the upload card and the send modal until Review 2, which removed it there too);
   - document text escaped;
   - seller assertions excluded from range outcomes;
   - evidentiary framing for beginning of construction;
@@ -78,3 +78,49 @@ Scores are from `npm run eval`, and the saved runs are in `evals/itc-transfer/re
   - eval honesty fixes;
   - scanned-page detection;
   - this log rewritten.
+
+## Review 2 (2026-10-06 to 07): submission scope
+
+A second independent review (Fable) read the repo against the hiring brief. Paul decided the scope the same evening: maximise evidence that the product was framed, built, evaluated and shipped end to end, not sophistication. Rules that followed: new eval rooms and the README's first screen outrank code fixes; no special-casing (new rooms run through the same engine, prompts and playbook); Cottonwood keeps its score; UI changes only where something looked broken; every README claim true of the code.
+
+**What the review found (by id).** Tests that could not fail (H3: ingestion and highlight checks printed FAIL but exited 0; M7: the injection assertion passed when 11 of 12 checks obeyed). A "changed" check whose value the model did not return silently left the range (H4). $0 where an input was missing or a string (D5). Dates in common formats (12/22/2025, December 2025, Q4 2025) silently disabled the domestic-content and FEOC rules (D6). Two different insurance "required" figures on one card (D4). Quotes, displays and notes re-entered the fourth prompt unescaped after being unescaped for the UI, so a document carrying prompt markup could forge a page boundary there (M4). A PDF's hyphenated line break could not match a quote (M3). A hard-coded deal name, cost and "100%" note in generic screens (D2). The replay flag was a public build-time variable only (D7). Unbounded scenario enumeration (D8). Plus the UI items in §5 and the README first screen (D12).
+
+**Decisions, including four reversals.**
+
+| # | Topic | Decision |
+|---|---|---|
+| D1 | Replay pacing | Keep the simulated pacing; the copy says it is a recorded replay. Live classify shows one indeterminate state, no fake streaming. |
+| D2 | Generic UI | **Reversed.** No genericization refactor. The three literally false bits (deal name, cost, 100% note) are removed and the README says the UI still carries ITC-specific copy. |
+| D3 | Unverified quotes | Shown, visibly marked, rather than hidden. |
+| D4 | Insurance "required" | At the high case, consistently, read from the metric. |
+| D5 | Non-computable values | A null state on `Metric` with the missing inputs named. Never $0 for a missing input. |
+| D6 | Dates | **Trimmed.** Common formats normalised to ISO in code; an ambiguous month, quarter or year that straddles a pivot is "not computable: a precise construction-start date is needed". No range machinery over date uncertainty. |
+| D7 | API auth | **Reversed.** A server-only replay flag and one README line on the trust model; no shared-secret header. |
+| D8 | Scenario blow-up | **Reversed.** A guard that throws above 100,000 scenarios instead of an approximation. |
+| D9 | Test runner | Exit codes fixed; vitest not adopted (the scripts stay in the `npm test` chain). |
+| D10 | Evals | Per-finding injection assertion; a clean room and a perturbed room added; adversarial room only if budget remained. |
+| D11 | Replay fixture | Re-recorded from the final Cottonwood run, the latest run rather than the best. |
+| D12 | README | First screen restructured for a five-minute reviewer. |
+| D13 | Walkthrough | A short GIF of the replay on the README's first screen. |
+| D14 | Parked work | Listed below as deliberate omissions with reasons. |
+
+**Eval scores before and after, per room.** 
+
+| Room | Before this review | After |
+|---|---|---|
+| Cottonwood | 78/78 on the old checks (79/79 once the tests could fail, 82/82 once the range rows were added) | **82/82**, 68/68 quotes, $0.85, after the rule fixes below |
+| Clean (new) | 58/65 on its first run: construction start left open although the independent engineer had reviewed the records and confirmed it; a judgment call, six RFIs and four risks on a deal with nothing wrong; range low of $0 | **65/65**, 57/57 quotes, $0.77: twelve confirmed, no questions, no RFIs, one risk, range $71.0M–$71.0M |
+| Perturbed (new) | — | **75/76**, 57/57 quotes, $0.78: the only miss is the gold's assumption that the schedule slip would be repeated as a risk; the run reports the slip in the placed-in-service finding (February 15, 2027, 77 days late, crossing the year end) and raises a different, sharper risk (the 2025 start rests on a transformer that later failed factory testing). Left as a recorded miss rather than edited away. |
+
+**What the clean room changed (general rules, not special cases).** The beginning-of-construction rule now says an independent party's statement that it reviewed the records and confirms the start substantiates off-site work; only a seller's or supplier's own statement, an engineer who reviewed nothing, or disagreeing documents keep the check open. The FEOC rule confirms the assumption when the start is substantiated before 2026 and treats certifications as informational. The reconcile prompt asks for an RFI only where it would change a check or correct a clerical error, and for a risk only where something in the evidence could reduce, delay or endanger the credit as signed. Cottonwood was re-run after each of these and kept 82/82; its RFIs fell from ten to five and its risks from six to two, all the asserted ones still present. The replay fixture is that run.
+
+**Deliberately not done** (parked with a reason; none affects what the demo claims):
+- Full UI genericization: the engine and math are generic; the UI copy is ITC-specific, and a second playbook would be the time to generalise it against a real second case.
+- Date-range or fork modelling for ambiguous construction-start dates: the not-computable state with a plain reason is honest and cheaper; modelling uncertainty would invite false precision.
+- Scenario approximation above the guard: a run with more than 100,000 scenarios means the inputs are wrong, not that the math needs sampling.
+- Shared-secret API auth: public deploys are replay-only; live mode is for localhost with the operator's own key.
+- Retry-a-step in the UI: "Start over" is enough for a demo; a retry needs idempotent server state that does not exist yet.
+- Accessibility pass (dialog focus traps, nested interactive rows, checkbox labels): real work, not demo-blocking.
+- PdfPane re-key on resize and zoom override; tri-state `verified` with fuzzy partial matches; pdf.js server/client version alignment and a postinstall worker copy: viewer polish.
+- Per-page textless tracking, per-step usage in the fixture, tmp-dir sweeping, a billions tier in `fmtMoney`, `Finding.currentShort`/`followUp`/`questionIds` cleanup, confirm-before-reset on the logo: small, and none changes a result.
+- Adversarial room (prompt markup inside a document, an instruction in a filename): the escaping fix is unit-tested; a live adversarial room is the next eval to buy.
