@@ -39,6 +39,10 @@ async function main() {
     else ok++;
   }
   console.log(`\n${ok} full, ${partial} partial, ${miss} missing of ${quotes.length} quotes`);
-  process.exit(miss ? 1 : 0);
+  // A partial highlight is a failure too: the viewer would paint only part of the quoted passage.
+  process.exit(miss || partial ? 1 : 0);
 }
-main();
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
