@@ -91,6 +91,14 @@ export default function PdfPane({
     };
   }, [pdf, stableHighlights]);
 
+  // The page of the active highlight when its passage could not be located there (nothing to paint), else null.
+  const missingOn = useMemo(() => {
+    const h = marks && activeId ? stableHighlights.find((x) => x.id === activeId) : undefined;
+    if (!h || !marks) return null;
+    const found = [...(marks.get(h.page)?.values() ?? [])].some((list) => list.some((m) => m.ids.includes(h.id)));
+    return found ? null : h.page;
+  }, [marks, activeId, stableHighlights]);
+
   const pageNumbers = useMemo(() => Array.from({ length: pdf?.numPages ?? 0 }, (_, i) => i + 1), [pdf]);
 
   // Renderer functions must keep a stable identity per page, or react-pdf re-renders the text layer in a loop.
@@ -140,6 +148,11 @@ export default function PdfPane({
     <div className={`flex min-h-0 flex-col ${className}`}>
       <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-500">
         <span>{pdf ? `${pdf.numPages} page${pdf.numPages === 1 ? "" : "s"}` : "Loading..."}</span>
+        {missingOn !== null && (
+          <span className="rounded bg-amber-50 px-2 py-0.5 font-medium text-amber-800 ring-1 ring-inset ring-amber-600/25" data-testid="passage-not-found">
+            Passage not found on page {missingOn}
+          </span>
+        )}
         <div className="flex items-center overflow-hidden rounded-md border border-slate-200 text-slate-600">
           <button className="px-2 py-1 hover:bg-slate-50 disabled:opacity-40" disabled={zoom <= 1} onClick={() => setZoom((z) => Math.max(1, +(z - 0.4).toFixed(1)))} aria-label="Zoom out">
             −

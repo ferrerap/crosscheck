@@ -57,7 +57,7 @@ export function Spinner({ className }: { className?: string }) {
   return <span className={cx("inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700", className)} />;
 }
 
-/** A clickable citation that opens the source PDF at the quoted page. */
+/** A clickable citation that opens the source PDF at the quoted page. A quote that was not found on that page is marked. */
 export function QuoteChip({
   quote,
   docName,
@@ -69,11 +69,15 @@ export function QuoteChip({
   onOpen: (q: Quote) => void;
   full?: boolean;
 }) {
+  const found = quote.verified;
   return (
     <button
       onClick={() => onOpen(quote)}
-      title={quote.text}
-      className="group inline-flex max-w-full items-start gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-left text-xs text-slate-700 transition hover:border-slate-400 hover:bg-white"
+      title={found ? quote.text : `Not found in source: ${quote.text}`}
+      className={cx(
+        "group inline-flex max-w-full items-start gap-2 rounded-md border px-2 py-1 text-left text-xs text-slate-700 transition hover:bg-white",
+        found ? "border-slate-200 bg-slate-50 hover:border-slate-400" : "border-dashed border-amber-600 bg-amber-50/60 hover:border-amber-700",
+      )}
     >
       <span className="shrink-0 rounded bg-slate-200 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-700 group-hover:bg-slate-900 group-hover:text-white">
         p.{quote.page}
@@ -82,6 +86,7 @@ export function QuoteChip({
         <span className="text-slate-500">{docName}: </span>
         &ldquo;{quote.text}&rdquo;
       </span>
+      {!found && <span className="mt-0.5 shrink-0 whitespace-nowrap text-[10px] font-semibold text-amber-800">not found in source</span>}
     </button>
   );
 }

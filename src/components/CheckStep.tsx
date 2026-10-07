@@ -489,16 +489,21 @@ export function CheckStep({
 
 function FactLine({ e, label, onOpen }: { e: Evidence; label: Label; onOpen: (q: Quote[]) => void }) {
   const cls = e.stance === "supports" ? "bg-emerald-100 text-emerald-700" : e.stance === "contradicts" ? MARK_CON[label] : "bg-transparent text-slate-400";
+  const found = e.quote.verified;
   return (
     <div className="flex items-start gap-[7px] py-px text-xs leading-tight text-slate-800">
       <span className={cx("mt-px flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold", cls)} title={e.stance}>
         {e.stance === "supports" ? "✓" : e.stance === "contradicts" ? "✕" : "·"}
       </span>
       <span className="min-w-0 flex-1 text-slate-700">{e.display}</span>
+      {!found && <span className="mt-px shrink-0 text-[10px] font-medium text-amber-800">not found in source</span>}
       <button
         onClick={() => onOpen([e.quote])}
-        title={e.quote.text}
-        className="mt-px shrink-0 rounded border border-slate-200 bg-slate-50 px-1.5 font-mono text-[10px] text-slate-500 hover:border-slate-900 hover:bg-slate-900 hover:text-white"
+        title={found ? e.quote.text : `Not found in source: ${e.quote.text}`}
+        className={cx(
+          "mt-px shrink-0 rounded border px-1.5 font-mono text-[10px] hover:border-slate-900 hover:bg-slate-900 hover:text-white",
+          found ? "border-slate-200 bg-slate-50 text-slate-500" : "border-dashed border-amber-600 bg-amber-50 text-amber-800",
+        )}
       >
         p.{e.quote.page}
       </button>
