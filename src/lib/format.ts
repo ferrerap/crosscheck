@@ -1,13 +1,19 @@
 import type { Label, Metric } from "@/engine/types";
 
-export function fmtMoney(n: number): string {
+/** Shown wherever a figure could not be computed or was not stated. */
+export const NO_FIGURE = "—";
+
+/** $70.9M, $136.5M (rounded to the nearest $100k in decimal, so 70,850,000 is $70.9M), $500,000; null → —. */
+export function fmtMoney(n: number | null | undefined): string {
+  if (n === null || n === undefined || !Number.isFinite(n)) return NO_FIGURE;
   const abs = Math.abs(n);
   const sign = n < 0 ? "-" : "";
-  if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000_000) return `${sign}$${(Math.round(abs / 100_000) / 10).toFixed(1)}M`;
   return `${sign}$${Math.round(abs).toLocaleString("en-US")}`;
 }
 
-export function fmtMetric(n: number, format: Metric["format"]): string {
+export function fmtMetric(n: number | null | undefined, format: Metric["format"]): string {
+  if (n === null || n === undefined || !Number.isFinite(n)) return NO_FIGURE;
   if (format === "money") return fmtMoney(n);
   if (format === "percent") return `${Number.isInteger(n) ? n : n.toFixed(1)}%`;
   return n.toLocaleString("en-US");
