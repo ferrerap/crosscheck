@@ -117,7 +117,8 @@ export function UploadStep({
   const [room, setRoom] = useState<PickedFile[]>([]);
   const [demoChoice, setDemoChoice] = useState(false);
 
-  // Hash each dropped file in the browser so the bundled demo deal can be recognised.
+  // Hash each dropped file in the browser so the bundled demo deal can be recognised. A key is held only while its
+  // hash is in flight, so a file that is removed and added again is hashed again.
   const hashing = useRef(new Set<string>());
   useEffect(() => {
     for (const pf of [...term, ...room]) {
@@ -125,6 +126,7 @@ export function UploadStep({
       hashing.current.add(pf.key);
       sha256Hex(pf.file)
         .then((h) => {
+          hashing.current.delete(pf.key);
           const set = (l: PickedFile[]) => l.map((x) => (x.key === pf.key ? { ...x, hash: h } : x));
           setTerm(set);
           setRoom(set);
