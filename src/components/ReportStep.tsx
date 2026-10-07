@@ -1,7 +1,7 @@
 "use client";
 import { Fragment, useState } from "react";
 import type { Finding, Label, Metric, Quote, Rfi, Risk, RunUsage } from "@/engine/types";
-import { LABEL_ORDER, fmtMetric, fmtMoney } from "@/lib/format";
+import { LABEL_ORDER, NO_FIGURE, fmtMetric, fmtMoney } from "@/lib/format";
 import { GROUPS, assumptionKind, assumptionName } from "@/lib/meta";
 import type { CreditImpact, CreditRange } from "@/lib/scenarios";
 import { creditTag } from "@/lib/creditTag";
@@ -10,7 +10,19 @@ import { Card, CreditPill, LabelChip, PriorityBadge, QuoteChip, StanceTag, cx, s
 const COLS = "lg:grid-cols-[11rem_7rem_9rem_12rem_9.5rem_1fr]";
 
 const pick = (m: Metric[], id: string) => m.find((x) => x.id === id);
-const span = (lo: number, hi: number, f: Metric["format"]) => (Math.abs(hi - lo) < 1e-9 ? fmtMetric(lo, f) : `${fmtMetric(lo, f)}–${fmtMetric(hi, f)}`);
+const span = (lo: number | null | undefined, hi: number | null | undefined, f: Metric["format"]) =>
+  lo === null || lo === undefined || hi === null || hi === undefined ? NO_FIGURE : Math.abs(hi - lo) < 1e-9 ? fmtMetric(lo, f) : `${fmtMetric(lo, f)}–${fmtMetric(hi, f)}`;
+
+/** Why a figure is blank: the inputs it needs that are missing or unusable. */
+function NotComputable({ metrics }: { metrics: (Metric | undefined)[] }) {
+  const names = [...new Set(metrics.flatMap((m) => (m && m.current === null ? m.missing ?? [] : [])))];
+  if (!names.length) return null;
+  return (
+    <div className="mt-1 text-xs text-amber-800" data-testid="not-computable">
+      Not computable: missing {names.join(", ")}
+    </div>
+  );
+}
 
 function CheckTags({ ids }: { ids: string[] }) {
   return (
@@ -59,9 +71,9 @@ export function ReportStep({
   const credit = { signed: pick(range.asSigned, "credit"), low: pick(range.low, "credit"), high: pick(range.high, "credit") };
   const price = { signed: pick(range.asSigned, "price"), low: pick(range.low, "price"), high: pick(range.high, "price") };
   const rate = { signed: pick(range.asSigned, "rate"), low: pick(range.low, "rate"), high: pick(range.high, "rate") };
+  // The insurance metric in the high case: baseline = required coverage at the high-case price, current = bound.
   const ins = pick(range.high, "insurance");
-  const requiredAtHigh = price.high?.current ?? 0; // term sheet: 100% of the purchase price, at the high case
-  const insGap = (ins?.current ?? 0) - requiredAtHigh;
+  const insGap = ins && ins.current !== null && ins.baseline !== null ? ins.current - ins.baseline : null;
   const ifCleared = pick(range.lowIfCleared, "credit");
   const clearNames = range.clearable.map((a) => assumptionName(a)).join(" and ");
   const facts = findings.filter((f) => f.label === "changed").map((f) => assumptionName(f.assumptionId).toLowerCase());
@@ -79,14 +91,16 @@ export function ReportStep({
               <div>
                 <div className="text-xs font-medium text-slate-500">As signed (term sheet)</div>
                 <div className="mt-1 text-3xl font-semibold tabular-nums tracking-tight text-slate-900" data-testid="metric-credit">
-                  {credit.signed ? fmtMoney(credit.signed.current) : "–"}
+                  {fmtMoney(credit.signed?.current)}
                 </div>
+                <NotComputable metrics={[credit.signed]} />
               </div>
               <div className="border-slate-200 sm:border-l sm:pl-6">
                 <div className="text-xs font-medium text-slate-500">Depending on the seller&apos;s answers</div>
                 <div className="mt-1 text-3xl font-semibold tabular-nums tracking-tight text-slate-900" data-testid="metric-credit-range">
-                  {credit.low && credit.high ? span(credit.low.current, credit.high.current, "money") : "–"}
+                  {span(credit.low?.current, credit.high?.current, "money")}
                 </div>
+                <NotComputable metrics={[credit.low, credit.high]} />
                 {ifCleared && range.clearable.length > 0 && (
                   <div className="mt-1 text-sm text-slate-600" data-testid="metric-credit-if-cleared">
                     Low case {fmtMoney(ifCleared.current)} if {clearNames} is shown. A facility that fails the FEOC rules gets no credit.
@@ -99,23 +113,25 @@ export function ReportStep({
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Purchase price</div>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-sm text-slate-400">{price.signed ? fmtMoney(price.signed.current) : ""} signed</span>
+              <span className="text-sm text-slate-400">{fmtMoney(price.signed?.current)} signed</span>
               <span className="text-slate-300">&rarr;</span>
               <span className="text-xl font-semibold tabular-nums tracking-tight text-slate-900" data-testid="metric-price-range">
-                {price.low && price.high ? span(price.low.current, price.high.current, "money") : "–"}
+                {span(price.low?.current, price.high?.current, "money")}
               </span>
             </div>
+            <NotComputable metrics={[price.signed, price.low, price.high]} />
             {price.signed?.note && <div className="mt-1 text-xs text-slate-500">{price.signed.note}</div>}
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Credit rate</div>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-sm text-slate-400">{rate.signed ? fmtMetric(rate.signed.current, "percent") : ""} signed</span>
+              <span className="text-sm text-slate-400">{fmtMetric(rate.signed?.current, "percent")} signed</span>
               <span className="text-slate-300">&rarr;</span>
               <span className="text-xl font-semibold tabular-nums tracking-tight text-slate-900" data-testid="metric-rate-range">
-                {rate.low && rate.high ? span(rate.low.current, rate.high.current, "percent") : "–"}
+                {span(rate.low?.current, rate.high?.current, "percent")}
               </span>
             </div>
+            <NotComputable metrics={[rate.signed, rate.low, rate.high]} />
             <div className="mt-1 text-xs text-slate-500">Depends on prevailing wage, the two bonuses and FEOC</div>
           </div>
           {ins && (
@@ -123,18 +139,21 @@ export function ReportStep({
               <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Insurance limit vs. required</div>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-xl font-semibold tabular-nums tracking-tight text-slate-900" data-testid="metric-insurance">
-                  {fmtMetric(ins.current, ins.format)}
+                  {ins.current === null ? "not stated" : fmtMetric(ins.current, ins.format)}
                 </span>
-                <span className="text-sm text-slate-500">bound vs {fmtMoney(requiredAtHigh)} required</span>
+                <span className="text-sm text-slate-500">bound vs {fmtMoney(ins.baseline)} required</span>
               </div>
-              <div className={cx("mt-1 text-xs font-medium", insGap < 0 ? "text-red-700" : "text-emerald-700")}>
-                {insGap < 0 ? `Shortfall ${fmtMoney(-insGap)}` : `Covers the requirement (+${fmtMoney(insGap)})`} &middot; term sheet requires 100% of the purchase price (high case)
+              <NotComputable metrics={[ins]} />
+              <div className={cx("mt-1 text-xs font-medium", insGap === null ? "text-slate-500" : insGap < 0 ? "text-red-700" : "text-emerald-700")}>
+                {insGap === null ? "Shortfall unknown" : insGap < 0 ? `Shortfall ${fmtMoney(-insGap)}` : `Covers the requirement (+${fmtMoney(insGap)})`}
+                {ins.note ? ` · ${ins.note} (high case)` : ""}
               </div>
             </div>
           )}
         </div>
         <p className="mt-2 text-xs text-slate-500">
-          Data room facts{facts.length ? ` (${facts.join(", ")})` : ""} are applied. Each open question could resolve either way, which sets the range. Computed in code, not by the model.
+          Data room facts{facts.length ? ` (${facts.join(", ")})` : ""} are applied. Each open question could resolve either way, which sets the range
+          {range.notComputable > 0 ? `; ${range.notComputable} of ${range.scenarios} scenarios could not be computed and are left out` : ""}. Computed in code, not by the model.
         </p>
       </div>
 

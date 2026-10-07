@@ -2,6 +2,7 @@
 // Everything transaction-specific lives here; the engine stays generic.
 
 import type { AssumptionDef, Metric } from "@/engine/types";
+import { toIsoDate } from "@/lib/dates";
 import type { Playbook, Values } from "../types";
 
 const identityRule =
@@ -123,25 +124,44 @@ const assumptions: AssumptionDef[] = [
 
 // ---- Deterministic tax math (the LLM never does this) ----
 
-/** Domestic content manufactured-products threshold by construction start year. */
+/** Why a rule could not be applied to a date value. */
+export type RuleReason = "not parsed" | "a precise construction-start date is needed";
+export interface RuleResult<T> {
+  value: T | null;
+  reason?: RuleReason;
+}
+
+const DC_BANDS: [string, number][] = [
+  ["2025-06-16", 40], // before June 16, 2025
+  ["2026-01-01", 45], // June 16 to December 31, 2025
+  ["2027-01-01", 50], // 2026
+];
+const dcBand = (isoDay: string) => DC_BANDS.find(([until]) => isoDay < until)?.[1] ?? 55;
+
 /**
  * Domestic content manufactured-products threshold for §48E by construction start date:
  * 40% before June 16, 2025; 45% from June 16 to December 31, 2025; 50% in 2026; 55% after 2026.
- * Dates may be YYYY-MM-DD or YYYY-MM (a month before June 2025 is treated as pre-June 16).
+ * Accepts any format `toIsoDate` parses. A month, quarter or year that straddles a pivot cannot be placed.
  */
-export function dcThreshold(bocDate: string | null): number | null {
-  if (!bocDate || !/^\d{4}-\d{2}/.test(bocDate)) return null;
-  if (bocDate < "2025-06-16") return 40;
-  if (bocDate < "2026") return 45;
-  if (bocDate < "2027") return 50;
-  return 55;
+export function dcThreshold(bocDate: string | null): RuleResult<number> {
+  const d = toIsoDate(bocDate);
+  if (!d) return { value: null, reason: "not parsed" };
+  const a = dcBand(d.start);
+  const b = dcBand(d.end);
+  return a === b ? { value: a } : { value: null, reason: "a precise construction-start date is needed" };
 }
 
 /** Construction beginning after December 31, 2025 brings the material assistance (FEOC) rules into play. */
-export function feocApplies(bocDate: string | null): boolean | null {
-  if (!bocDate || !/^\d{4}/.test(bocDate)) return null;
-  return bocDate >= "2026";
+export function feocApplies(bocDate: string | null): RuleResult<boolean> {
+  const d = toIsoDate(bocDate);
+  if (!d) return { value: null, reason: "not parsed" };
+  if (d.start >= "2026-01-01") return { value: true };
+  if (d.end < "2026-01-01") return { value: false };
+  return { value: null, reason: "a precise construction-start date is needed" };
 }
+
+/** Which figure an unusable input blocks: the rate (and so everything after it), the credit amount, or the price. */
+type Scope = "rate" | "credit" | "price";
 
 export interface CreditFacts {
   basis: number | null;
@@ -149,9 +169,12 @@ export interface CreditFacts {
   ecQualifies: boolean | null;
   dcQualifies: boolean | null;
   price: number | null;
+  /** Null when the data room states no limit; that is "not stated", not an error. */
   insuranceLimit: number | null;
-  /** True when the FEOC rules apply and compliance fails: not a qualified facility, so no credit. */
-  feocFails: boolean;
+  /** True when the FEOC rules apply and compliance fails: not a qualified facility, so no credit. Null = unknown. */
+  feocFails: boolean | null;
+  /** Inputs that are missing or unusable, by assumption name, with the figure they block. */
+  problems: { name: string; scope: Scope }[];
 }
 
 function asBool(v: unknown): boolean | null {
@@ -161,60 +184,108 @@ function asBool(v: unknown): boolean | null {
   return null;
 }
 function asNum(v: unknown): number | null {
-  if (typeof v === "number") return v;
+  if (typeof v === "number" && Number.isFinite(v)) return v;
   if (typeof v === "string" && v.trim() !== "" && !isNaN(Number(v))) return Number(v);
   return null;
 }
+const nameOf = (id: string) => assumptions.find((a) => a.id === id)?.name ?? id;
 
 /** Map assumption values (baseline or resolved current) to the facts the math needs. */
 export function toFacts(v: Values): CreditFacts {
-  // T5 may be a boolean (term sheet: "bonus assumed") or an adjusted percentage (evidence).
-  let dc = asBool(v.T5);
+  const problems: CreditFacts["problems"] = [];
+  const need = (id: string, scope: Scope, reason?: string) =>
+    problems.push({ name: reason ? `${nameOf(id)} (${reason})` : nameOf(id), scope });
+  const boc = typeof v.T6 === "string" ? v.T6 : null;
+
+  const basis = asNum(v.T2);
+  if (basis === null) need("T2", "credit");
+  const pwaMet = asBool(v.T3);
+  if (pwaMet === null) need("T3", "rate");
+  const ecQualifies = asBool(v.T4);
+  if (ecQualifies === null) need("T4", "rate");
+
+  // T5 may be a boolean (term sheet: "bonus assumed") or an adjusted percentage (evidence) judged against the
+  // threshold for the construction start date.
+  let dcQualifies = asBool(v.T5);
   const dcPct = asNum(v.T5);
-  if (dc === null && dcPct !== null) {
-    const t = dcThreshold(typeof v.T6 === "string" ? v.T6 : null);
-    dc = t === null ? null : dcPct >= t;
+  if (dcQualifies === null && dcPct !== null) {
+    const t = dcThreshold(boc);
+    if (t.value === null) need("T6", "rate", t.reason);
+    else dcQualifies = dcPct >= t.value;
+  } else if (dcQualifies === null) need("T5", "rate");
+
+  // The FEOC rules only matter when construction began after 2025; then failing them means no credit.
+  let feocFails: boolean | null = false;
+  const feocOk = asBool(v.T8);
+  if (feocOk !== true) {
+    const applies = feocApplies(boc);
+    if (applies.value === null) {
+      feocFails = null;
+      need("T6", "rate", applies.reason);
+    } else if (applies.value && feocOk === null) {
+      feocFails = null;
+      need("T8", "rate");
+    } else feocFails = applies.value && feocOk === false;
   }
-  return {
-    basis: asNum(v.T2),
-    pwaMet: asBool(v.T3),
-    ecQualifies: asBool(v.T4),
-    dcQualifies: dc,
-    price: asNum(v.P1),
-    insuranceLimit: asNum(v.T9),
-    feocFails: asBool(v.T8) === false && feocApplies(typeof v.T6 === "string" ? v.T6 : null) === true,
-  };
+
+  const price = asNum(v.P1);
+  if (price === null) need("P1", "price");
+
+  return { basis, pwaMet, ecQualifies, dcQualifies, price, insuranceLimit: asNum(v.T9), feocFails, problems };
 }
 
 /** §48E rate: 6% base or 30% with PWA; each bonus is 10 points with PWA, 2 without. FEOC failure: 0. */
 export function creditRate(f: CreditFacts): number | null {
-  if (f.feocFails) return 0;
-  if (f.pwaMet === null) return null;
+  if (f.feocFails === true) return 0;
+  if (f.feocFails === null || f.pwaMet === null || f.ecQualifies === null || f.dcQualifies === null) return null;
   const base = f.pwaMet ? 30 : 6;
   const bonus = f.pwaMet ? 10 : 2;
   return base + (f.ecQualifies ? bonus : 0) + (f.dcQualifies ? bonus : 0);
 }
 
+const cents = (x: number) => Math.round(x * 100) / 100;
+
+/** Rate, credit and price for one set of facts; a null figure carries the names of the inputs it lacks. */
+function figures(f: CreditFacts) {
+  const missing = (scopes: Scope[]) => [...new Set(f.problems.filter((p) => scopes.includes(p.scope)).map((p) => p.name))];
+  const rate = creditRate(f);
+  const credit = rate === null || f.basis === null ? null : cents(f.basis * (rate / 100));
+  const price = credit === null || f.price === null ? null : cents(credit * f.price);
+  return {
+    rate,
+    credit,
+    price,
+    rateMissing: rate === null ? missing(["rate"]) : [],
+    creditMissing: credit === null ? missing(["rate", "credit"]) : [],
+    priceMissing: price === null ? missing(["rate", "credit", "price"]) : [],
+  };
+}
+
 function metrics(baseline: Values, current: Values): Metric[] {
-  const b = toFacts(baseline);
-  const c = toFacts({ ...baseline, ...current }); // unresolved items fall back to baseline
-  const bRate = creditRate(b) ?? 0;
-  const cRate = creditRate(c) ?? 0;
-  const cents = (x: number) => Math.round(x * 100) / 100;
-  const bCredit = cents((b.basis ?? 0) * (bRate / 100));
-  const cCredit = cents((c.basis ?? 0) * (cRate / 100));
-  const price = b.price ?? 0;
+  const bf = toFacts(baseline);
+  const cf = toFacts({ ...baseline, ...current }); // unresolved items fall back to baseline
+  const b = figures(bf);
+  const c = figures(cf);
+  // The term sheet's coverage requirement as a share of the purchase price (100% in the demo deal), applied to
+  // this scenario's price. The report reads it from the high case.
+  const ratio = bf.insuranceLimit !== null && b.price ? bf.insuranceLimit / b.price : 1;
+  const ratioPct = Math.round(ratio * 1000) / 10;
+  const required = c.price === null ? null : cents(c.price * ratio);
+  const perDollar = bf.price !== null ? `at $${bf.price.toFixed(3)} per $1.00 of credit` : undefined;
   return [
-    { id: "rate", label: "Credit rate", baseline: bRate, current: cRate, format: "percent" },
-    { id: "credit", label: "Credit amount", baseline: bCredit, current: cCredit, format: "money" },
-    { id: "price", label: "Purchase price", baseline: cents(bCredit * price), current: cents(cCredit * price), format: "money", note: `at $${price.toFixed(3)} per $1.00 of credit` },
+    { id: "rate", label: "Credit rate", baseline: b.rate, current: c.rate, format: "percent", missing: c.rateMissing },
+    { id: "credit", label: "Credit amount", baseline: b.credit, current: c.credit, format: "money", missing: c.creditMissing },
+    { id: "price", label: "Purchase price", baseline: b.price, current: c.price, format: "money", note: perDollar, missing: c.priceMissing },
     {
+      // baseline = required coverage at this scenario's purchase price; current = the limit the data room states
+      // (null when none is stated).
       id: "insurance",
       label: "Insurance limit vs. required",
-      baseline: b.insuranceLimit ?? cents(bCredit * price),
-      current: c.insuranceLimit ?? 0,
+      baseline: required,
+      current: cf.insuranceLimit,
       format: "money",
-      note: "term sheet requires coverage of 100% of purchase price",
+      note: `term sheet requires coverage of ${ratioPct}% of the purchase price`,
+      missing: required === null ? c.priceMissing : [],
     },
   ];
 }

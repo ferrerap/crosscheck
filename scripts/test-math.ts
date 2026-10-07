@@ -8,8 +8,8 @@ const resolved = { T2: 136400000, T5: 47.8, T7: "2027-02-15", T9: 55000000 };
 
 let fail = 0;
 const b = itcTransfer.metrics(baseline, {});
-const check = (name: string, got: number, want: number) => {
-  const ok = Math.abs(got - want) < 0.5;
+const check = (name: string, got: number | null, want: number) => {
+  const ok = got !== null && Math.abs(got - want) < 0.5;
   if (!ok) fail++;
   console.log(ok ? "PASS" : "FAIL", name, got, ok ? "" : `(want ${want})`);
 };
@@ -24,5 +24,5 @@ for (const [name, s] of Object.entries(gold.scenarios)) {
 }
 // §48E domestic content threshold by construction start (June 16, 2025 pivot).
 for (const [date, want] of [["2025-03-01", 40], ["2025-06-15", 40], ["2025-06-16", 45], ["2025-12", 45], ["2026-01-12", 50], ["2027-02-01", 55]] as const)
-  check(`dc threshold ${date}`, dcThreshold(date) ?? -1, want);
+  check(`dc threshold ${date}`, dcThreshold(date).value, want);
 process.exit(fail ? 1 : 0);

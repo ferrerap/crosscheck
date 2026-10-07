@@ -151,14 +151,19 @@ export interface Finding {
   followUp?: string; // targeted request to the seller
 }
 
-/** A headline number on the report, computed deterministically by the playbook. */
+/**
+ * A headline number on the report, computed deterministically by the playbook. A figure is null when an input
+ * it needs is missing or unusable; `missing` then names those inputs. A null with no `missing` means the input
+ * itself was not stated (e.g. no insurance limit in the data room).
+ */
 export interface Metric {
   id: string;
   label: string;
-  baseline: number;
-  current: number;
+  baseline: number | null;
+  current: number | null;
   format: "money" | "percent" | "number";
   note?: string;
+  missing?: string[];
 }
 
 export interface RunUsage {
