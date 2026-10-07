@@ -10,7 +10,7 @@ export interface CreditTag {
 
 /** The credit-impact tag for one check; null for confirmed checks. Shared by the check rows and the Report. */
 export function creditTag(f: Finding, impact: CreditImpact, findings: Map<string, Finding>): CreditTag | null {
-  const { atRisk, cut } = impact;
+  const { atRisk, cut, unresolved } = impact;
   const own = atRisk[f.assumptionId] ?? 0;
   if (own > 0) return { kind: "risk", text: `up to ${fmtMoney(own)} at risk` };
   const lost = cut[f.assumptionId] ?? 0;
@@ -18,6 +18,7 @@ export function creditTag(f: Finding, impact: CreditImpact, findings: Map<string
   const parent = f.dependsOn ? atRisk[f.dependsOn] ?? 0 : 0;
   if (f.dependsOn && parent > 0 && findings.has(f.dependsOn))
     return { kind: "part", text: `part of the ${fmtMoney(parent)} on the ${assumptionName(f.dependsOn).toLowerCase()}` };
+  if (unresolved.includes(f.assumptionId)) return { kind: "none", text: "data room value not resolved" };
   if (f.label === "confirmed") return null;
   return { kind: "none", text: "credit amount unchanged" };
 }

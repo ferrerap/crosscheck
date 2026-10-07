@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { creditAtRisk, creditCutByFacts, creditRange } from "../src/lib/scenarios";
 import { itcTransfer } from "../src/playbooks/itc-transfer";
-import type { Run } from "../src/engine/types";
+import type { Metric, Run } from "../src/engine/types";
 
 const run: Run = JSON.parse(fs.readFileSync(path.join(process.cwd(), "src", "fixtures", "replay-itc-transfer.json"), "utf8"));
 const baseline = Object.fromEntries(run.baseline.map((b) => [b.id, b.value]));
@@ -17,9 +17,9 @@ const input = {
 const r = creditRange(itcTransfer, baseline, input);
 const risk = creditAtRisk(itcTransfer, baseline, input);
 const cut = creditCutByFacts(itcTransfer, baseline, input);
-const credit = (m: { id: string; current: number }[]) => m.find((x) => x.id === "credit")!.current;
-console.log(`as signed ${credit(r.asSigned)}  range ${credit(r.low)} - ${credit(r.high)}  if ${r.clearable.join(",")} cleared ${credit(r.lowIfCleared)}  (${r.scenarios} scenarios)`);
-console.log("at risk", risk, "cut by facts", cut);
+const credit = (m: Metric[]) => m.find((x) => x.id === "credit")!.current ?? NaN;
+console.log(`as signed ${credit(r.asSigned)}  range ${credit(r.low)} - ${credit(r.high)}  if ${r.clearable.join(",")} cleared ${credit(r.lowIfCleared)}  (${r.scenarios} scenarios, ${r.notComputable} not computable)`);
+console.log("at risk", risk, "cut by facts", cut, "unresolved", r.unresolved);
 const checks: [string, boolean][] = [
   ["as signed $71.0M", credit(r.asSigned) === 71000000],
   ["high $68.2M", credit(r.high) === 68200000],
@@ -29,6 +29,12 @@ const checks: [string, boolean][] = [
   ["apprenticeship puts $54.6M at risk", risk.T3 === 54560000],
   ["FEOC counted under construction start", !("T8" in risk)],
   ["basis fact cuts $2.8M", cut.T2 === 2800000],
+  ["every scenario computable", r.notComputable === 0],
+  ["nothing unresolved", r.unresolved.length === 0],
 ];
-for (const [name, ok] of checks) console.log(ok ? "PASS" : "FAIL", name);
-process.exit(checks.every(([, ok]) => ok) ? 0 : 1);
+let failed = 0;
+for (const [name, ok] of checks) {
+  if (!ok) failed++;
+  console.log(ok ? "PASS" : "FAIL", name);
+}
+process.exit(failed ? 1 : 0);

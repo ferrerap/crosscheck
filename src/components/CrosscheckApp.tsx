@@ -95,9 +95,10 @@ export default function CrosscheckApp() {
         ? {
             atRisk: creditAtRisk(activePlaybook, baselineValues, scenarioInput),
             cut: creditCutByFacts(activePlaybook, baselineValues, scenarioInput),
+            unresolved: range?.unresolved ?? [],
           }
-        : { atRisk: {}, cut: {} },
-    [baseline, baselineValues, findings, scenarioInput],
+        : { atRisk: {}, cut: {}, unresolved: [] },
+    [baseline, baselineValues, findings, scenarioInput, range],
   );
   const sentRfis = useMemo(() => sendableRfis(rfis, findings, accepted), [rfis, findings, accepted]);
   const shownRisks = useMemo(() => readerRisks(risks, classifications), [risks, classifications]);
