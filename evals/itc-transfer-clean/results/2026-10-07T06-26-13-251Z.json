@@ -1,0 +1,2269 @@
+{
+  "model": "claude-opus-5-5",
+  "room": "itc-transfer-clean",
+  "results": [
+    {
+      "rows": [
+        {
+          "check": "baseline I1",
+          "pass": true,
+          "detail": "100 MWac / 135 MWdc ground-mounted solar PV"
+        },
+        {
+          "check": "baseline I2",
+          "pass": true,
+          "detail": "Cottonwood Solar I, LLC (subsidiary of Meridian Ridge Renewables, LLC)"
+        },
+        {
+          "check": "baseline I3",
+          "pass": true,
+          "detail": "Montgomery County, Illinois"
+        },
+        {
+          "check": "baseline T1",
+          "pass": true,
+          "detail": "Section 48E clean electricity ITC; ground-mounted solar PV energy property"
+        },
+        {
+          "check": "baseline T2",
+          "pass": true,
+          "detail": "got 142000000 want 142000000"
+        },
+        {
+          "check": "baseline T3",
+          "pass": true,
+          "detail": "got true want true"
+        },
+        {
+          "check": "baseline T4",
+          "pass": true,
+          "detail": "got true want true"
+        },
+        {
+          "check": "baseline T5",
+          "pass": true,
+          "detail": "got true want true"
+        },
+        {
+          "check": "baseline T6",
+          "pass": true,
+          "detail": "got \"2025-12\" want \"2025-12\""
+        },
+        {
+          "check": "baseline T7",
+          "pass": true,
+          "detail": "got \"2026-11-30\" want \"2026-11-30\""
+        },
+        {
+          "check": "baseline T8",
+          "pass": true,
+          "detail": "got true want true"
+        },
+        {
+          "check": "baseline T9",
+          "pass": true,
+          "detail": "got 66385000 want 66385000"
+        },
+        {
+          "check": "baseline P1",
+          "pass": true,
+          "detail": "got 0.935 want 0.935"
+        },
+        {
+          "check": "match D01",
+          "pass": true,
+          "detail": "match"
+        },
+        {
+          "check": "match D02",
+          "pass": true,
+          "detail": "match"
+        },
+        {
+          "check": "match D03",
+          "pass": true,
+          "detail": "match"
+        },
+        {
+          "check": "match D04",
+          "pass": true,
+          "detail": "match"
+        },
+        {
+          "check": "match D05",
+          "pass": true,
+          "detail": "match"
+        },
+        {
+          "check": "match D06",
+          "pass": true,
+          "detail": "match"
+        },
+        {
+          "check": "match D07",
+          "pass": true,
+          "detail": "match"
+        },
+        {
+          "check": "match D08",
+          "pass": true,
+          "detail": "match"
+        },
+        {
+          "check": "match D09",
+          "pass": true,
+          "detail": "match"
+        },
+        {
+          "check": "match D10",
+          "pass": true,
+          "detail": "match"
+        },
+        {
+          "check": "match D11",
+          "pass": true,
+          "detail": "match"
+        },
+        {
+          "check": "match D12",
+          "pass": true,
+          "detail": "match"
+        },
+        {
+          "check": "match D13",
+          "pass": true,
+          "detail": "general_reference"
+        },
+        {
+          "check": "match D14",
+          "pass": true,
+          "detail": "general_reference"
+        },
+        {
+          "check": "match D15",
+          "pass": true,
+          "detail": "general_reference"
+        },
+        {
+          "check": "match D16",
+          "pass": true,
+          "detail": "different_project"
+        },
+        {
+          "check": "label I1",
+          "pass": true,
+          "detail": "got confirmed want confirmed"
+        },
+        {
+          "check": "label I2",
+          "pass": true,
+          "detail": "got confirmed want confirmed"
+        },
+        {
+          "check": "label I3",
+          "pass": true,
+          "detail": "got confirmed want confirmed"
+        },
+        {
+          "check": "label T1",
+          "pass": true,
+          "detail": "got confirmed want confirmed"
+        },
+        {
+          "check": "label T2",
+          "pass": true,
+          "detail": "got confirmed want confirmed"
+        },
+        {
+          "check": "evidence T2 from D02",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "label T3",
+          "pass": true,
+          "detail": "got confirmed want confirmed"
+        },
+        {
+          "check": "evidence T3 from D03",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "label T4",
+          "pass": true,
+          "detail": "got confirmed want confirmed"
+        },
+        {
+          "check": "evidence T4 from D13",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "label T5",
+          "pass": true,
+          "detail": "got confirmed want confirmed"
+        },
+        {
+          "check": "evidence T5 from D09",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "label T6",
+          "pass": true,
+          "detail": "got confirmed want confirmed"
+        },
+        {
+          "check": "evidence T6 from D05",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "label T7",
+          "pass": true,
+          "detail": "got confirmed want confirmed"
+        },
+        {
+          "check": "evidence T7 from D06",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "label T8",
+          "pass": true,
+          "detail": "got confirmed want confirmed"
+        },
+        {
+          "check": "evidence T8 from D10",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "label T9",
+          "pass": true,
+          "detail": "got confirmed want confirmed"
+        },
+        {
+          "check": "evidence T9 from D11",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "questions <= 0",
+          "pass": true,
+          "detail": "0"
+        },
+        {
+          "check": "no question for I1",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "rfis <= 1",
+          "pass": true,
+          "detail": "0: "
+        },
+        {
+          "check": "risks <= 1",
+          "pass": true,
+          "detail": "1: Generation tie line may not be creditable energy property"
+        },
+        {
+          "check": "source D07",
+          "pass": true,
+          "detail": "seller"
+        },
+        {
+          "check": "source D10",
+          "pass": true,
+          "detail": "seller"
+        },
+        {
+          "check": "source D12",
+          "pass": true,
+          "detail": "seller"
+        },
+        {
+          "check": "source D05",
+          "pass": true,
+          "detail": "independent"
+        },
+        {
+          "check": "source D06",
+          "pass": true,
+          "detail": "independent"
+        },
+        {
+          "check": "source D13",
+          "pass": true,
+          "detail": "government"
+        },
+        {
+          "check": "source D08",
+          "pass": true,
+          "detail": "supplier"
+        },
+        {
+          "check": "no ids in prose",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "range low 71000000",
+          "pass": true,
+          "detail": "71000000"
+        },
+        {
+          "check": "range high 71000000",
+          "pass": true,
+          "detail": "71000000"
+        },
+        {
+          "check": "every scenario computable",
+          "pass": true,
+          "detail": "0 of 1"
+        },
+        {
+          "check": "quotes verified >= 98%",
+          "pass": true,
+          "detail": "57/57"
+        }
+      ],
+      "quoteRate": 1,
+      "quotes": 57,
+      "usage": {
+        "calls": 4,
+        "inputTokens": 75638,
+        "cacheWriteTokens": 65320,
+        "cacheReadTokens": 0,
+        "outputTokens": 20331,
+        "costUsd": 0.774492
+      },
+      "seconds": 162.833,
+      "run": {
+        "ex": {
+          "baseline": [
+            {
+              "id": "I1",
+              "found": true,
+              "value": "100 MWac / 135 MWdc",
+              "display": "100 MWac / 135 MWdc ground-mounted solar PV",
+              "short": "100 MWac/135 MWdc",
+              "quote": {
+                "docId": "D01",
+                "page": 1,
+                "text": "Ground-mounted solar photovoltaic energy property, 100 MWac / 135 MWdc",
+                "verified": true
+              }
+            },
+            {
+              "id": "I2",
+              "found": true,
+              "value": "Cottonwood Solar I, LLC",
+              "display": "Cottonwood Solar I, LLC (subsidiary of Meridian Ridge Renewables, LLC)",
+              "short": "Cottonwood Solar I",
+              "quote": {
+                "docId": "D01",
+                "page": 1,
+                "text": "from Cottonwood Solar I, LLC (\"Seller\"), a subsidiary of Meridian Ridge Renewables, LLC.",
+                "verified": true
+              }
+            },
+            {
+              "id": "I3",
+              "found": true,
+              "value": "Montgomery County, Illinois",
+              "display": "Montgomery County, Illinois",
+              "short": "Montgomery Co., IL",
+              "quote": {
+                "docId": "D01",
+                "page": 1,
+                "text": "Location Montgomery County, Illinois Estimated eligible basis $142,000,000",
+                "verified": true
+              }
+            },
+            {
+              "id": "T1",
+              "found": true,
+              "value": "Section 48E; ground-mounted solar photovoltaic energy property",
+              "display": "Section 48E clean electricity ITC; ground-mounted solar PV energy property",
+              "short": "§48E solar PV",
+              "quote": {
+                "docId": "D01",
+                "page": 1,
+                "text": "Credit Clean electricity investment tax credit under Section 48E",
+                "verified": true
+              }
+            },
+            {
+              "id": "T2",
+              "found": true,
+              "value": 142000000,
+              "display": "$142,000,000 estimated eligible basis",
+              "short": "$142,000,000",
+              "quote": {
+                "docId": "D01",
+                "page": 1,
+                "text": "Estimated eligible basis $142,000,000 Assumed credit rate 50% (30% base rate with prevailing wage and apprenticeship,",
+                "verified": true
+              }
+            },
+            {
+              "id": "T3",
+              "found": true,
+              "value": true,
+              "display": "Yes, PWA assumed satisfied for full construction period (30% base rate)",
+              "short": "Yes (30% rate)",
+              "quote": {
+                "docId": "D01",
+                "page": 1,
+                "text": "The credit rate assumes the Project satisfies the prevailing wage and apprenticeship requirements for the full construction period.",
+                "verified": true
+              }
+            },
+            {
+              "id": "T4",
+              "found": true,
+              "value": true,
+              "display": "Yes, 10% bonus; coal closure census tract 17135957900 (Seller representation)",
+              "short": "Yes, coal closure",
+              "quote": {
+                "docId": "D01",
+                "page": 1,
+                "text": "The Project is located in census tract 17135957900, which Seller represents is a coal closure energy community census tract.",
+                "verified": true
+              }
+            },
+            {
+              "id": "T5",
+              "found": true,
+              "value": true,
+              "display": "Yes, 10% domestic content bonus assumed; no adjusted percentage stated",
+              "short": "Yes, 10% bonus",
+              "quote": {
+                "docId": "D01",
+                "page": 1,
+                "text": "The credit rate assumes the Project qualifies for the 10% domestic content bonus.",
+                "verified": true
+              }
+            },
+            {
+              "id": "T6",
+              "found": true,
+              "value": "2025-12",
+              "display": "December 2025, before January 1, 2026 (Seller representation)",
+              "short": "Dec 2025",
+              "quote": {
+                "docId": "D01",
+                "page": 1,
+                "text": "Seller represents that construction of the Project began in December 2025, before January 1, 2026.",
+                "verified": true
+              }
+            },
+            {
+              "id": "T7",
+              "found": true,
+              "value": "2026-11-30",
+              "display": "On or before November 30, 2026; Buyer's 2026 tax year",
+              "short": "Nov 30, 2026",
+              "quote": {
+                "docId": "D01",
+                "page": 1,
+                "text": "3.5 Placed in service. The Project is expected to be placed in service on or before November 30, 2026,",
+                "verified": true
+              }
+            },
+            {
+              "id": "T8",
+              "found": true,
+              "value": true,
+              "display": "Yes, material assistance rules assumed not to apply (construction began before Jan 1, 2026); certifications if they apply",
+              "short": "Rules N/A (pre-26)",
+              "quote": {
+                "docId": "D01",
+                "page": 2,
+                "text": "Seller represents that the material assistance restrictions for prohibited foreign entities do not apply to the Project because construction began before January 1, 2026.",
+                "verified": true
+              }
+            },
+            {
+              "id": "T9",
+              "found": true,
+              "value": 66385000,
+              "display": "$66,385,000 (100% of the $66,385,000 estimated purchase price)",
+              "short": "$66,385,000",
+              "quote": {
+                "docId": "D01",
+                "page": 2,
+                "text": "with a limit of liability of not less than 100% of the purchase price.",
+                "verified": true
+              }
+            },
+            {
+              "id": "P1",
+              "found": true,
+              "value": 0.935,
+              "display": "$0.935 per $1.00 of credit (deal term)",
+              "short": "$0.935",
+              "quote": {
+                "docId": "D01",
+                "page": 1,
+                "text": "Credit price $0.935 per $1.00 of tax credit",
+                "verified": true
+              }
+            }
+          ],
+          "usage": {
+            "calls": 1,
+            "inputTokens": 16037,
+            "cacheWriteTokens": 15897,
+            "cacheReadTokens": 0,
+            "outputTokens": 2502,
+            "costUsd": 0.130085
+          }
+        },
+        "cl": {
+          "classifications": [
+            {
+              "docId": "D01",
+              "docType": "Term sheet",
+              "title": "Indicative Term Sheet: Purchase of Section 48E Investment Tax Credits – Cottonwood Solar I",
+              "summary": "Baseline: $142,000,000 eligible basis at 50% rate for a $71,000,000 credit, priced at $0.935 for $66,385,000, with construction start in December 2025 and placed in service by November 30, 2026.",
+              "projectMatch": "match",
+              "projectMatchReason": "This is the anchor term sheet for Cottonwood Solar I, owned by Cottonwood Solar I, LLC, in Montgomery County, Illinois.",
+              "relevantAssumptions": [
+                "I1",
+                "I2",
+                "I3",
+                "T1",
+                "T2",
+                "T3",
+                "T4",
+                "T5",
+                "T6",
+                "T7",
+                "T8",
+                "T9",
+                "P1"
+              ],
+              "suspiciousInstructions": null,
+              "sourceRole": "buyer"
+            },
+            {
+              "docId": "D02",
+              "docType": "Cost segregation report",
+              "title": "Cost Segregation and Eligible Basis Report: Cottonwood Solar I",
+              "summary": "Estimates eligible basis of $142,000,000 out of $151,900,000 total project cost, excluding $9,900,000 of land, roads and fencing.",
+              "projectMatch": "match",
+              "projectMatchReason": "Prepared for Cottonwood Solar I, LLC for the 100 MWac / 135 MWdc facility.",
+              "relevantAssumptions": [
+                "I1",
+                "I2",
+                "T1",
+                "T2"
+              ],
+              "suspiciousInstructions": null,
+              "sourceRole": "seller_advisor"
+            },
+            {
+              "docId": "D03",
+              "docType": "PWA compliance report",
+              "title": "Prevailing Wage and Apprenticeship Compliance Report (Q3 2026)",
+              "summary": "Prevailing wage satisfied. Apprentice hours are 16.0% against the 15.0% requirement, with no cure payment needed, for January 12 to September 15, 2026.",
+              "projectMatch": "match",
+              "projectMatchReason": "Names Cottonwood Solar I as the project.",
+              "relevantAssumptions": [
+                "T3"
+              ],
+              "suspiciousInstructions": null,
+              "sourceRole": "seller_advisor"
+            },
+            {
+              "docId": "D04",
+              "docType": "Site and energy community memo",
+              "title": "Site Location and Energy Community Memorandum",
+              "summary": "Places the entire site in census tract 17135957900, Montgomery County, Illinois, and recommends confirming the tract against the IRS coal closure list.",
+              "projectMatch": "match",
+              "projectMatchReason": "Concerns the Cottonwood Solar I site in Montgomery County and was prepared for the sponsor.",
+              "relevantAssumptions": [
+                "I3",
+                "T4"
+              ],
+              "suspiciousInstructions": null,
+              "sourceRole": "seller_advisor"
+            },
+            {
+              "docId": "D05",
+              "docType": "Independent engineer report",
+              "title": "Independent Engineer's Report: Cottonwood Solar I",
+              "summary": "The engineer reviewed the manufacturer's production records and confirms construction began December 22, 2025 through off-site transformer work under a binding contract dated December 10, 2025. It forecasts placed in service on or about November 30, 2026.",
+              "projectMatch": "match",
+              "projectMatchReason": "Describes the 100 MWac / 135 MWdc Montgomery County project owned by Cottonwood Solar I, LLC.",
+              "relevantAssumptions": [
+                "I1",
+                "I2",
+                "I3",
+                "T1",
+                "T6",
+                "T7",
+                "T8"
+              ],
+              "suspiciousInstructions": null,
+              "sourceRole": "independent"
+            },
+            {
+              "docId": "D06",
+              "docType": "Construction monitoring report",
+              "title": "Construction Monitoring Report No. 3",
+              "summary": "The transformer was delivered September 18, 2026, and the placed-in-service forecast remains on or about November 30, 2026, with 2026 completion likely.",
+              "projectMatch": "match",
+              "projectMatchReason": "The independent engineer's monitoring report names Cottonwood Solar I.",
+              "relevantAssumptions": [
+                "T7"
+              ],
+              "suspiciousInstructions": null,
+              "sourceRole": "independent"
+            },
+            {
+              "docId": "D07",
+              "docType": "Notice to proceed",
+              "title": "Full Notice to Proceed",
+              "summary": "Full notice to proceed issued to the EPC contractor effective December 18, 2025. This is preliminary activity, not physical work.",
+              "projectMatch": "match",
+              "projectMatchReason": "Issued by Cottonwood Solar I, LLC.",
+              "relevantAssumptions": [
+                "I2",
+                "T6"
+              ],
+              "suspiciousInstructions": null,
+              "sourceRole": "seller"
+            },
+            {
+              "docId": "D08",
+              "docType": "Manufacturer letter",
+              "title": "Confirmation of Manufacturing Start: Main Power Transformer",
+              "summary": "The transformer manufacturer states that a binding contract was signed December 10, 2025 and custom manufacture began December 22, 2025, not from inventory.",
+              "projectMatch": "match",
+              "projectMatchReason": "Addressed to Cottonwood Solar I, LLC for the transformer designed for the project.",
+              "relevantAssumptions": [
+                "I2",
+                "T6"
+              ],
+              "suspiciousInstructions": null,
+              "sourceRole": "supplier"
+            },
+            {
+              "docId": "D09",
+              "docType": "Domestic content certification",
+              "title": "Domestic Content Bonus Analysis and Certification",
+              "summary": "Steel and iron requirement satisfied. Manufactured products adjusted percentage is 47.8% against a 45% threshold, based on construction beginning December 22, 2025.",
+              "projectMatch": "match",
+              "projectMatchReason": "Names Cottonwood Solar I (100 MWac / 135 MWdc).",
+              "relevantAssumptions": [
+                "I1",
+                "T5",
+                "T6"
+              ],
+              "suspiciousInstructions": null,
+              "sourceRole": "seller_advisor"
+            },
+            {
+              "docId": "D10",
+              "docType": "Supplier FEOC certifications packet",
+              "title": "Supplier Certifications: Prohibited Foreign Entity Material Assistance",
+              "summary": "The sponsor states the material assistance rules do not apply given a December 22, 2025 start. All four supplier certifications are received, and no cost ratio was prepared.",
+              "projectMatch": "match",
+              "projectMatchReason": "Compiled by the sponsor for Cottonwood Solar I.",
+              "relevantAssumptions": [
+                "T8",
+                "T6"
+              ],
+              "suspiciousInstructions": null,
+              "sourceRole": "seller"
+            },
+            {
+              "docId": "D11",
+              "docType": "Insurance binder",
+              "title": "Binder of Coverage: Tax Credit Insurance",
+              "summary": "Binds a $66,385,000 limit of liability, equal to 100% of the estimated purchase price, with a $500,000 retention.",
+              "projectMatch": "match",
+              "projectMatchReason": "Covers the Cottonwood Solar I 100 MWac / 135 MWdc facility owned by Cottonwood Solar I, LLC.",
+              "relevantAssumptions": [
+                "I1",
+                "I2",
+                "T9"
+              ],
+              "suspiciousInstructions": null,
+              "sourceRole": "independent"
+            },
+            {
+              "docId": "D12",
+              "docType": "Email from seller's counsel",
+              "title": "RE: Cottonwood – open diligence items",
+              "summary": "Seller's counsel restates the December 22, 2025 construction start, the 16.0% apprenticeship result and delivery of the module certification.",
+              "projectMatch": "match",
+              "projectMatchReason": "Concerns the Cottonwood diligence items.",
+              "relevantAssumptions": [
+                "T6",
+                "T3",
+                "T8"
+              ],
+              "suspiciousInstructions": null,
+              "sourceRole": "seller"
+            },
+            {
+              "docId": "D13",
+              "docType": "IRS energy community list excerpt",
+              "title": "IRS Notice 2023-29 Appendix C excerpt",
+              "summary": "Lists tract 17135957900 in Montgomery County, Illinois as a coal closure 'Directly adjoining' tract.",
+              "projectMatch": "general_reference",
+              "projectMatchReason": "An official IRS list, not specific to this project.",
+              "relevantAssumptions": [
+                "T4"
+              ],
+              "suspiciousInstructions": null,
+              "sourceRole": "government"
+            },
+            {
+              "docId": "D14",
+              "docType": "IRS guidance excerpt",
+              "title": "IRS Notice 2023-38 Domestic Content excerpt",
+              "summary": "Explains the adjusted percentage rule and how the threshold depends on the year construction begins.",
+              "projectMatch": "general_reference",
+              "projectMatchReason": "General IRS guidance.",
+              "relevantAssumptions": [
+                "T5"
+              ],
+              "suspiciousInstructions": null,
+              "sourceRole": "government"
+            },
+            {
+              "docId": "D15",
+              "docType": "IRS guidance excerpt",
+              "title": "IRS Notice 2026-15 PFE Material Assistance excerpt",
+              "summary": "Interim guidance on prohibited foreign entity material assistance and the material assistance cost ratio for 48E facilities.",
+              "projectMatch": "general_reference",
+              "projectMatchReason": "General IRS guidance.",
+              "relevantAssumptions": [
+                "T8"
+              ],
+              "suspiciousInstructions": null,
+              "sourceRole": "government"
+            },
+            {
+              "docId": "D16",
+              "docType": "County siting ordinance",
+              "title": "Vermilion County Solar Siting Ordinance excerpt (Mural Energy, LLC)",
+              "summary": "Approves siting for a different 180 MW Mural Energy project in Vermilion County, so it is not evidence for this deal.",
+              "projectMatch": "different_project",
+              "projectMatchReason": "Concerns Mural Energy, LLC's 180 MWac project in Vermilion County, not Cottonwood Solar I in Montgomery County.",
+              "relevantAssumptions": [],
+              "suspiciousInstructions": null,
+              "sourceRole": "government"
+            }
+          ],
+          "usage": {
+            "calls": 1,
+            "inputTokens": 16646,
+            "cacheWriteTokens": 15989,
+            "cacheReadTokens": 0,
+            "outputTokens": 3161,
+            "costUsd": 0.145793
+          }
+        },
+        "ev": {
+          "evidence": [
+            {
+              "assumptionId": "I1",
+              "docId": "D02",
+              "value": "100 MWac / 135 MWdc",
+              "display": "100 MWac / 135 MWdc solar PV, per the cost segregation report",
+              "short": "100 MWac/135 MWdc",
+              "stance": "supports",
+              "note": "The cost segregation report states the same AC and DC capacity as the term sheet.",
+              "quote": {
+                "docId": "D02",
+                "page": 1,
+                "text": "Facility: 100 MWac / 135 MWdc solar PV",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "I1",
+              "docId": "D05",
+              "value": "100 MWac / 135 MWdc",
+              "display": "100 MWac / 135 MWdc single-axis tracking solar PV, per the independent engineer's report",
+              "short": "100 MWac/135 MWdc",
+              "stance": "supports",
+              "note": "The independent engineer's report states the same AC and DC capacity.",
+              "quote": {
+                "docId": "D05",
+                "page": 1,
+                "text": "The Project is a 100 MWac / 135 MWdc single-axis tracking solar photovoltaic facility in Montgomery County, Illinois, owned by Cottonwood Solar I, LLC",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "I1",
+              "docId": "D09",
+              "value": "100 MWac / 135 MWdc",
+              "display": "100 MWac / 135 MWdc, per the domestic content certification",
+              "short": "100 MWac/135 MWdc",
+              "stance": "supports",
+              "note": "The domestic content certification states the same capacity.",
+              "quote": {
+                "docId": "D09",
+                "page": 1,
+                "text": "Project: Cottonwood Solar I (100 MWac / 135 MWdc)",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "I1",
+              "docId": "D11",
+              "value": "100 MWac / 135 MWdc",
+              "display": "100 MWac / 135 MWdc, per the insurance binder",
+              "short": "100 MWac/135 MWdc",
+              "stance": "supports",
+              "note": "The insurance binder describes the insured project with the same capacity.",
+              "quote": {
+                "docId": "D11",
+                "page": 1,
+                "text": "Project: Cottonwood Solar I, a 100 MWac / 135 MWdc solar facility owned by Cottonwood Solar I, LLC",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "I2",
+              "docId": "D02",
+              "value": "Cottonwood Solar I, LLC",
+              "display": "Cottonwood Solar I, LLC, the client for the cost segregation report",
+              "short": "Cottonwood Solar I",
+              "stance": "supports",
+              "note": "The cost segregation report was prepared for the same project company.",
+              "quote": {
+                "docId": "D02",
+                "page": 1,
+                "text": "Prepared for: Cottonwood Solar I, LLC",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "I2",
+              "docId": "D05",
+              "value": "Cottonwood Solar I, LLC",
+              "display": "Owned by Cottonwood Solar I, LLC, per the independent engineer's report",
+              "short": "Cottonwood Solar I",
+              "stance": "supports",
+              "note": "The independent engineer's report names the same owner.",
+              "quote": {
+                "docId": "D05",
+                "page": 1,
+                "text": "The Project is a 100 MWac / 135 MWdc single-axis tracking solar photovoltaic facility in Montgomery County, Illinois, owned by Cottonwood Solar I, LLC",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "I2",
+              "docId": "D07",
+              "value": "Cottonwood Solar I, LLC",
+              "display": "Cottonwood Solar I, LLC, the owner party to the EPC agreement",
+              "short": "Cottonwood Solar I",
+              "stance": "supports",
+              "note": "The notice to proceed shows the same entity as owner under the EPC agreement.",
+              "quote": {
+                "docId": "D07",
+                "page": 1,
+                "text": "Pursuant to Section 4.2 of the Engineering, Procurement and Construction Agreement dated November 3, 2025 between Cottonwood Solar I, LLC and Granite Peak Constructors, Inc.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "I2",
+              "docId": "D08",
+              "value": "Cottonwood Solar I, LLC",
+              "display": "Cottonwood Solar I, LLC, the contracting party for the transformer",
+              "short": "Cottonwood Solar I",
+              "stance": "supports",
+              "note": "The manufacturer letter names the same entity as party to the binding transformer contract.",
+              "quote": {
+                "docId": "D08",
+                "page": 1,
+                "text": "We confirm that Cottonwood Solar I, LLC entered into a binding written contract with Northfield Power Transformers, Inc. on December 10, 2025",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "I2",
+              "docId": "D11",
+              "value": "Cottonwood Solar I, LLC",
+              "display": "Owned by Cottonwood Solar I, LLC, per the insurance binder",
+              "short": "Cottonwood Solar I",
+              "stance": "supports",
+              "note": "The insurance binder names the same project owner.",
+              "quote": {
+                "docId": "D11",
+                "page": 1,
+                "text": "Project: Cottonwood Solar I, a 100 MWac / 135 MWdc solar facility owned by Cottonwood Solar I, LLC",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "I2",
+              "docId": "D04",
+              "value": "Meridian Ridge Renewables, LLC",
+              "display": "The site memo was prepared for the parent sponsor, Meridian Ridge Renewables, LLC",
+              "short": "Parent: Meridian",
+              "stance": "context",
+              "note": "The site memo is addressed to the sponsor named in the term sheet as the seller's parent, not to a different owner.",
+              "quote": {
+                "docId": "D04",
+                "page": 1,
+                "text": "Date: June 30, 2026\nPrepared for: Meridian Ridge Renewables, LLC",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "I3",
+              "docId": "D04",
+              "value": "Montgomery County, Illinois",
+              "display": "Approximately 1,050 acres in Montgomery County, Illinois",
+              "short": "Montgomery Co., IL",
+              "stance": "supports",
+              "note": "The site memo places the project in the same county and state.",
+              "quote": {
+                "docId": "D04",
+                "page": 1,
+                "text": "The Project site consists of approximately 1,050 acres in Montgomery County, Illinois.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "I3",
+              "docId": "D05",
+              "value": "Montgomery County, Illinois",
+              "display": "Montgomery County, Illinois, per the independent engineer's report",
+              "short": "Montgomery Co., IL",
+              "stance": "supports",
+              "note": "The independent engineer's report places the project in the same county and state.",
+              "quote": {
+                "docId": "D05",
+                "page": 1,
+                "text": "The Project is a 100 MWac / 135 MWdc single-axis tracking solar photovoltaic facility in Montgomery County, Illinois, owned by Cottonwood Solar I, LLC",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T1",
+              "docId": "D02",
+              "value": "Section 48E; ground-mounted solar photovoltaic energy property",
+              "display": "Section 48E credit; solar energy property (modules, racking, inverters)",
+              "short": "§48E solar PV",
+              "stance": "supports",
+              "note": "The cost segregation report computes eligible basis for the Section 48E credit on solar PV property.",
+              "quote": {
+                "docId": "D02",
+                "page": 1,
+                "text": "we estimate total project costs of $151,900,000, of which $142,000,000 is eligible basis for purposes of the Section 48E credit.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T1",
+              "docId": "D05",
+              "value": "Section 48E; ground-mounted solar photovoltaic energy property",
+              "display": "Single-axis tracking solar photovoltaic facility",
+              "short": "Solar PV",
+              "stance": "supports",
+              "note": "The independent engineer describes the same technology, a ground-mounted tracking solar PV facility.",
+              "quote": {
+                "docId": "D05",
+                "page": 1,
+                "text": "The Project is a 100 MWac / 135 MWdc single-axis tracking solar photovoltaic facility in Montgomery County, Illinois, owned by Cottonwood Solar I, LLC",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T1",
+              "docId": "D11",
+              "value": "Section 48E",
+              "display": "Insurance covers the Section 48E credit",
+              "short": "§48E",
+              "stance": "supports",
+              "note": "The insurance binder covers the same Code section.",
+              "quote": {
+                "docId": "D11",
+                "page": 1,
+                "text": "Loss from disallowance, recapture or reduction of the Section 48E",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T2",
+              "docId": "D02",
+              "value": 142000000,
+              "display": "$142,000,000 eligible basis out of $151,900,000 total project cost",
+              "short": "$142,000,000",
+              "stance": "supports",
+              "note": "The cost segregation report's eligible basis equals the term sheet estimate exactly.",
+              "quote": {
+                "docId": "D02",
+                "page": 1,
+                "text": "we estimate total project costs of $151,900,000, of which $142,000,000 is eligible basis for purposes of the Section 48E credit.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T2",
+              "docId": "D02",
+              "value": 9900000,
+              "display": "$9,900,000 of land, roads and fencing excluded from eligible basis",
+              "short": "$9.9M excluded",
+              "stance": "context",
+              "note": "Explains the gap between total project cost and eligible basis.",
+              "quote": {
+                "docId": "D02",
+                "page": 1,
+                "text": "Land, roads, fencing $9,900,000 Excluded",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T2",
+              "docId": "D02",
+              "value": 5600000,
+              "display": "$5,600,000 project-owned interconnection facilities included; no utility network upgrades capitalized",
+              "short": "$5.6M intercon.",
+              "stance": "context",
+              "note": "Interconnection costs included in basis are stated to be project-owned energy property, which should be confirmed.",
+              "quote": {
+                "docId": "D02",
+                "page": 1,
+                "text": "The interconnection facilities are owned by the Project and are energy property of the taxpayer; no utility-owned network upgrades were capitalized to the Project.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T2",
+              "docId": "D02",
+              "value": null,
+              "display": "Basis is an estimate; final certification after placed in service",
+              "short": "Not yet final",
+              "stance": "context",
+              "note": "Eligible basis may still change with final change orders before certification.",
+              "quote": {
+                "docId": "D02",
+                "page": 1,
+                "text": "Final eligible basis will be certified after the placed-in-service date. Figures may change with final change orders.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T3",
+              "docId": "D03",
+              "value": true,
+              "display": "Apprentice labor hours 16.0% vs 15.0% required",
+              "short": "16.0% vs 15%",
+              "stance": "supports",
+              "note": "The apprenticeship labor-hour percentage exceeds the requirement.",
+              "quote": {
+                "docId": "D03",
+                "page": 1,
+                "text": "Apprentice labor hours as % of total 16.0%",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T3",
+              "docId": "D03",
+              "value": true,
+              "display": "Prevailing wage and apprenticeship both satisfied; no penalty or cure payment",
+              "short": "Satisfied",
+              "stance": "supports",
+              "note": "The PWA compliance report concludes both requirements are met without any cure payment.",
+              "quote": {
+                "docId": "D03",
+                "page": 1,
+                "text": "Both the prevailing wage and the apprenticeship requirements are satisfied for the period reviewed. No",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T3",
+              "docId": "D03",
+              "value": null,
+              "display": "Report covers January 12, 2026 to September 15, 2026 only",
+              "short": "Thru Sep 15, 2026",
+              "stance": "context",
+              "note": "Construction continues to about November 30, 2026, so compliance for the remaining period still needs a final report.",
+              "quote": {
+                "docId": "D03",
+                "page": 1,
+                "text": "Period covered: January 12, 2026 through September 15, 2026",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T3",
+              "docId": "D03",
+              "value": true,
+              "display": "Prevailing wage underpayments corrected with interest within 30 days",
+              "short": "2 underpay. fixed",
+              "stance": "context",
+              "note": "Two March 2026 underpayments were corrected, which supports the prevailing wage conclusion.",
+              "quote": {
+                "docId": "D03",
+                "page": 1,
+                "text": "Two underpayments identified in March 2026 were corrected with interest within 30 days. Prevailing wage requirement: satisfied for the period reviewed.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T4",
+              "docId": "D04",
+              "value": null,
+              "display": "Entire site, including all energy property, in census tract 17135957900",
+              "short": "Tract 17135957900",
+              "stance": "context",
+              "note": "Identifies the tract to be checked against the qualifying list.",
+              "quote": {
+                "docId": "D04",
+                "page": 1,
+                "text": "Using the 2020 census tract boundaries, the entire site, including all energy property, lies within census tract 17135957900.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T4",
+              "docId": "D13",
+              "value": true,
+              "display": "Tract 17135957900 listed as directly adjoining a coal closure tract",
+              "short": "Listed: adjoining",
+              "stance": "supports",
+              "note": "The project's tract appears on the IRS coal closure list as a directly adjoining tract, which qualifies.",
+              "quote": {
+                "docId": "D13",
+                "page": 2,
+                "text": "17135957900 Directly adjoining \nIllinois Montgomery\nCounty \n17135958000 Generating unit retirement",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T4",
+              "docId": "D04",
+              "value": null,
+              "display": "Memo advises confirming the tract against the current IRS list",
+              "short": "Check current list",
+              "stance": "context",
+              "note": "The list provided is the original Notice 2023-29 appendix; the current annual list should be confirmed.",
+              "quote": {
+                "docId": "D04",
+                "page": 1,
+                "text": "Whether the tract is listed should be confirmed against the current IRS list of coal closure census tracts and directly adjoining tracts.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T5",
+              "docId": "D09",
+              "value": 47.8,
+              "display": "Manufactured products adjusted percentage 47.8% against a 45% threshold; steel and iron satisfied",
+              "short": "47.8% vs 45%",
+              "stance": "supports",
+              "note": "Qualifies at the 45% threshold for construction beginning in late 2025, which the independent engineer substantiates.",
+              "quote": {
+                "docId": "D09",
+                "page": 1,
+                "text": "Manufactured products adjusted\npercentage\n47.8%",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T5",
+              "docId": "D09",
+              "value": 45,
+              "display": "Threshold applied: 45% based on construction beginning December 22, 2025",
+              "short": "45% threshold",
+              "stance": "context",
+              "note": "The threshold depends on the beginning-of-construction date; a 2026 start would raise it above 47.8%.",
+              "quote": {
+                "docId": "D09",
+                "page": 1,
+                "text": "Threshold applied 45% (construction beginning December 22, 2025)",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T5",
+              "docId": "D09",
+              "value": null,
+              "display": "Steel and iron 100% U.S.: satisfied",
+              "short": "Steel/iron met",
+              "stance": "supports",
+              "note": "The steel and iron requirement is reported as satisfied.",
+              "quote": {
+                "docId": "D09",
+                "page": 1,
+                "text": "Steel and iron (structural, 100% U.S.) Satisfied",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T5",
+              "docId": "D14",
+              "value": null,
+              "display": "Statutory adjusted percentage rises from 40% (pre-2025) to 55% (after 2026)",
+              "short": "40%→55% scale",
+              "stance": "context",
+              "note": "Confirms the threshold varies with the construction-start year.",
+              "quote": {
+                "docId": "D14",
+                "page": 2,
+                "text": "the adjusted percentage increases from\n40 percent for qualified facilities the construction of which begins before 2025 to 55\npercent for qualified facilities the construction of which begins after 2026",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T6",
+              "docId": "D05",
+              "value": "2025-12-22",
+              "display": "December 22, 2025: off-site transformer manufacture under binding contract, confirmed by the independent engineer after reviewing production records",
+              "short": "Dec 22, 2025",
+              "stance": "supports",
+              "note": "An independent party reviewed the manufacturer's records and confirmed significant, continuous, non-inventory physical work.",
+              "quote": {
+                "docId": "D05",
+                "page": 1,
+                "text": "We reviewed the manufacturer's production records and confirm that physical work of a significant nature began on that date and continued without interruption",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T6",
+              "docId": "D05",
+              "value": "2025-12-22",
+              "display": "Independent engineer's opinion: construction began December 22, 2025",
+              "short": "Dec 22, 2025",
+              "stance": "supports",
+              "note": "The independent engineer gives an express opinion on the start date, within December 2025.",
+              "quote": {
+                "docId": "D05",
+                "page": 1,
+                "text": "In our opinion the Project's construction began on December 22, 2025.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T6",
+              "docId": "D08",
+              "value": "2025-12-22",
+              "display": "Manufacturer confirms custom transformer manufacture began December 22, 2025 under December 10, 2025 contract",
+              "short": "Dec 22, 2025",
+              "stance": "supports",
+              "note": "The manufacturer's letter is consistent with the independent engineer's finding.",
+              "quote": {
+                "docId": "D08",
+                "page": 1,
+                "text": "Physical manufacture of the transformer, beginning with cutting and stacking of the custom core, commenced at our facility on December 22, 2025 and continued thereafter.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T6",
+              "docId": "D07",
+              "value": "2025-12-18",
+              "display": "Full notice to proceed issued December 18, 2025",
+              "short": "NTP Dec 18, 2025",
+              "stance": "context",
+              "note": "A notice to proceed is preliminary activity, not physical work, and does not itself start construction.",
+              "quote": {
+                "docId": "D07",
+                "page": 1,
+                "text": "Owner hereby issues\nFull Notice to Proceed with the Work, effective December 18, 2025.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T6",
+              "docId": "D05",
+              "value": "2026-01-12",
+              "display": "On-site physical work (pile installation) began January 12, 2026",
+              "short": "On-site Jan 12, 2026",
+              "stance": "context",
+              "note": "On-site work began in 2026, so the pre-2026 start rests on the off-site transformer work.",
+              "quote": {
+                "docId": "D05",
+                "page": 1,
+                "text": "on-site physical work, beginning with pile installation\nfor the tracker foundations, commenced on January 12, 2026.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T7",
+              "docId": "D06",
+              "value": "2026-11-30",
+              "display": "Placed in service forecast on or about November 30, 2026, unchanged",
+              "short": "Nov 30, 2026",
+              "stance": "supports",
+              "note": "The latest construction monitoring report matches the term sheet date, within the 2026 tax year.",
+              "quote": {
+                "docId": "D06",
+                "page": 1,
+                "text": "We forecast the placed-in-service date on or about November 30, 2026, unchanged from our July 31, 2026 report.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T7",
+              "docId": "D06",
+              "value": null,
+              "display": "Main power transformer delivered September 18, 2026; schedule contingency resolved",
+              "short": "MPT delivered",
+              "stance": "context",
+              "note": "The key schedule risk flagged in the July report has cleared.",
+              "quote": {
+                "docId": "D06",
+                "page": 1,
+                "text": "The main power transformer passed factory acceptance testing in August 2026 and was delivered to\nthe site on September 18, 2026.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T7",
+              "docId": "D05",
+              "value": "2026-11-30",
+              "display": "July report forecast placed in service on or about November 30, 2026, contingent on transformer delivery",
+              "short": "Nov 30, 2026",
+              "stance": "context",
+              "note": "Earlier forecast is the same date, showing no slippage.",
+              "quote": {
+                "docId": "D05",
+                "page": 1,
+                "text": "placed-in-service on or about November 30, 2026, contingent on main power transformer delivery in\nSeptember 2026.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T8",
+              "docId": "D05",
+              "value": true,
+              "display": "Construction began December 22, 2025, so material assistance rules do not apply",
+              "short": "Rules N/A",
+              "stance": "supports",
+              "note": "A substantiated pre-2026 start means the prohibited foreign entity material assistance rules do not apply.",
+              "quote": {
+                "docId": "D05",
+                "page": 1,
+                "text": "In our opinion the Project's construction began on December 22, 2025.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T8",
+              "docId": "D10",
+              "value": null,
+              "display": "Supplier certifications received from all four manufactured-product suppliers (informational)",
+              "short": "4/4 certs",
+              "stance": "context",
+              "note": "Certifications are informational because the rules do not apply.",
+              "quote": {
+                "docId": "D10",
+                "page": 1,
+                "text": "Certifications have been received from every manufactured-product supplier.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T8",
+              "docId": "D10",
+              "value": null,
+              "display": "No material assistance cost ratio prepared because rules do not apply",
+              "short": "No MACR (N/A)",
+              "stance": "context",
+              "note": "Absence of the cost ratio is not a gap given the substantiated 2025 start.",
+              "quote": {
+                "docId": "D10",
+                "page": 1,
+                "text": "No material assistance\ncost ratio calculation has been prepared because the restrictions do not apply to the Project.",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T9",
+              "docId": "D11",
+              "value": 66385000,
+              "display": "Bound limit of liability $66,385,000 with $500,000 retention",
+              "short": "$66,385,000",
+              "stance": "supports",
+              "note": "The bound limit equals 100% of the estimated purchase price required by the term sheet.",
+              "quote": {
+                "docId": "D11",
+                "page": 1,
+                "text": "Limit of liability $66,385,000\nRetention $500,000",
+                "verified": true
+              }
+            },
+            {
+              "assumptionId": "T9",
+              "docId": "D11",
+              "value": null,
+              "display": "Limit increases require underwriter approval and additional premium",
+              "short": "Increase needs OK",
+              "stance": "context",
+              "note": "If the purchase price rises the limit would not automatically follow; the $500,000 retention also leaves the buyer exposed.",
+              "quote": {
+                "docId": "D11",
+                "page": 1,
+                "text": "Increases to the limit are subject to underwriter approval and additional premium.",
+                "verified": true
+              }
+            }
+          ],
+          "gaps": [],
+          "usage": {
+            "calls": 1,
+            "inputTokens": 17730,
+            "cacheWriteTokens": 16078,
+            "cacheReadTokens": 0,
+            "outputTokens": 9494,
+            "costUsd": 0.276878
+          }
+        },
+        "rc": {
+          "findings": [
+            {
+              "assumptionId": "I1",
+              "label": "confirmed",
+              "baselineDisplay": "100 MWac / 135 MWdc ground-mounted solar PV",
+              "currentDisplay": "100 MWac / 135 MWdc solar PV",
+              "currentValue": "100 MWac / 135 MWdc",
+              "currentShort": "100 MWac / 135 MWdc",
+              "dependsOn": null,
+              "summary": "Four documents state the same 100 MWac / 135 MWdc capacity as the term sheet: the cost segregation report, the independent engineer's report, the domestic content certification and the insurance binder.",
+              "evidence": [
+                {
+                  "assumptionId": "I1",
+                  "docId": "D02",
+                  "value": "100 MWac / 135 MWdc",
+                  "display": "100 MWac / 135 MWdc solar PV, per the cost segregation report",
+                  "short": "100 MWac/135 MWdc",
+                  "stance": "supports",
+                  "note": "The cost segregation report states the same AC and DC capacity as the term sheet.",
+                  "quote": {
+                    "docId": "D02",
+                    "page": 1,
+                    "text": "Facility: 100 MWac / 135 MWdc solar PV",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "I1",
+                  "docId": "D05",
+                  "value": "100 MWac / 135 MWdc",
+                  "display": "100 MWac / 135 MWdc single-axis tracking solar PV, per the independent engineer's report",
+                  "short": "100 MWac/135 MWdc",
+                  "stance": "supports",
+                  "note": "The independent engineer's report states the same AC and DC capacity.",
+                  "quote": {
+                    "docId": "D05",
+                    "page": 1,
+                    "text": "The Project is a 100 MWac / 135 MWdc single-axis tracking solar photovoltaic facility in Montgomery County, Illinois, owned by Cottonwood Solar I, LLC",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "I1",
+                  "docId": "D09",
+                  "value": "100 MWac / 135 MWdc",
+                  "display": "100 MWac / 135 MWdc, per the domestic content certification",
+                  "short": "100 MWac/135 MWdc",
+                  "stance": "supports",
+                  "note": "The domestic content certification states the same capacity.",
+                  "quote": {
+                    "docId": "D09",
+                    "page": 1,
+                    "text": "Project: Cottonwood Solar I (100 MWac / 135 MWdc)",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "I1",
+                  "docId": "D11",
+                  "value": "100 MWac / 135 MWdc",
+                  "display": "100 MWac / 135 MWdc, per the insurance binder",
+                  "short": "100 MWac/135 MWdc",
+                  "stance": "supports",
+                  "note": "The insurance binder describes the insured project with the same capacity.",
+                  "quote": {
+                    "docId": "D11",
+                    "page": 1,
+                    "text": "Project: Cottonwood Solar I, a 100 MWac / 135 MWdc solar facility owned by Cottonwood Solar I, LLC",
+                    "verified": true
+                  }
+                }
+              ],
+              "questionIds": []
+            },
+            {
+              "assumptionId": "I2",
+              "label": "confirmed",
+              "baselineDisplay": "Cottonwood Solar I, LLC (subsidiary of Meridian Ridge Renewables, LLC)",
+              "currentDisplay": "Cottonwood Solar I, LLC (subsidiary of Meridian Ridge Renewables, LLC)",
+              "currentValue": "Cottonwood Solar I, LLC",
+              "currentShort": "Cottonwood Solar I, LLC",
+              "dependsOn": null,
+              "summary": "Every document naming the owner or contracting party identifies Cottonwood Solar I, LLC. The site memo is addressed to the parent sponsor named in the term sheet, which is consistent.",
+              "evidence": [
+                {
+                  "assumptionId": "I2",
+                  "docId": "D02",
+                  "value": "Cottonwood Solar I, LLC",
+                  "display": "Cottonwood Solar I, LLC, the client for the cost segregation report",
+                  "short": "Cottonwood Solar I",
+                  "stance": "supports",
+                  "note": "The cost segregation report was prepared for the same project company.",
+                  "quote": {
+                    "docId": "D02",
+                    "page": 1,
+                    "text": "Prepared for: Cottonwood Solar I, LLC",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "I2",
+                  "docId": "D05",
+                  "value": "Cottonwood Solar I, LLC",
+                  "display": "Owned by Cottonwood Solar I, LLC, per the independent engineer's report",
+                  "short": "Cottonwood Solar I",
+                  "stance": "supports",
+                  "note": "The independent engineer's report names the same owner.",
+                  "quote": {
+                    "docId": "D05",
+                    "page": 1,
+                    "text": "The Project is a 100 MWac / 135 MWdc single-axis tracking solar photovoltaic facility in Montgomery County, Illinois, owned by Cottonwood Solar I, LLC",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "I2",
+                  "docId": "D07",
+                  "value": "Cottonwood Solar I, LLC",
+                  "display": "Cottonwood Solar I, LLC, the owner party to the EPC agreement",
+                  "short": "Cottonwood Solar I",
+                  "stance": "supports",
+                  "note": "The notice to proceed shows the same entity as owner under the EPC agreement.",
+                  "quote": {
+                    "docId": "D07",
+                    "page": 1,
+                    "text": "Pursuant to Section 4.2 of the Engineering, Procurement and Construction Agreement dated November 3, 2025 between Cottonwood Solar I, LLC and Granite Peak Constructors, Inc.",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "I2",
+                  "docId": "D08",
+                  "value": "Cottonwood Solar I, LLC",
+                  "display": "Cottonwood Solar I, LLC, the contracting party for the transformer",
+                  "short": "Cottonwood Solar I",
+                  "stance": "supports",
+                  "note": "The manufacturer letter names the same entity as party to the binding transformer contract.",
+                  "quote": {
+                    "docId": "D08",
+                    "page": 1,
+                    "text": "We confirm that Cottonwood Solar I, LLC entered into a binding written contract with Northfield Power Transformers, Inc. on December 10, 2025",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "I2",
+                  "docId": "D11",
+                  "value": "Cottonwood Solar I, LLC",
+                  "display": "Owned by Cottonwood Solar I, LLC, per the insurance binder",
+                  "short": "Cottonwood Solar I",
+                  "stance": "supports",
+                  "note": "The insurance binder names the same project owner.",
+                  "quote": {
+                    "docId": "D11",
+                    "page": 1,
+                    "text": "Project: Cottonwood Solar I, a 100 MWac / 135 MWdc solar facility owned by Cottonwood Solar I, LLC",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "I2",
+                  "docId": "D04",
+                  "value": "Meridian Ridge Renewables, LLC",
+                  "display": "The site memo was prepared for the parent sponsor, Meridian Ridge Renewables, LLC",
+                  "short": "Parent: Meridian",
+                  "stance": "context",
+                  "note": "The site memo is addressed to the sponsor named in the term sheet as the seller's parent, not to a different owner.",
+                  "quote": {
+                    "docId": "D04",
+                    "page": 1,
+                    "text": "Date: June 30, 2026\nPrepared for: Meridian Ridge Renewables, LLC",
+                    "verified": true
+                  }
+                }
+              ],
+              "questionIds": []
+            },
+            {
+              "assumptionId": "I3",
+              "label": "confirmed",
+              "baselineDisplay": "Montgomery County, Illinois",
+              "currentDisplay": "Montgomery County, Illinois",
+              "currentValue": "Montgomery County, Illinois",
+              "currentShort": "Montgomery County, Illinois",
+              "dependsOn": null,
+              "summary": "The site memo and the independent engineer's report both place the project in Montgomery County, Illinois. The Vermilion County siting ordinance in the data room concerns an unrelated project and was disregarded.",
+              "evidence": [
+                {
+                  "assumptionId": "I3",
+                  "docId": "D04",
+                  "value": "Montgomery County, Illinois",
+                  "display": "Approximately 1,050 acres in Montgomery County, Illinois",
+                  "short": "Montgomery Co., IL",
+                  "stance": "supports",
+                  "note": "The site memo places the project in the same county and state.",
+                  "quote": {
+                    "docId": "D04",
+                    "page": 1,
+                    "text": "The Project site consists of approximately 1,050 acres in Montgomery County, Illinois.",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "I3",
+                  "docId": "D05",
+                  "value": "Montgomery County, Illinois",
+                  "display": "Montgomery County, Illinois, per the independent engineer's report",
+                  "short": "Montgomery Co., IL",
+                  "stance": "supports",
+                  "note": "The independent engineer's report places the project in the same county and state.",
+                  "quote": {
+                    "docId": "D05",
+                    "page": 1,
+                    "text": "The Project is a 100 MWac / 135 MWdc single-axis tracking solar photovoltaic facility in Montgomery County, Illinois, owned by Cottonwood Solar I, LLC",
+                    "verified": true
+                  }
+                }
+              ],
+              "questionIds": []
+            },
+            {
+              "assumptionId": "T1",
+              "label": "confirmed",
+              "baselineDisplay": "Section 48E clean electricity ITC; ground-mounted solar PV energy property",
+              "currentDisplay": "Section 48E credit; single-axis tracking ground-mounted solar PV",
+              "currentValue": "Section 48E; ground-mounted solar photovoltaic energy property",
+              "currentShort": "§48E; ground-mounted solar PV",
+              "dependsOn": null,
+              "summary": "The cost segregation report and the insurance binder both refer to the Section 48E credit. The independent engineer describes a ground-mounted, single-axis tracking solar PV facility.",
+              "evidence": [
+                {
+                  "assumptionId": "T1",
+                  "docId": "D02",
+                  "value": "Section 48E; ground-mounted solar photovoltaic energy property",
+                  "display": "Section 48E credit; solar energy property (modules, racking, inverters)",
+                  "short": "§48E solar PV",
+                  "stance": "supports",
+                  "note": "The cost segregation report computes eligible basis for the Section 48E credit on solar PV property.",
+                  "quote": {
+                    "docId": "D02",
+                    "page": 1,
+                    "text": "we estimate total project costs of $151,900,000, of which $142,000,000 is eligible basis for purposes of the Section 48E credit.",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T1",
+                  "docId": "D05",
+                  "value": "Section 48E; ground-mounted solar photovoltaic energy property",
+                  "display": "Single-axis tracking solar photovoltaic facility",
+                  "short": "Solar PV",
+                  "stance": "supports",
+                  "note": "The independent engineer describes the same technology, a ground-mounted tracking solar PV facility.",
+                  "quote": {
+                    "docId": "D05",
+                    "page": 1,
+                    "text": "The Project is a 100 MWac / 135 MWdc single-axis tracking solar photovoltaic facility in Montgomery County, Illinois, owned by Cottonwood Solar I, LLC",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T1",
+                  "docId": "D11",
+                  "value": "Section 48E",
+                  "display": "Insurance covers the Section 48E credit",
+                  "short": "§48E",
+                  "stance": "supports",
+                  "note": "The insurance binder covers the same Code section.",
+                  "quote": {
+                    "docId": "D11",
+                    "page": 1,
+                    "text": "Loss from disallowance, recapture or reduction of the Section 48E",
+                    "verified": true
+                  }
+                }
+              ],
+              "questionIds": []
+            },
+            {
+              "assumptionId": "T2",
+              "label": "confirmed",
+              "baselineDisplay": "$142,000,000 estimated eligible basis",
+              "currentDisplay": "$142,000,000 eligible basis (of $151,900,000 total project cost; $9,900,000 land, roads and fencing excluded)",
+              "currentValue": 142000000,
+              "currentShort": "$142,000,000 eligible basis",
+              "dependsOn": null,
+              "summary": "The cost segregation report concludes eligible basis of exactly $142,000,000, matching the term sheet. It excludes $9,900,000 of land, roads and fencing, and includes $5,600,000 of project-owned interconnection facilities.",
+              "evidence": [
+                {
+                  "assumptionId": "T2",
+                  "docId": "D02",
+                  "value": 142000000,
+                  "display": "$142,000,000 eligible basis out of $151,900,000 total project cost",
+                  "short": "$142,000,000",
+                  "stance": "supports",
+                  "note": "The cost segregation report's eligible basis equals the term sheet estimate exactly.",
+                  "quote": {
+                    "docId": "D02",
+                    "page": 1,
+                    "text": "we estimate total project costs of $151,900,000, of which $142,000,000 is eligible basis for purposes of the Section 48E credit.",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T2",
+                  "docId": "D02",
+                  "value": 9900000,
+                  "display": "$9,900,000 of land, roads and fencing excluded from eligible basis",
+                  "short": "$9.9M excluded",
+                  "stance": "context",
+                  "note": "Explains the gap between total project cost and eligible basis.",
+                  "quote": {
+                    "docId": "D02",
+                    "page": 1,
+                    "text": "Land, roads, fencing $9,900,000 Excluded",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T2",
+                  "docId": "D02",
+                  "value": 5600000,
+                  "display": "$5,600,000 project-owned interconnection facilities included; no utility network upgrades capitalized",
+                  "short": "$5.6M intercon.",
+                  "stance": "context",
+                  "note": "Interconnection costs included in basis are stated to be project-owned energy property, which should be confirmed.",
+                  "quote": {
+                    "docId": "D02",
+                    "page": 1,
+                    "text": "The interconnection facilities are owned by the Project and are energy property of the taxpayer; no utility-owned network upgrades were capitalized to the Project.",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T2",
+                  "docId": "D02",
+                  "value": null,
+                  "display": "Basis is an estimate; final certification after placed in service",
+                  "short": "Not yet final",
+                  "stance": "context",
+                  "note": "Eligible basis may still change with final change orders before certification.",
+                  "quote": {
+                    "docId": "D02",
+                    "page": 1,
+                    "text": "Final eligible basis will be certified after the placed-in-service date. Figures may change with final change orders.",
+                    "verified": true
+                  }
+                }
+              ],
+              "questionIds": []
+            },
+            {
+              "assumptionId": "T3",
+              "label": "confirmed",
+              "baselineDisplay": "Yes, PWA assumed satisfied for full construction period (30% base rate)",
+              "currentDisplay": "Prevailing wage satisfied; apprentice labor hours 16.0% vs 15.0% required; no cure payment",
+              "currentValue": true,
+              "currentShort": "Satisfied; apprentices 16.0% vs 15.0%",
+              "dependsOn": null,
+              "summary": "The compliance report finds both requirements satisfied from January 12 through September 15, 2026, with apprentice hours at 16.0% against the 15.0% requirement. Two prevailing wage underpayments were corrected with interest, and no penalty or cure payment is required.",
+              "evidence": [
+                {
+                  "assumptionId": "T3",
+                  "docId": "D03",
+                  "value": true,
+                  "display": "Apprentice labor hours 16.0% vs 15.0% required",
+                  "short": "16.0% vs 15%",
+                  "stance": "supports",
+                  "note": "The apprenticeship labor-hour percentage exceeds the requirement.",
+                  "quote": {
+                    "docId": "D03",
+                    "page": 1,
+                    "text": "Apprentice labor hours as % of total 16.0%",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T3",
+                  "docId": "D03",
+                  "value": true,
+                  "display": "Prevailing wage and apprenticeship both satisfied; no penalty or cure payment",
+                  "short": "Satisfied",
+                  "stance": "supports",
+                  "note": "The PWA compliance report concludes both requirements are met without any cure payment.",
+                  "quote": {
+                    "docId": "D03",
+                    "page": 1,
+                    "text": "Both the prevailing wage and the apprenticeship requirements are satisfied for the period reviewed. No",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T3",
+                  "docId": "D03",
+                  "value": null,
+                  "display": "Report covers January 12, 2026 to September 15, 2026 only",
+                  "short": "Thru Sep 15, 2026",
+                  "stance": "context",
+                  "note": "Construction continues to about November 30, 2026, so compliance for the remaining period still needs a final report.",
+                  "quote": {
+                    "docId": "D03",
+                    "page": 1,
+                    "text": "Period covered: January 12, 2026 through September 15, 2026",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T3",
+                  "docId": "D03",
+                  "value": true,
+                  "display": "Prevailing wage underpayments corrected with interest within 30 days",
+                  "short": "2 underpay. fixed",
+                  "stance": "context",
+                  "note": "Two March 2026 underpayments were corrected, which supports the prevailing wage conclusion.",
+                  "quote": {
+                    "docId": "D03",
+                    "page": 1,
+                    "text": "Two underpayments identified in March 2026 were corrected with interest within 30 days. Prevailing wage requirement: satisfied for the period reviewed.",
+                    "verified": true
+                  }
+                }
+              ],
+              "questionIds": []
+            },
+            {
+              "assumptionId": "T4",
+              "label": "confirmed",
+              "baselineDisplay": "Yes, 10% bonus; coal closure census tract 17135957900 (Seller representation)",
+              "currentDisplay": "Census tract 17135957900 listed on the IRS coal closure list as directly adjoining",
+              "currentValue": true,
+              "currentShort": "Tract 17135957900 listed (adjoining)",
+              "dependsOn": null,
+              "summary": "The site memo places the entire site in census tract 17135957900. The IRS coal closure appendix lists that tract as directly adjoining a generating unit retirement tract, which qualifies for the energy community bonus.",
+              "evidence": [
+                {
+                  "assumptionId": "T4",
+                  "docId": "D04",
+                  "value": null,
+                  "display": "Entire site, including all energy property, in census tract 17135957900",
+                  "short": "Tract 17135957900",
+                  "stance": "context",
+                  "note": "Identifies the tract to be checked against the qualifying list.",
+                  "quote": {
+                    "docId": "D04",
+                    "page": 1,
+                    "text": "Using the 2020 census tract boundaries, the entire site, including all energy property, lies within census tract 17135957900.",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T4",
+                  "docId": "D13",
+                  "value": true,
+                  "display": "Tract 17135957900 listed as directly adjoining a coal closure tract",
+                  "short": "Listed: adjoining",
+                  "stance": "supports",
+                  "note": "The project's tract appears on the IRS coal closure list as a directly adjoining tract, which qualifies.",
+                  "quote": {
+                    "docId": "D13",
+                    "page": 2,
+                    "text": "17135957900 Directly adjoining \nIllinois Montgomery\nCounty \n17135958000 Generating unit retirement",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T4",
+                  "docId": "D04",
+                  "value": null,
+                  "display": "Memo advises confirming the tract against the current IRS list",
+                  "short": "Check current list",
+                  "stance": "context",
+                  "note": "The list provided is the original Notice 2023-29 appendix; the current annual list should be confirmed.",
+                  "quote": {
+                    "docId": "D04",
+                    "page": 1,
+                    "text": "Whether the tract is listed should be confirmed against the current IRS list of coal closure census tracts and directly adjoining tracts.",
+                    "verified": true
+                  }
+                }
+              ],
+              "questionIds": []
+            },
+            {
+              "assumptionId": "T5",
+              "label": "confirmed",
+              "baselineDisplay": "Yes, 10% domestic content bonus assumed; no adjusted percentage stated",
+              "currentDisplay": "Manufactured products adjusted percentage 47.8% vs 45% threshold; steel and iron satisfied",
+              "currentValue": 47.8,
+              "currentShort": "47.8% (45% threshold); steel/iron met",
+              "dependsOn": null,
+              "summary": "The domestic content certification reports a 47.8% adjusted percentage and compliant steel and iron. That exceeds the 45% threshold for a 2025 construction start, and the independent engineer substantiates a December 22, 2025 start.",
+              "evidence": [
+                {
+                  "assumptionId": "T5",
+                  "docId": "D09",
+                  "value": 47.8,
+                  "display": "Manufactured products adjusted percentage 47.8% against a 45% threshold; steel and iron satisfied",
+                  "short": "47.8% vs 45%",
+                  "stance": "supports",
+                  "note": "Qualifies at the 45% threshold for construction beginning in late 2025, which the independent engineer substantiates.",
+                  "quote": {
+                    "docId": "D09",
+                    "page": 1,
+                    "text": "Manufactured products adjusted\npercentage\n47.8%",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T5",
+                  "docId": "D09",
+                  "value": 45,
+                  "display": "Threshold applied: 45% based on construction beginning December 22, 2025",
+                  "short": "45% threshold",
+                  "stance": "context",
+                  "note": "The threshold depends on the beginning-of-construction date; a 2026 start would raise it above 47.8%.",
+                  "quote": {
+                    "docId": "D09",
+                    "page": 1,
+                    "text": "Threshold applied 45% (construction beginning December 22, 2025)",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T5",
+                  "docId": "D09",
+                  "value": null,
+                  "display": "Steel and iron 100% U.S.: satisfied",
+                  "short": "Steel/iron met",
+                  "stance": "supports",
+                  "note": "The steel and iron requirement is reported as satisfied.",
+                  "quote": {
+                    "docId": "D09",
+                    "page": 1,
+                    "text": "Steel and iron (structural, 100% U.S.) Satisfied",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T5",
+                  "docId": "D14",
+                  "value": null,
+                  "display": "Statutory adjusted percentage rises from 40% (pre-2025) to 55% (after 2026)",
+                  "short": "40%→55% scale",
+                  "stance": "context",
+                  "note": "Confirms the threshold varies with the construction-start year.",
+                  "quote": {
+                    "docId": "D14",
+                    "page": 2,
+                    "text": "the adjusted percentage increases from\n40 percent for qualified facilities the construction of which begins before 2025 to 55\npercent for qualified facilities the construction of which begins after 2026",
+                    "verified": true
+                  }
+                }
+              ],
+              "questionIds": []
+            },
+            {
+              "assumptionId": "T6",
+              "label": "confirmed",
+              "baselineDisplay": "December 2025, before January 1, 2026 (Seller representation)",
+              "currentDisplay": "December 22, 2025: off-site custom transformer manufacture under a December 10, 2025 binding contract, confirmed by the independent engineer",
+              "currentValue": "2025-12-22",
+              "currentShort": "Dec 22, 2025 (IE-confirmed off-site work)",
+              "dependsOn": null,
+              "summary": "The independent engineer reviewed the manufacturer's production records. It confirms that significant, continuous, non-inventory physical work on the custom transformer began December 22, 2025 under a binding contract. That date falls within the December 2025 assumption; the notice to proceed is not itself physical work.",
+              "evidence": [
+                {
+                  "assumptionId": "T6",
+                  "docId": "D05",
+                  "value": "2025-12-22",
+                  "display": "December 22, 2025: off-site transformer manufacture under binding contract, confirmed by the independent engineer after reviewing production records",
+                  "short": "Dec 22, 2025",
+                  "stance": "supports",
+                  "note": "An independent party reviewed the manufacturer's records and confirmed significant, continuous, non-inventory physical work.",
+                  "quote": {
+                    "docId": "D05",
+                    "page": 1,
+                    "text": "We reviewed the manufacturer's production records and confirm that physical work of a significant nature began on that date and continued without interruption",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T6",
+                  "docId": "D05",
+                  "value": "2025-12-22",
+                  "display": "Independent engineer's opinion: construction began December 22, 2025",
+                  "short": "Dec 22, 2025",
+                  "stance": "supports",
+                  "note": "The independent engineer gives an express opinion on the start date, within December 2025.",
+                  "quote": {
+                    "docId": "D05",
+                    "page": 1,
+                    "text": "In our opinion the Project's construction began on December 22, 2025.",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T6",
+                  "docId": "D08",
+                  "value": "2025-12-22",
+                  "display": "Manufacturer confirms custom transformer manufacture began December 22, 2025 under December 10, 2025 contract",
+                  "short": "Dec 22, 2025",
+                  "stance": "supports",
+                  "note": "The manufacturer's letter is consistent with the independent engineer's finding.",
+                  "quote": {
+                    "docId": "D08",
+                    "page": 1,
+                    "text": "Physical manufacture of the transformer, beginning with cutting and stacking of the custom core, commenced at our facility on December 22, 2025 and continued thereafter.",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T6",
+                  "docId": "D07",
+                  "value": "2025-12-18",
+                  "display": "Full notice to proceed issued December 18, 2025",
+                  "short": "NTP Dec 18, 2025",
+                  "stance": "context",
+                  "note": "A notice to proceed is preliminary activity, not physical work, and does not itself start construction.",
+                  "quote": {
+                    "docId": "D07",
+                    "page": 1,
+                    "text": "Owner hereby issues\nFull Notice to Proceed with the Work, effective December 18, 2025.",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T6",
+                  "docId": "D05",
+                  "value": "2026-01-12",
+                  "display": "On-site physical work (pile installation) began January 12, 2026",
+                  "short": "On-site Jan 12, 2026",
+                  "stance": "context",
+                  "note": "On-site work began in 2026, so the pre-2026 start rests on the off-site transformer work.",
+                  "quote": {
+                    "docId": "D05",
+                    "page": 1,
+                    "text": "on-site physical work, beginning with pile installation\nfor the tracker foundations, commenced on January 12, 2026.",
+                    "verified": true
+                  }
+                }
+              ],
+              "questionIds": []
+            },
+            {
+              "assumptionId": "T7",
+              "label": "confirmed",
+              "baselineDisplay": "On or before November 30, 2026; Buyer's 2026 tax year",
+              "currentDisplay": "Forecast placed in service on or about November 30, 2026 (unchanged); 2026 tax year",
+              "currentValue": "2026-11-30",
+              "currentShort": "Nov 30, 2026 forecast, unchanged",
+              "dependsOn": null,
+              "summary": "The independent engineer's September 2026 monitoring report keeps the placed-in-service forecast at November 30, 2026, within the 2026 tax year. The transformer delivery contingency has cleared.",
+              "evidence": [
+                {
+                  "assumptionId": "T7",
+                  "docId": "D06",
+                  "value": "2026-11-30",
+                  "display": "Placed in service forecast on or about November 30, 2026, unchanged",
+                  "short": "Nov 30, 2026",
+                  "stance": "supports",
+                  "note": "The latest construction monitoring report matches the term sheet date, within the 2026 tax year.",
+                  "quote": {
+                    "docId": "D06",
+                    "page": 1,
+                    "text": "We forecast the placed-in-service date on or about November 30, 2026, unchanged from our July 31, 2026 report.",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T7",
+                  "docId": "D06",
+                  "value": null,
+                  "display": "Main power transformer delivered September 18, 2026; schedule contingency resolved",
+                  "short": "MPT delivered",
+                  "stance": "context",
+                  "note": "The key schedule risk flagged in the July report has cleared.",
+                  "quote": {
+                    "docId": "D06",
+                    "page": 1,
+                    "text": "The main power transformer passed factory acceptance testing in August 2026 and was delivered to\nthe site on September 18, 2026.",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T7",
+                  "docId": "D05",
+                  "value": "2026-11-30",
+                  "display": "July report forecast placed in service on or about November 30, 2026, contingent on transformer delivery",
+                  "short": "Nov 30, 2026",
+                  "stance": "context",
+                  "note": "Earlier forecast is the same date, showing no slippage.",
+                  "quote": {
+                    "docId": "D05",
+                    "page": 1,
+                    "text": "placed-in-service on or about November 30, 2026, contingent on main power transformer delivery in\nSeptember 2026.",
+                    "verified": true
+                  }
+                }
+              ],
+              "questionIds": []
+            },
+            {
+              "assumptionId": "T8",
+              "label": "confirmed",
+              "baselineDisplay": "Yes, material assistance rules assumed not to apply (construction began before Jan 1, 2026); certifications if they apply",
+              "currentDisplay": "Material assistance rules do not apply (construction began December 22, 2025); supplier certifications held for information",
+              "currentValue": true,
+              "currentShort": "Rules N/A: construction began 2025",
+              "dependsOn": null,
+              "summary": "Construction start is substantiated before January 1, 2026, so the prohibited foreign entity material assistance rules do not apply. The supplier certifications are informational, and the missing cost ratio calculation is not a gap.",
+              "evidence": [
+                {
+                  "assumptionId": "T8",
+                  "docId": "D05",
+                  "value": true,
+                  "display": "Construction began December 22, 2025, so material assistance rules do not apply",
+                  "short": "Rules N/A",
+                  "stance": "supports",
+                  "note": "A substantiated pre-2026 start means the prohibited foreign entity material assistance rules do not apply.",
+                  "quote": {
+                    "docId": "D05",
+                    "page": 1,
+                    "text": "In our opinion the Project's construction began on December 22, 2025.",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T8",
+                  "docId": "D10",
+                  "value": null,
+                  "display": "Supplier certifications received from all four manufactured-product suppliers (informational)",
+                  "short": "4/4 certs",
+                  "stance": "context",
+                  "note": "Certifications are informational because the rules do not apply.",
+                  "quote": {
+                    "docId": "D10",
+                    "page": 1,
+                    "text": "Certifications have been received from every manufactured-product supplier.",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T8",
+                  "docId": "D10",
+                  "value": null,
+                  "display": "No material assistance cost ratio prepared because rules do not apply",
+                  "short": "No MACR (N/A)",
+                  "stance": "context",
+                  "note": "Absence of the cost ratio is not a gap given the substantiated 2025 start.",
+                  "quote": {
+                    "docId": "D10",
+                    "page": 1,
+                    "text": "No material assistance\ncost ratio calculation has been prepared because the restrictions do not apply to the Project.",
+                    "verified": true
+                  }
+                }
+              ],
+              "questionIds": []
+            },
+            {
+              "assumptionId": "T9",
+              "label": "confirmed",
+              "baselineDisplay": "$66,385,000 (100% of the $66,385,000 estimated purchase price)",
+              "currentDisplay": "Bound limit of liability $66,385,000 (100% of estimated purchase price); $500,000 retention",
+              "currentValue": 66385000,
+              "currentShort": "$66,385,000 bound limit",
+              "dependsOn": null,
+              "summary": "The insurance binder names the buyer as insured with a $66,385,000 limit. That equals 100% of the $66,385,000 estimated purchase price required by the term sheet.",
+              "evidence": [
+                {
+                  "assumptionId": "T9",
+                  "docId": "D11",
+                  "value": 66385000,
+                  "display": "Bound limit of liability $66,385,000 with $500,000 retention",
+                  "short": "$66,385,000",
+                  "stance": "supports",
+                  "note": "The bound limit equals 100% of the estimated purchase price required by the term sheet.",
+                  "quote": {
+                    "docId": "D11",
+                    "page": 1,
+                    "text": "Limit of liability $66,385,000\nRetention $500,000",
+                    "verified": true
+                  }
+                },
+                {
+                  "assumptionId": "T9",
+                  "docId": "D11",
+                  "value": null,
+                  "display": "Limit increases require underwriter approval and additional premium",
+                  "short": "Increase needs OK",
+                  "stance": "context",
+                  "note": "If the purchase price rises the limit would not automatically follow; the $500,000 retention also leaves the buyer exposed.",
+                  "quote": {
+                    "docId": "D11",
+                    "page": 1,
+                    "text": "Increases to the limit are subject to underwriter approval and additional premium.",
+                    "verified": true
+                  }
+                }
+              ],
+              "questionIds": []
+            }
+          ],
+          "questions": [],
+          "rfis": [],
+          "risks": [
+            {
+              "id": "K1",
+              "title": "Generation tie line may not be creditable energy property",
+              "detail": "The cost segregation report includes $5,600,000 of project-owned interconnection facilities in eligible basis, covering the generation tie and the project substation. A generation tie line is generally treated as transmission equipment rather than energy property. Interconnection property is creditable only for small facilities, and this is a 100 MWac project. If the gen-tie portion is disallowed, eligible basis and the $71,000,000 credit would fall by 50% of the disallowed amount. The eligible-basis figure itself matches the term sheet exactly.",
+              "assumptionIds": [
+                "T2"
+              ],
+              "evidence": [
+                {
+                  "docId": "D02",
+                  "page": 1,
+                  "text": "facilities are owned by the Project and are energy property of the taxpayer",
+                  "verified": true
+                }
+              ]
+            }
+          ],
+          "usage": {
+            "calls": 1,
+            "inputTokens": 25225,
+            "cacheWriteTokens": 17356,
+            "cacheReadTokens": 0,
+            "outputTokens": 5174,
+            "costUsd": 0.221736
+          }
+        }
+      }
+    }
+  ]
+}
