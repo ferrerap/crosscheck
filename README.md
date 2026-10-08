@@ -4,7 +4,7 @@
 
 **Does the data room support the term sheet?**
 
-**Live demo:** _replay-only deployment, link pending_ (a replay of a recorded run; no sign-in) · **Walkthrough:** the GIF below · **Read:** [How it works](#how-it-works) · [Evals](#evals) · [How I built it](#how-i-built-it) · [Build log](DECISIONS.md)
+**Live demo:** [crosscheck-aa4e.vercel.app](https://crosscheck-aa4e.vercel.app/) (a replay of a recorded run; no sign-in) · **Walkthrough:** the GIF below · **Read:** [How it works](#how-it-works) · [Evals](#evals) · [How I built it](#how-i-built-it) · [Build log](DECISIONS.md)
 
 ![Walkthrough: upload, confirm the baseline, cross-check with the question to the seller and the evidence, open a quote in the PDF, report](docs/walkthrough.gif)
 
