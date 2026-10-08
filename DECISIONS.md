@@ -38,7 +38,7 @@ How Crosscheck was built over 5–6 October 2026: the decisions, who made them, 
 - **Seller assertions are not independent evidence.** Each document is tagged by source (seller, seller's advisor, independent, government). Seller documents form their own lane. The reconcile prompt is told their status, and seller-stated values never become an outcome in the range.
 - **Prompt caching works per step, not across steps.** Each call has its own structured-output schema and effort level ahead of the cache breakpoint, so the four steps keep four caches. A step's cache is reused when the same step runs again within the cache window. That's why a cold run costs about $1.00 and a warm one about $0.65. Cache reads and writes are now recorded separately in usage. A shared schema across steps could fix this, but it's deferred.
 - **No database.** A run is one JSON object, and replay plays back a recorded live run.
-- **Public deploys are replay-only** (`NEXT_PUBLIC_REPLAY_ONLY=1`). The server refuses live calls and uploads.
+- **Public deploys are replay-only** (`NEXT_PUBLIC_REPLAY_ONLY=1`, set for every production build by the committed `.env.production`). The server refuses live calls and uploads.
 
 ## Eval history
 

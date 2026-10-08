@@ -50,7 +50,7 @@ cp .env.example .env.local   # add ANTHROPIC_API_KEY for live mode
 npm run dev                  # http://localhost:3000
 ```
 
-Live mode (your own PDFs, or the demo deal run fresh) is for localhost with your own key; public deploys set a replay-only flag and serve the recorded run.
+Live mode (your own PDFs, or the demo deal run fresh) is for `npm run dev` on localhost with your own key. Production builds are replay-only by default (`.env.production` sets `NEXT_PUBLIC_REPLAY_ONLY=1`): a public deploy serves the recorded run, refuses live calls and uploads, and needs no API key.
 
 | Command | What it does |
 |---|---|
