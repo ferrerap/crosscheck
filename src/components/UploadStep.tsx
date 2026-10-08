@@ -139,7 +139,6 @@ export function UploadStep({
 }) {
   const [term, setTerm] = useState<PickedFile[]>([]);
   const [room, setRoom] = useState<PickedFile[]>([]);
-  const [demoChoice, setDemoChoice] = useState(false);
 
   // Hash each dropped file in the browser so the bundled demo deal can be recognised. A key is held only while its
   // hash is in flight, so a file that is removed and added again is hashed again.
@@ -159,8 +158,7 @@ export function UploadStep({
     }
   }, [term, room]);
 
-  // Files the upload would refuse are named in a notice instead of being added. Adding files drops an earlier
-  // "load the demo deal" choice: what is shown follows the files (demo set or not).
+  // Files the upload would refuse are named in a notice instead of being added.
   const [notice, setNotice] = useState<string | null>(null);
   const screen = (files: File[]) => {
     const refused = files.map(refusal).filter((r): r is string => r !== null);
@@ -171,7 +169,6 @@ export function UploadStep({
     const { ok, refused } = screen(files);
     report(refused);
     if (!ok.length) return;
-    setDemoChoice(false);
     setTerm([{ key: keyOf(ok[0]), file: ok[0] }]);
   };
   const addRoom = (files: File[]) => {
@@ -183,7 +180,6 @@ export function UploadStep({
     if (over > 0) refused.push(`${over} more file${over === 1 ? "" : "s"} (at most ${MAX_FILES} per upload, term sheet included)`);
     report(refused);
     if (!added.length) return;
-    setDemoChoice(false);
     setRoom([...room, ...added.map((file) => ({ key: keyOf(file), file }))]);
   };
 
@@ -191,7 +187,8 @@ export function UploadStep({
   const hashed = ready && [...term, ...room].every((f) => f.hash);
   const hashes = new Set([...term, ...room].map((f) => f.hash));
   const isDemo = hashed && hashes.size === DEMO_HASHES.size && [...DEMO_HASHES].every((h) => hashes.has(h));
-  const showChoice = demoChoice || isDemo;
+  const liveButton = "rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-50";
+  const spinner = busy ? <Spinner className="border-slate-500 border-t-white" /> : null;
 
   return (
     <div className="mx-auto max-w-4xl pt-6 sm:pt-12">
@@ -202,66 +199,78 @@ export function UploadStep({
         verbatim, clickable evidence. Where documents disagree, it asks you to decide.
       </p>
 
-      <div className="mt-10 grid gap-6 md:grid-cols-2">
-        <DropZone title="1 · Term sheet" hint={`One PDF, up to ${MAX_MB} MB`} multiple={false} files={term} onAdd={addTerm} onRemove={(k) => setTerm((l) => l.filter((x) => x.key !== k))} testId="term-input" />
-        <DropZone title="2 · Data room" hint={`Up to ${MAX_FILES - 1} PDFs, ${MAX_MB} MB each`} multiple files={room} onAdd={addRoom} onRemove={(k) => setRoom((l) => l.filter((x) => x.key !== k))} testId="room-input" />
-      </div>
-      {notice && (
-        <p className="mt-3 text-sm text-amber-800" role="status" data-testid="upload-notice">
-          {notice}
-        </p>
-      )}
-
-      {showChoice ? (
-        <div className="fade-in mt-8 rounded-xl border border-slate-300 bg-white p-6 shadow-sm" data-testid="demo-choice">
-          <div className="text-sm font-semibold text-slate-900">This is the bundled demo deal. A recorded run is available.</div>
-          <p className="mt-1 text-sm text-slate-600" data-testid="demo-description">
-            {DEMO.name}: a term sheet and a data room of {DEMO.room}
-            {DEMO.excerpts}.
-          </p>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <PrimaryButton onClick={onReplay} disabled={!!busy}>
-              {busy ? <Spinner className="border-slate-500 border-t-white" /> : null}
-              Replay recorded run
-            </PrimaryButton>
-            {!replayOnly && <button
-              onClick={onLiveDemo}
-              disabled={!!busy}
-              className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Run live with Claude ({DEMO.liveCost})
-            </button>}
-            {replayOnly && (
-              <span className="text-sm text-slate-500">Live analysis runs locally with your own API key. See the README.</span>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="mt-8 flex flex-wrap items-center gap-4">
-          {ready && !replayOnly && (
-            <PrimaryButton onClick={() => onLiveUpload(term[0].file, room.map((r) => r.file))} disabled={!!busy || !hashed} className="px-6 py-3 text-base">
-              {busy ? <Spinner className="border-slate-500 border-t-white" /> : null}
-              Start diligence
-            </PrimaryButton>
+      {/* The demo is the first action on the page: one click starts the recorded run. */}
+      <div className="mt-10 rounded-xl border border-slate-300 bg-white p-6 shadow-sm" data-testid="demo-start">
+        <div className="flex flex-wrap items-center gap-3">
+          <PrimaryButton onClick={onReplay} disabled={!!busy} className="px-6 py-3 text-base">
+            {spinner}
+            Start the interactive demo
+          </PrimaryButton>
+          {!replayOnly && (
+            <button onClick={onLiveDemo} disabled={!!busy} className={liveButton}>
+              Run the demo deal live with Claude ({DEMO.liveCost})
+            </button>
           )}
-          <p className="text-sm text-slate-500">
-            {ready
-              ? replayOnly
-                ? "This public demo replays a recorded run of the bundled deal. To analyze your own documents, run Crosscheck locally with an API key (see the README)."
-                : "These are your own documents, so live analysis with Claude will run (a few minutes)."
-              : "Add a term sheet and at least one data room document to begin."}
-          </p>
         </div>
-      )}
+        <p className="mt-3 text-sm text-slate-600" data-testid="demo-description">
+          {DEMO.name}: a term sheet and a data room of {DEMO.room}
+          {DEMO.excerpts}. The demo replays a recorded live run, so there is nothing to upload and no sign-in; you still confirm the
+          baseline, read the evidence and choose what to ask the seller.
+        </p>
+      </div>
       {busy && <p className="mt-4 text-sm text-slate-600">{busy}</p>}
 
-      <div className="mt-10 border-t border-slate-200 pt-5 text-sm text-slate-500">
-        <button onClick={() => setDemoChoice(true)} disabled={!!busy} className="font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 hover:text-slate-900 hover:decoration-slate-500">
-          Or load the demo deal
-        </button>
-        <span className="ml-2">
-          The demo data room is {DEMO.room} (fictional parties){DEMO.excerpts}.
-        </span>
+      <div className="mt-10 border-t border-slate-200 pt-6">
+        <h2 className="text-sm font-semibold text-slate-900">Or analyze your own documents</h2>
+        {replayOnly ? (
+          <p className="mt-1 text-sm text-slate-500">
+            This public deployment only replays the recorded run. To analyze your own term sheet and data room, run Crosscheck locally
+            with your own API key (see the README).
+          </p>
+        ) : (
+          <>
+            <p className="mt-1 text-sm text-slate-500">
+              Live analysis with Claude runs on your own documents (a few minutes). The bundled demo deal is recognised if you drop its files.
+            </p>
+            <div className="mt-4 grid gap-6 md:grid-cols-2">
+              <DropZone title="1 · Term sheet" hint={`One PDF, up to ${MAX_MB} MB`} multiple={false} files={term} onAdd={addTerm} onRemove={(k) => setTerm((l) => l.filter((x) => x.key !== k))} testId="term-input" />
+              <DropZone title="2 · Data room" hint={`Up to ${MAX_FILES - 1} PDFs, ${MAX_MB} MB each`} multiple files={room} onAdd={addRoom} onRemove={(k) => setRoom((l) => l.filter((x) => x.key !== k))} testId="room-input" />
+            </div>
+            {notice && (
+              <p className="mt-3 text-sm text-amber-800" role="status" data-testid="upload-notice">
+                {notice}
+              </p>
+            )}
+            {isDemo ? (
+              <div className="fade-in mt-6 rounded-xl border border-slate-300 bg-white p-5 shadow-sm" data-testid="demo-choice">
+                <div className="text-sm font-semibold text-slate-900">These are the bundled demo deal&apos;s files. A recorded run is available.</div>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <PrimaryButton onClick={onReplay} disabled={!!busy}>
+                    {spinner}
+                    Replay recorded run
+                  </PrimaryButton>
+                  <button onClick={onLiveDemo} disabled={!!busy} className={liveButton}>
+                    Run live with Claude ({DEMO.liveCost})
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-6 flex flex-wrap items-center gap-4">
+                {ready && (
+                  <PrimaryButton onClick={() => onLiveUpload(term[0].file, room.map((r) => r.file))} disabled={!!busy || !hashed} className="px-6 py-3 text-base">
+                    {spinner}
+                    Start diligence
+                  </PrimaryButton>
+                )}
+                <p className="text-sm text-slate-500">
+                  {ready
+                    ? "These are your own documents, so live analysis with Claude will run (a few minutes)."
+                    : "Add a term sheet and at least one data room document to begin."}
+                </p>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

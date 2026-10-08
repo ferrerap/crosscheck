@@ -6,7 +6,7 @@
 
 **Live demo:** [crosscheck-aa4e.vercel.app](https://crosscheck-aa4e.vercel.app/) (a replay of a recorded run; no sign-in) · **Walkthrough:** the GIF below · **Read:** [How it works](#how-it-works) · [Evals](#evals) · [How I built it](#how-i-built-it) · [Build log](DECISIONS.md)
 
-![Walkthrough: upload, confirm the baseline, cross-check with the question to the seller and the evidence, open a quote in the PDF, report](docs/walkthrough.gif)
+![Walkthrough: start the demo, confirm the baseline, cross-check with the question to the seller and the evidence, open a quote in the PDF, report](docs/walkthrough.gif)
 
 A tax credit buyer signs a term sheet that assumes a credit amount: an eligible basis, a credit rate built from prevailing wage, energy community and domestic content, a placed-in-service year, an insurance limit. Crosscheck reads the seller's data room with Claude, checks every one of those assumptions against it, puts each finding next to the exact source passage, and turns what does not hold into questions for the seller, with the credit at risk priced in code. Built as an application artifact for the AI Product Engineer role at Crux, whose diligence products already match files to checklists and extract terms from single documents; this is the next layer, reasoning across documents against the deal's own assumptions.
 
@@ -65,7 +65,7 @@ Live mode (your own PDFs, or the demo deal run fresh) is for `npm run dev` on lo
 
 | Step | What happens |
 |---|---|
-| 1. Upload | Drop the term sheet and the data room. The bundled demo deal is recognised by hash and can replay a recorded live run instantly. |
+| 1. Start | One button starts the interactive demo: a replay of a recorded live run on the bundled deal, nothing to upload. Running locally, you can instead drop your own term sheet and data room for live analysis; the bundled deal is recognised by hash if you drop its files. |
 | 2. Baseline | Claude extracts the assumptions behind the credit amount. You confirm each one beside the highlighted term sheet. |
 | 3. Cross-check and review | Every check is traced through every document. Each comes out "checks out" or "question to the seller", with the supporting evidence one click away, seller assertions shown apart from independent evidence, and the credit at risk on each open check. You edit the questions, choose which to send, and send them. |
 | 4. Report | The credit as signed, the range it could land in depending on the seller's answers, the questions prepared, the risks, and source walk-back for every claim. |
