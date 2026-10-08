@@ -1,6 +1,6 @@
 {
   "playbook": "itc-transfer",
-  "note": "Clean data room: the same deal with no planted issue. Tests false positives: the pipeline must not invent questions, risks or a narrower credit range. Builder-authored; Paul to review the tax logic.",
+  "note": "Clean data room: the same deal with no planted issue. Tests false positives: the pipeline must not invent questions, routine RFIs or a narrower credit range. At most one risk is allowed, and the one the pipeline raises is real: the cost segregation report counts a project-owned generation tie line as energy property, which a buyer's tax counsel would question even though the figure matches the term sheet. Builder-authored; Paul to review the tax logic.",
   "baseline": {
     "I1": {
       "value": "100 MWac / 135 MWdc",
