@@ -7,7 +7,8 @@ import "react-pdf/dist/Page/TextLayer.css";
 import { matchQuotes, type ItemMark } from "@/lib/highlight";
 
 // react-pdf bundles its own pdfjs-dist (6.3.x) which differs from the top-level install, so the matching
-// worker is copied to /public (public/pdf.worker.min.mjs) rather than resolved through import.meta.url.
+// worker is copied to /public (public/pdf.worker.min.mjs) rather than resolved through import.meta.url. It is the
+// legacy worker, matching the legacy build next.config.ts aliases in so the viewer runs on phones.
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
 export interface PaneHighlight {
