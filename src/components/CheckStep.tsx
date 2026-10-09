@@ -1,7 +1,12 @@
 "use client";
 // Cross-check and review (design G4): checks as collapsed rows, every open check is a question to the seller.
+// An expanded check reads as its own trace: what the term sheet states, the standard it is judged by (from the
+// playbook), what the documents show, the question to the seller, the evidence and gaps per document, and any
+// relevant document that cited nothing.
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { BaselineAssumption, DocClassification, Evidence, Finding, Gap, Label, Quote, Question, Rfi, Risk } from "@/engine/types";
+import { activePlaybook } from "@/lib/activePlaybook";
+import { checkCoverage } from "@/lib/coverage";
 import { assumptionName, docLabels, shortType } from "@/lib/meta";
 import type { DocMeta, RunnerMode } from "@/lib/runner";
 import { creditTag } from "@/lib/creditTag";
@@ -89,6 +94,7 @@ export function CheckStep({
   const docName = useCallback((id: string) => labels.get(id) ?? docs.find((d) => d.id === id)?.filename ?? id, [labels, docs]);
   const findingBy = useMemo(() => new Map(findings.map((f) => [f.assumptionId, f])), [findings]);
   const baseBy = useMemo(() => new Map(baseline.map((b) => [b.id, b])), [baseline]);
+  const anchors = useMemo(() => new Set(docs.filter((d) => d.role === "anchor").map((d) => d.id)), [docs]);
   const evidenceBy = useMemo(() => {
     const m = new Map<string, Evidence[]>();
     for (const e of evidence) m.set(e.assumptionId, [...(m.get(e.assumptionId) ?? []), e]);
@@ -316,12 +322,45 @@ export function CheckStep({
     );
   }
 
-  /** The plain account of what the documents show, plus any risk that cites this check. */
+  /** What the term sheet states, the standard the check is judged by, what the documents show, and any risk that cites it. */
   function renderShow(aid: string, f: Finding) {
     const rk = risks.filter((r) => r.assumptionIds.includes(aid));
+    const b = baseBy.get(aid);
+    const def = activePlaybook.assumptions.find((a) => a.id === aid);
     return (
       <div data-testid={`show-${aid}`}>
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">What the documents show</div>
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">The term sheet states</div>
+        <div className="mt-1 flex items-start gap-2 text-[13px] leading-relaxed text-slate-700" data-testid={`asserted-${aid}`}>
+          <span className="min-w-0 flex-1">{b?.quote ? <>&ldquo;{b.quote.text}&rdquo;</> : (b?.display ?? f.baselineDisplay)}</span>
+          {b?.quote && (
+            <button
+              onClick={() => onOpenQuotes([b.quote!])}
+              title={b.quote.verified ? "Open the term sheet at this passage" : `Not found in source: ${b.quote.text}`}
+              className="mt-0.5 shrink-0 rounded border border-slate-200 bg-slate-50 px-1.5 font-mono text-[10px] text-slate-500 hover:border-slate-900 hover:bg-slate-900 hover:text-white"
+            >
+              p.{b.quote.page}
+            </button>
+          )}
+        </div>
+        {def && (
+          <details className="mt-1.5" data-testid={`standard-${aid}`}>
+            <summary className="cursor-pointer select-none text-[12px] font-medium text-slate-500 hover:text-slate-800">How this check is judged</summary>
+            <dl className="mt-1.5 space-y-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[12.5px] leading-snug text-slate-700">
+              <div>
+                <dt className="inline font-semibold text-slate-800">Evidence that should exist: </dt>
+                <dd className="inline">{def.evidenceHint}</dd>
+              </div>
+              <div>
+                <dt className="inline font-semibold text-slate-800">Rule applied: </dt>
+                <dd className="inline">{def.rule}</dd>
+              </div>
+              <div className="text-[11px] text-slate-500">
+                Both come from the deal-type playbook, written by the domain owner and sent to Claude with every call. Any credit figure is computed in code from the result.
+              </div>
+            </dl>
+          </details>
+        )}
+        <div className="mt-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">What the documents show</div>
         <p className="mt-1 text-[13px] leading-relaxed text-slate-700">{f.summary}</p>
         {rk.length > 0 && (
           <ul className="mt-1.5 list-disc space-y-1 pl-5 text-[13px] leading-snug text-slate-700 marker:text-slate-400">
@@ -471,6 +510,20 @@ export function CheckStep({
     const rank = (d: string) => Math.min(3, ...items.filter((e) => e.docId === d).map((e) => STANCE_RANK[e.stance]));
     ids.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
     const sellerSays = ids.some((d) => clsById.get(d)?.sourceRole === "seller");
+    // Documents the classifier marked relevant to this check that produced neither a passage nor a gap.
+    const silent = checkCoverage(aid, classifications, evidence, gaps, anchors).silent;
+    const missed = silent.length > 0 && (
+      <div
+        className="mt-1.5 flex items-start gap-[7px] text-xs leading-tight text-slate-500"
+        data-testid={`coverage-${aid}`}
+        title="The document classifier marked these documents relevant to this check, but the evidence step cited no passage from them and recorded no gap. Open them to check for a missed passage."
+      >
+        <span className="mx-px mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-[1.5px] border-dotted border-amber-500" />
+        <span className="min-w-0 flex-1">
+          Marked relevant, nothing cited: {silent.map(docName).join(", ")}. Worth a look for a missed passage.
+        </span>
+      </div>
+    );
     const row = (d: string) => {
       const mine = items.filter((e) => e.docId === d);
       const gap = myGaps.find((g) => g.docId === d);
@@ -505,13 +558,21 @@ export function CheckStep({
         </div>
       );
       return (
-        <div className="mt-1 grid grid-cols-2 items-start gap-4" data-testid={`lanes-${aid}`}>
-          {lane((d) => clsById.get(d)?.sourceRole !== "seller", "Evidence", "independent, advisor, supplier, IRS")}
-          {lane((d) => clsById.get(d)?.sourceRole === "seller", "Seller says", "Seller and its counsel")}
-        </div>
+        <>
+          <div className="mt-1 grid grid-cols-2 items-start gap-4" data-testid={`lanes-${aid}`}>
+            {lane((d) => clsById.get(d)?.sourceRole !== "seller", "Evidence", "independent, advisor, supplier, IRS")}
+            {lane((d) => clsById.get(d)?.sourceRole === "seller", "Seller says", "Seller and its counsel")}
+          </div>
+          {missed}
+        </>
       );
     }
-    return <div className="mt-1 columns-2 gap-4">{ids.map(row)}</div>;
+    return (
+      <>
+        <div className="mt-1 columns-2 gap-4">{ids.map(row)}</div>
+        {missed}
+      </>
+    );
   }
 }
 
@@ -584,6 +645,9 @@ function Legend() {
       </span>
       <span className="flex items-center gap-1.5">
         <span className="h-3.5 w-3.5 rounded-full border-[1.5px] border-dashed border-slate-400" /> expected, not stated
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="h-3.5 w-3.5 rounded-full border-[1.5px] border-dotted border-amber-500" /> marked relevant, nothing cited
       </span>
       <b className="ml-2 font-semibold text-slate-600">Source</b>
       <SourceTag role="seller" />

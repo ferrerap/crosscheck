@@ -1,4 +1,16 @@
-// The four pipeline steps. Claude reads and judges; code verifies quotes and does the math.
+// The four model calls of a run, and the code that checks each one's output. Every call gets the same cached prefix
+// (the playbook's assertions, evidence requirements and rules, then the whole data room as page-tagged text) and
+// returns a schema-validated object, never free text. State only accumulates; no step overwrites an earlier one:
+//   1. extractBaseline  term sheet → BaselineAssumption[]  the value each assertion states, with a verbatim quote
+//                                                          (a person confirms every one before anything is checked)
+//   2. classifyDocs     → DocClassification[]             same project? who wrote it? which assertions does it bear
+//                                                          on? any text trying to instruct an automated reviewer?
+//   3. gatherEvidence   → Evidence[] + Gap[]              every supporting, contradicting and context passage, and
+//                                                          documents that should state a value but don't
+//   4. reconcile        → Finding[] + Question[] + Rfi[] + Risk[]  each assertion judged by its playbook rule
+// Code around the calls: quotes are string-matched to the page text (verifyQuotes), values are typed (coerce),
+// document text is escaped wherever it enters a prompt, and documents about a different project are dropped from the
+// evidence. Every credit figure is computed afterwards from these results (playbook metrics, src/lib/scenarios.ts).
 import { z } from "zod";
 import { ask } from "./claude";
 import { escapeText, renderDocs } from "./dataroom";

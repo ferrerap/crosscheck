@@ -196,8 +196,8 @@ export function UploadStep({
       <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">{activePlaybook.name}</p>
       <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-5xl">Does the data room support the term sheet?</h1>
       <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-600">
-        Crosscheck reads the buyer&apos;s term sheet, scans the seller&apos;s data room, and tests each assumption behind the credit amount against
-        verbatim, clickable evidence. Where documents disagree, it asks you to decide.
+        Crosscheck reads the buyer&apos;s term sheet, works out what evidence each assumption behind the credit amount needs, and checks the
+        seller&apos;s data room for it, with verbatim, clickable sources. Where documents disagree or say nothing, it drafts the question to the seller.
       </p>
 
       {/* The demo is the first action on the page: one click starts the recorded run. */}

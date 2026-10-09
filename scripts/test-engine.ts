@@ -1,11 +1,12 @@
 // Engine unit checks that need no API key: value coercion, date rules, the not-computable state, the
-// insurance requirement, money formatting, the scenario model's bookkeeping and its size guard.
+// insurance requirement, money formatting, the scenario model's bookkeeping and its size guard, evidence coverage.
 //   npx tsx scripts/test-engine.ts
 import fs from "node:fs";
 import path from "node:path";
 import { buildReconcileTask, coerce, parseNumber } from "../src/engine/pipeline";
-import type { AssumptionDef, DocRecord, Finding, Metric, Question, Run } from "../src/engine/types";
+import type { AssumptionDef, DocClassification, DocRecord, Finding, Metric, Question, Run } from "../src/engine/types";
 import { locate } from "../src/engine/verifyQuotes";
+import { checkCoverage } from "../src/lib/coverage";
 import { toIsoDate } from "../src/lib/dates";
 import { fmtMoney } from "../src/lib/format";
 import { matchQuote } from "../src/lib/highlight";
@@ -196,6 +197,31 @@ check("fmtMoney NaN → —", fmtMoney(NaN) === "—");
   check("perturbed room: range is $68.2M at both ends", perturbed.low === got && perturbed.high === got && got === 68200000, JSON.stringify({ perturbed, got }));
   const withFeocFail = credit(itcTransfer.metrics(baseline, { T2: 136400000, T5: 47.8, T6: "2025-12-22", T8: false })).current;
   check("perturbed room: a missing FEOC certificate is not a cliff on a 2025 start", withFeocFail === 68200000, String(withFeocFail));
+}
+
+// ---- Coverage: relevant documents that produced neither a passage nor a gap are listed, nothing else ----
+{
+  const cls = (docId: string, relevant: string[], projectMatch: DocClassification["projectMatch"] = "match") =>
+    ({ docId, docType: "", title: "", summary: "", projectMatch, projectMatchReason: "", relevantAssumptions: relevant }) as DocClassification;
+  const quote = { docId: "", page: 1, text: "", verified: true };
+  const c = checkCoverage(
+    "T1",
+    [cls("D01", ["T1"]), cls("D02", ["T1"]), cls("D03", ["T1"]), cls("D04", ["T1"]), cls("D05", ["T1"], "different_project"), cls("D06", ["T2"])],
+    [{ assumptionId: "T1", docId: "D02", value: null, display: "", stance: "supports", note: "", quote }],
+    [{ assumptionId: "T1", docId: "D03", note: "" }],
+    new Set(["D01"]),
+  );
+  check("coverage: anchor and different-project documents are not counted", eq(c.relevant, ["D02", "D03", "D04"]), JSON.stringify(c));
+  check("coverage: cited, gap-only and silent are told apart", eq(c.cited, ["D02"]) && eq(c.gapOnly, ["D03"]) && eq(c.silent, ["D04"]), JSON.stringify(c));
+  // The recorded demo run: which checks have a relevant document that said nothing.
+  const anchors = new Set(run.docs.filter((d) => d.role === "anchor").map((d) => d.id));
+  const silent = Object.fromEntries(
+    itcTransfer.assumptions
+      .filter((a) => a.kind !== "term")
+      .map((a) => [a.id, checkCoverage(a.id, run.classifications, run.evidence, run.gaps ?? [], anchors).silent] as const)
+      .filter(([, s]) => s.length),
+  );
+  check("coverage: the recorded run's silent documents", eq(silent, { I2: ["D10"], T6: ["D09"], T8: ["D05", "D08"] }), JSON.stringify(silent));
 }
 
 if (failures) {

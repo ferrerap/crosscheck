@@ -1,4 +1,9 @@
-// Core, transaction-agnostic types shared by every playbook.
+// Core, transaction-agnostic types shared by every playbook. A run's state builds up in this order, each step adding
+// to it and none overwriting an earlier one:
+//   BaselineAssumption (what the anchor document states) → DocClassification (per document) →
+//   Evidence and Gap (per passage; per statement a document should make and doesn't) →
+//   Finding, Question, Rfi, Risk (per assertion) → Metric (computed in code, never by the model).
+// The whole run is one JSON object (Run); a recorded one drives replay mode.
 
 export type Label =
   | "confirmed" // current evidence matches the baseline assumption
@@ -41,9 +46,9 @@ export interface AssumptionDef {
   kind?: "identity" | "assumption" | "term";
   /** What to look for in the anchor document. */
   extractionHint: string;
-  /** What counts as current evidence in the data room. */
+  /** The evidence requirement: which documents and facts should exist in the data room if the assertion holds. */
   evidenceHint: string;
-  /** How to judge the label, including traps to avoid. */
+  /** The standard: how the evidence decides the label, including traps (e.g. a notice to proceed is not physical work). */
   rule: string;
 }
 

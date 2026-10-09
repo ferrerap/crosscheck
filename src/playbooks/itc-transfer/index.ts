@@ -1,5 +1,8 @@
 // Playbook: buyer-side diligence of a §48E ITC transfer (§6418) against the signed term sheet.
-// Everything transaction-specific lives here; the engine stays generic.
+// Everything transaction-specific lives here; the engine stays generic. This is where each assertion is decomposed,
+// once, by the domain owner: what to read from the term sheet (extractionHint), what evidence should exist if it holds
+// (evidenceHint), and the standard that turns evidence into a label (rule). The model applies these; it does not
+// invent them. The tax math below is deterministic and never delegated to the model.
 
 import type { AssumptionDef, Metric } from "@/engine/types";
 import { toIsoDate } from "@/lib/dates";
