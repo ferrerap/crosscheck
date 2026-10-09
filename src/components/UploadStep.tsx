@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { activePlaybook, replayOnly } from "@/lib/activePlaybook";
 import { dealNameOf } from "@/lib/meta";
@@ -217,6 +218,9 @@ export function UploadStep({
           {DEMO.excerpts}. The demo replays a recorded live run, so there is nothing to upload and no sign-in; you still confirm the
           baseline, read the evidence and choose what to ask the seller.
         </p>
+        <Link href="/reliability" className="mt-3 inline-block text-sm font-semibold text-slate-800 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-600">
+          How do we know when it&apos;s wrong? A real failure, how it was caught, and what changes when the evidence does →
+        </Link>
       </div>
       {busy && <p className="mt-4 text-sm text-slate-600">{busy}</p>}
 

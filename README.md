@@ -4,7 +4,7 @@
 
 **Does the data room support the term sheet?**
 
-**Live demo:** [crosscheck-aa4e.vercel.app](https://crosscheck-aa4e.vercel.app/) (a replay of a recorded run; no sign-in) · **Walkthrough:** the GIF below · **Read:** [How it works](#how-it-works) · [Evals](#evals) · [How I built it](#how-i-built-it) · [Build log](DECISIONS.md)
+**Live demo:** [crosscheck-aa4e.vercel.app](https://crosscheck-aa4e.vercel.app/) (a replay of a recorded run; no sign-in) · **Walkthrough:** the GIF below · **[How we know when it's wrong](https://crosscheck-aa4e.vercel.app/reliability)** (a real recorded failure and how it was caught; one fact changed, conclusions moved) · **Read:** [How it works](#how-it-works) · [Evals](#evals) · [How I built it](#how-i-built-it) · [Build log](DECISIONS.md)
 
 ![Walkthrough: start the demo, confirm the baseline, cross-check with the question to the seller and the evidence, open a quote in the PDF, report](docs/walkthrough.gif)
 
@@ -39,6 +39,8 @@ Three data rooms, one pipeline. Every room runs through the same engine, prompts
 | **Perturbed** (`itc-transfer-perturbed`): Cottonwood with three facts resolved | **75 / 76** | 57 / 57 | $0.78 | Changing the evidence changes the conclusions through the same playbook: the construction-start question, the domestic-content doubt and the FEOC cliff disappear; the basis cut, the schedule slip, the typo and the missing certificate remain; range $68.2M–$68.2M. The one miss is a wording assumption in the gold (it expected the slip to be repeated as a risk; the run reports it in the finding itself) and is left as recorded. |
 
 *Cottonwood tests false negatives against planted issues; the clean room tests false positives; the perturbed room tests sensitivity. None of them proves generalisation to arbitrary real deals.* The clean room tests that the pipeline does not invent discrepancies between the term sheet and the data room (unsupported checks, questions, routine RFIs, a narrowed range); it does not assert that a deal has no conceivable tax risk, which is why its gold allows one risk rather than none. The playbook rules were written knowing Cottonwood's planted issues, so these numbers show that the pipeline executes the playbook reliably and that it changes its conclusions when the evidence changes, not that it would read an unseen deal correctly.
+
+The [reliability page](https://crosscheck-aa4e.vercel.app/reliability) (`/reliability`) shows three of these results side by side, read from the recorded runs (`scripts/reliability-data.ts` extracts them; `npm test` fails if the page drifts from the files): the first clean-room run's failure, which quote verification passed and the expected answers caught; Cottonwood against Perturbed, where one sentence in the independent engineer's report moves the construction start from conflicting to confirmed and the range from $0–$68.2M to $68.2M; and what the scores do not prove.
 
 This is a four-call pipeline with deterministic math, not an agent loop: the task is bounded and verifiable, so structured calls beat agency.
 
