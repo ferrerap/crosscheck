@@ -19,17 +19,48 @@ export interface PaneHighlight {
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-export default function PdfPane({
-  url,
-  highlights,
-  activeId,
-  className = "",
-}: {
+interface PaneProps {
   url: string;
   highlights: PaneHighlight[];
   activeId?: string | null;
   className?: string;
-}) {
+}
+
+// Phone and tablet browsers kill the tab when pdf.js renders here (a memory limit desktop browsers do not hit), so
+// touch-first and narrow screens get the quoted passages as text and the PDF in the device's own viewer.
+const lightweight = () => window.matchMedia("(max-width: 767px), (pointer: coarse)").matches;
+
+export default function PdfPane(props: PaneProps) {
+  const [light] = useState(lightweight); // this module only loads in the browser (dynamic import, ssr: false)
+  return light ? <PassageList {...props} /> : <RenderedPdf {...props} />;
+}
+
+function PassageList({ url, highlights, activeId, className = "" }: PaneProps) {
+  // One card per passage; a quote that backs two terms is listed once (and marked if either is active).
+  const passages = [...new Map(highlights.map((h) => [`${h.page}|${h.text}`, h])).values()];
+  const activeKey = highlights.find((h) => h.id === activeId);
+  return (
+    <div className={`flex min-h-0 flex-col ${className}`} data-testid="pdf-passages">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 py-2 text-xs text-slate-500">
+        <span>Source passages</span>
+        <a href={url} target="_blank" rel="noopener noreferrer" className="rounded-md border border-slate-300 px-2.5 py-1 font-semibold text-slate-800">
+          Open the PDF
+        </a>
+      </div>
+      <div className="min-h-0 flex-1 space-y-2 overflow-auto bg-slate-50 p-3 text-sm leading-relaxed text-slate-800">
+        {passages.map((h) => (
+          <div key={h.id} className={`rounded-md border bg-white p-2.5 ${activeKey && activeKey.page === h.page && activeKey.text === h.text ? "border-amber-400 ring-1 ring-amber-300" : "border-slate-200"}`}>
+            <span className="mr-1 text-xs font-semibold text-slate-500">p.{h.page}</span>
+            <mark className="bg-amber-100 text-slate-900">{h.text}</mark>
+          </div>
+        ))}
+        <p className="pt-1 text-xs text-slate-500">The highlighted page view is on desktop; on this device the PDF opens in the browser&apos;s own viewer.</p>
+      </div>
+    </div>
+  );
+}
+
+function RenderedPdf({ url, highlights, activeId, className = "" }: PaneProps) {
   const [pdf, setPdf] = useState<pdfjs.PDFDocumentProxy | null>(null);
   const [marks, setMarks] = useState<Map<number, Map<number, ItemMark[]>> | null>(null);
   const [zoom, setZoom] = useState(1);
