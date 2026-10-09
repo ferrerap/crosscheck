@@ -1,16 +1,17 @@
 "use client";
 // Cross-check and review (design G4): checks as collapsed rows, every open check is a question to the seller.
 // An expanded check reads as its own trace: what the term sheet states, the standard it is judged by (from the
-// playbook), what the documents show, the question to the seller, the evidence and gaps per document, and any
-// relevant document that cited nothing.
+// playbook), what the documents show, the question to the seller, the reviewer's decision for the numbers, the
+// evidence and gaps per document, and any relevant document that cited nothing.
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { BaselineAssumption, DocClassification, Evidence, Finding, Gap, Label, Quote, Question, Rfi, Risk } from "@/engine/types";
 import { activePlaybook } from "@/lib/activePlaybook";
 import { checkCoverage } from "@/lib/coverage";
+import { decisionChoices } from "@/lib/decisions";
 import { assumptionName, docLabels, shortType } from "@/lib/meta";
 import type { DocMeta, RunnerMode } from "@/lib/runner";
 import { creditTag } from "@/lib/creditTag";
-import type { CreditImpact } from "@/lib/scenarios";
+import type { CreditImpact, Resolution } from "@/lib/scenarios";
 import { Card, CreditPill, LabelChip, PriorityBadge, PrimaryButton, SourceTag, Spinner, cx, sortRfis } from "./ui";
 import { SendModal } from "./SendModal";
 import { reachableRfis, unverifiedQuotes } from "@/lib/questions";
@@ -53,8 +54,10 @@ export function CheckStep({
   impact,
   accepted,
   edits,
+  resolutions,
   onAccept,
   onEdit,
+  onResolve,
   onOpenQuotes,
   onSend,
 }: {
@@ -75,8 +78,12 @@ export function CheckStep({
   impact: CreditImpact;
   accepted: Set<string>;
   edits: Record<string, string>;
+  /** Reviewer decisions by check (see scenarios.ts). */
+  resolutions: Record<string, Resolution>;
   onAccept: (id: string, on: boolean) => void;
   onEdit: (id: string, text: string | null) => void;
+  /** Records a decision for one check, or clears it (null). */
+  onResolve: (id: string, r: Resolution | null) => void;
   onOpenQuotes: (quotes: Quote[]) => void;
   onSend: (count: number) => void;
 }) {
@@ -95,6 +102,7 @@ export function CheckStep({
   const findingBy = useMemo(() => new Map(findings.map((f) => [f.assumptionId, f])), [findings]);
   const baseBy = useMemo(() => new Map(baseline.map((b) => [b.id, b])), [baseline]);
   const anchors = useMemo(() => new Set(docs.filter((d) => d.role === "anchor").map((d) => d.id)), [docs]);
+  const sellerDocs = useMemo(() => new Set(classifications.filter((c) => c.sourceRole === "seller").map((c) => c.docId)), [classifications]);
   const evidenceBy = useMemo(() => {
     const m = new Map<string, Evidence[]>();
     for (const e of evidence) m.set(e.assumptionId, [...(m.get(e.assumptionId) ?? []), e]);
@@ -312,6 +320,7 @@ export function CheckStep({
           <div className="border-t border-dashed border-slate-200 bg-white px-3.5 pb-3.5 pl-12 pt-2.5">
             {renderShow(aid, f)}
             {ok ? renderGood(aid, rf) : renderAsk(f, rf)}
+            {renderDecide(aid, f)}
             <div className="mt-3.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
               Supporting evidence <span className="font-medium normal-case tracking-normal text-slate-400">· one line per fact · click a page to open the document</span>
             </div>
@@ -489,6 +498,53 @@ export function CheckStep({
     );
   }
 
+  /** The reviewer's decision for the numbers: it replaces the model's resolution of this check in the credit range. */
+  function renderDecide(aid: string, f: Finding) {
+    const def = activePlaybook.assumptions.find((a) => a.id === aid);
+    if (!def) return null;
+    const parent = f.dependsOn ? findingBy.get(f.dependsOn) : undefined;
+    const parentOpen = !!parent && parent.label !== "confirmed" && !(parent.assumptionId in resolutions);
+    const choices = decisionChoices(def, f, baseBy.get(aid), evidence, sellerDocs, docName, parentOpen);
+    if (!choices) return null;
+    const current = resolutions[aid];
+    const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+    const selected = current ? (choices.find((c) => c.resolution && same(c.resolution.value, current.value))?.key ?? "default") : "default";
+    return (
+      <div className="mt-3 rounded-[10px] border border-sky-600/25 bg-sky-50/60 px-4 py-3" data-testid={`decide-${aid}`}>
+        <div className="mb-1.5 flex flex-wrap items-baseline gap-x-2">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-sky-900">Your decision for the numbers</span>
+          <span className="text-[11px] text-slate-500">Replaces the model&apos;s resolution in the credit range and is recorded in the report. The model&apos;s label stays as it is.</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={selected}
+            onChange={(e) => {
+              const c = choices.find((x) => x.key === e.target.value);
+              onResolve(aid, c?.resolution ? { ...c.resolution, reason: current?.reason ?? "" } : null);
+            }}
+            aria-label="Decision for the numbers"
+            className="max-w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-[13px] text-slate-800"
+          >
+            {choices.map((c) => (
+              <option key={c.key} value={c.key}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+          {current && (
+            <input
+              value={current.reason}
+              onChange={(e) => onResolve(aid, { ...current, reason: e.target.value })}
+              placeholder="Why (recorded in the report)"
+              aria-label="Reason for the decision"
+              className="min-w-[16rem] flex-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-[13px] text-slate-800"
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+
   function renderGood(aid: string, rf: Rfi[]) {
     return (
       <div className="mt-3 rounded-[10px] border border-emerald-600/25 bg-emerald-50 px-3.5 py-2.5 text-[12.5px] text-emerald-800">
@@ -560,7 +616,7 @@ export function CheckStep({
       return (
         <>
           <div className="mt-1 grid grid-cols-2 items-start gap-4" data-testid={`lanes-${aid}`}>
-            {lane((d) => clsById.get(d)?.sourceRole !== "seller", "Evidence", "independent, advisor, supplier, IRS")}
+            {lane((d) => clsById.get(d)?.sourceRole !== "seller", "Third parties", "independent, advisor, supplier, IRS: each tagged by who wrote it")}
             {lane((d) => clsById.get(d)?.sourceRole === "seller", "Seller says", "Seller and its counsel")}
           </div>
           {missed}

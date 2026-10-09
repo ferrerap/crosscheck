@@ -117,7 +117,7 @@ export function PriorityBadge({ priority }: { priority: Rfi["priority"] }) {
   return <span className={cx("inline-block shrink-0 rounded px-1 py-px text-[9px] font-bold uppercase", PRIORITY_STYLE[priority])}>{priority}</span>;
 }
 
-export function CreditPill({ tag, wrap }: { tag: { kind: "risk" | "cut" | "part" | "none"; text: string }; wrap?: boolean }) {
+export function CreditPill({ tag, wrap }: { tag: { kind: "risk" | "cut" | "part" | "none" | "decided"; text: string }; wrap?: boolean }) {
   return (
     <span
       className={cx(
@@ -127,7 +127,9 @@ export function CreditPill({ tag, wrap }: { tag: { kind: "risk" | "cut" | "part"
           ? "bg-red-50 text-red-800 ring-red-600/20"
           : tag.kind === "cut"
             ? "bg-amber-50 text-amber-800 ring-amber-600/25"
-            : "bg-slate-100 text-slate-600 ring-slate-500/20",
+            : tag.kind === "decided"
+              ? "bg-sky-50 text-sky-800 ring-sky-600/25"
+              : "bg-slate-100 text-slate-600 ring-slate-500/20",
       )}
     >
       {tag.text}

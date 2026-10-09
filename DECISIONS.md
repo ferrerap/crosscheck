@@ -140,11 +140,16 @@ Three application-facing items, no code change.
 
 ## Legibility pass (2026-10-09)
 
-Paul asked that the repo make the reasoning architecture visible to an engineering reader, not only the product. Claude audited first. The decomposition (each assertion's evidence requirement and rule in the playbook), the intermediate state and the model / code / person split were all implemented, but visible only by reading the code. The review surface never showed the standard behind a label. And completeness had no explicit mechanism beyond whole-room context and gaps. No prompt, schema, rule or recorded run changed, so no eval was re-run.
+Paul set the brief for this pass. It covered:
+- **The framing:** claim-to-evidence reconciliation. What has been asserted, what evidence it requires, where that evidence lives, and how contradictions, missing information and uncertainty are preserved.
+- **The questions** the README had to answer, from "why not RAG" to completeness and failure modes.
+- **The constraint:** make the existing thinking legible, adding nothing for appearance.
 
-- **README rewritten around claim-to-evidence reconciliation (Claude, at Paul's direction):** why passage retrieval is not enough, the decomposition, who decides what, a construction-start trace copied from the recorded run, the state and the label taxonomy exactly as implemented, completeness, failure modes, an evaluation map, and what this is not. Application-neutral: the Crux-specific framing is gone (this log keeps the history). The "How I built it" bullets are unchanged; only the day and commit counts were updated.
+Claude audited against the brief before changing anything. The decomposition (each assertion's evidence requirement and rule in the playbook), the intermediate state and the model / code / person split were all implemented, but visible only by reading the code. The review surface never showed the standard behind a label. And completeness had no explicit mechanism beyond whole-room context and gaps. No prompt, schema, rule or recorded run changed, so no eval was re-run.
+
+- **README rewritten around Paul's framing (Claude wrote it):** why passage retrieval is not enough, the decomposition, who decides what, a construction-start trace copied from the recorded run, the state and the label taxonomy exactly as implemented, completeness, failure modes, an evaluation map, and what this is not. It is application-neutral: the Crux-specific framing is gone (this log keeps the history).
 - **Each expanded check now reads as its own trace:** the term sheet's sentence (opens the PDF), "How this check is judged" (the playbook's evidence requirement and rule, as sent to Claude), what the documents show, the question, the evidence and gaps, and any relevant document that cited nothing.
-- **Coverage cross-check** (`src/lib/coverage.ts`, unit-tested on synthetic data and on the recorded run): documents the classifier marked relevant that produced neither a passage nor a gap. The recorded run has 4 such pairs across 12 checks, most benign. It is a tripwire, not a guarantee, and the README says so.
+- **Coverage cross-check** (Claude proposed it in the audit, answering the brief's completeness question; Paul approved the plan). Lives in `src/lib/coverage.ts`, unit-tested on synthetic data and on the recorded run. It lists documents the classifier marked relevant that produced neither a passage nor a gap. The recorded run has 4 such pairs across 12 checks, most benign. It is a tripwire, not a guarantee, and the README says so.
 - **Comments** mapping each pipeline step to the state it produces (`pipeline.ts`, `types.ts`, the playbook header).
 - **One start-page sentence corrected.** It said "Where documents disagree, it asks you to decide", which predates the questions-to-the-seller design. It now says the app works out what evidence each assumption needs and drafts the question to the seller where documents disagree or say nothing. The walkthrough GIF was re-recorded from the production build.
 - **Considered and not done:**
@@ -155,3 +160,39 @@ Paul asked that the repo make the reasoning architecture visible to an engineeri
   - Reviewer overrides fed back as gold.
   
   All are listed as next steps in the README.
+
+## Guardrails pass (2026-10-09)
+
+Paul asked for a cold check of the legibility pass. Claude ran it as a fresh agent with no context, playing the hiring CTO. The read found:
+- **Six places where the README claimed more than the code did**, including two about guardrails.
+- **Two design gaps:** nobody signs off before a model value moves money, and the labels are one model judgment per check rather than rules applied in code.
+
+Paul then shared the job description. Its emphasis on deterministic guardrails around model output set the priorities, and Paul approved the fixes and the reviewer decisions below.
+
+- **The seller-only guardrail, now enforced in code** (`scenarios.ts`). Before, only values taken from the evidence excluded seller documents; a value the model resolved itself (a changed figure, a judgment-call option) was never source-checked. Now a value stated only by seller documents is never applied as a fact or used as an outcome, whichever way it arrives. Checked on all 18 recorded runs: facts, forks, ranges and at-risk figures are unchanged, and so are all re-scores.
+- **Escaping and validation.** The classify step passed the term-sheet displays unescaped; it now escapes them like every other step. The prompt is byte-identical for every recorded run (tested), so no eval re-run was needed. Document and assumption ids returned by the classifier are checked against the data room and the playbook.
+- **README corrected:**
+  - what code enforces about seller values;
+  - that quotes are matched against the cited document, with a wrong page corrected, rather than "on the page it cites";
+  - that dependencies are Claude's output, validated against known ids;
+  - the eval score split into reading checks (36 per room: term-sheet values, project matches, source roles) and reasoning checks (46/46, 29/29, 39/40).
+- **Reliability page:** buyer judgment calls were labelled "Question to the seller"; they now read "Judgment call raised".
+- **The "Evidence" lane is now "Third parties"**, so a supplier's own statement isn't presented as independent evidence. Each document keeps its source tag.
+- **Reviewer decisions (Paul's call, Claude's implementation; `src/lib/decisions.ts`, `CheckStep.tsx`, `ReportStep.tsx`).**
+  - *What it does:* on any disputed check, or any data room fact the math applies, a person can choose the value the numbers use, with a reason. The choices are exactly the outcomes the range already covers.
+  - *Effect:* the range, the at-risk tags and the report recompute. The report lists each decision beside the model's own label, and the model's label itself is never changed.
+  - *Scope:* decisions last for the session only.
+  - *Tests (hand-computed ranges):* deciding the construction start as January 12, 2026 gives $0–$54.6M, and as December 22, 2025 gives $13.6M–$68.2M; a judgment-call option cannot override a decision; once the start is decided, the FEOC check carries its own risk.
+- **README restructured to the job description's framing (Paul's direction):**
+  - model / guardrails / person;
+  - interpretation by the model, consequences decided symbolically;
+  - cost and latency;
+  - why a pipeline rather than an agent here, and what carries over to agents;
+  - provenance as location and authority;
+  - two new failure modes stated honestly: the construction-start fix may be overfit to the fixture's wording, and Claude's roles and dependencies steer the money;
+  - "move mechanical rules into code" as the first next step.
+- **Not done:**
+  - Labels computed in code from extracted facts. This is the first next step, and it means a schema and prompt change with every room re-run.
+  - A structured direct / relayed / own-assertion basis and as-of dates on evidence.
+  - A paraphrase room.
+  - Repeat runs.

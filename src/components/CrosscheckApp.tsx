@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BaselineAssumption, DocClassification, Evidence, Finding, Gap, Question, Quote, Rfi, Risk, RunUsage } from "@/engine/types";
 import type { Values } from "@/playbooks/types";
 import { activePlaybook } from "@/lib/activePlaybook";
-import { creditAtRisk, creditCutByFacts, creditRange, type CreditImpact } from "@/lib/scenarios";
+import { creditAtRisk, creditCutByFacts, creditRange, type CreditImpact, type Resolution } from "@/lib/scenarios";
 import { readerRisks, sendableRfis } from "@/lib/questions";
 import { dealNameOf, docLabels } from "@/lib/meta";
 import { ZERO_USAGE, addUsage, fileUrl, makeRunner, type DocMeta, type Runner, type RunnerMode } from "@/lib/runner";
@@ -43,6 +43,8 @@ export default function CrosscheckApp() {
   const [risks, setRisks] = useState<Risk[]>([]);
   const [accepted, setAccepted] = useState<Set<string>>(new Set()); // questions to the seller that will be sent
   const [edits, setEdits] = useState<Record<string, string>>({}); // reworded questions, by RFI id
+  // Reviewer decisions by check: each replaces the model's resolution of that check in the numbers.
+  const [resolutions, setResolutions] = useState<Record<string, Resolution>>({});
   const [toast, setToast] = useState<string | null>(null);
   const [usage, setUsage] = useState<RunUsage>(ZERO_USAGE);
   const [viewer, setViewer] = useState<ViewerTarget | null>(null);
@@ -82,8 +84,9 @@ export default function CrosscheckApp() {
       questions,
       evidence,
       sellerDocs: new Set(classifications.filter((c) => c.sourceRole === "seller").map((c) => c.docId)),
+      resolutions,
     }),
-    [findings, questions, evidence, classifications],
+    [findings, questions, evidence, classifications, resolutions],
   );
   const range = useMemo(
     () => (baseline.length && findings.length ? creditRange(activePlaybook, baselineValues, scenarioInput) : null),
@@ -96,9 +99,10 @@ export default function CrosscheckApp() {
             atRisk: creditAtRisk(activePlaybook, baselineValues, scenarioInput),
             cut: creditCutByFacts(activePlaybook, baselineValues, scenarioInput),
             unresolved: range?.unresolved ?? [],
+            decided: Object.fromEntries(Object.entries(resolutions).map(([id, r]) => [id, r.label])),
           }
-        : { atRisk: {}, cut: {}, unresolved: [] },
-    [baseline, baselineValues, findings, scenarioInput, range],
+        : { atRisk: {}, cut: {}, unresolved: [], decided: {} },
+    [baseline, baselineValues, findings, scenarioInput, range, resolutions],
   );
   const sentRfis = useMemo(() => sendableRfis(rfis, findings, accepted), [rfis, findings, accepted]);
   const shownRisks = useMemo(() => readerRisks(risks, classifications), [risks, classifications]);
@@ -128,6 +132,7 @@ export default function CrosscheckApp() {
     setRisks([]);
     setAccepted(new Set());
     setEdits({});
+    setResolutions({});
     setToast(null);
     setUsage(ZERO_USAGE);
     setPhase("classifying");
@@ -213,6 +218,7 @@ export default function CrosscheckApp() {
       setRisks(r.risks ?? []);
       setAccepted(new Set((r.rfis ?? []).map((x) => x.id)));
       setEdits({});
+      setResolutions({});
       setUsage((u) => addUsage(u, r.usage));
       setPhase("done");
     } catch (e) {
@@ -285,6 +291,15 @@ export default function CrosscheckApp() {
                 return n;
               })
             }
+            resolutions={resolutions}
+            onResolve={(id, r) =>
+              setResolutions((all) => {
+                const n = { ...all };
+                if (r === null) delete n[id];
+                else n[id] = r;
+                return n;
+              })
+            }
             onOpenQuotes={openQuotes}
             onSend={(count) => {
               if (count > 0) setToast("Questions ready to send. Nothing was sent in this demo.");
@@ -301,6 +316,7 @@ export default function CrosscheckApp() {
             findings={findings}
             rfis={sentRfis}
             edits={edits}
+            resolutions={resolutions}
             risks={shownRisks}
             usage={usage}
             onOpen={openQuote}

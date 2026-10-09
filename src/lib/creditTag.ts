@@ -4,13 +4,15 @@ import { fmtMoney } from "./format";
 import { assumptionName } from "./meta";
 
 export interface CreditTag {
-  kind: "risk" | "cut" | "part" | "none";
+  kind: "risk" | "cut" | "part" | "none" | "decided";
   text: string;
 }
 
 /** The credit-impact tag for one check; null for confirmed checks. Shared by the check rows and the Report. */
 export function creditTag(f: Finding, impact: CreditImpact, findings: Map<string, Finding>): CreditTag | null {
-  const { atRisk, cut, unresolved } = impact;
+  const { atRisk, cut, unresolved, decided } = impact;
+  // A reviewer's decision replaces the model's resolution in the math, so it replaces the impact tag too.
+  if (decided[f.assumptionId]) return { kind: "decided", text: `decided: ${decided[f.assumptionId]}` };
   const own = atRisk[f.assumptionId] ?? 0;
   if (own > 0) return { kind: "risk", text: `up to ${fmtMoney(own)} at risk` };
   const lost = cut[f.assumptionId] ?? 0;

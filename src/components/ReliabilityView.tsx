@@ -113,8 +113,9 @@ export default function ReliabilityView() {
             <Badge tone="real">Recorded run · clean room · {when(cleanFirst.stamp)} · {cleanFirst.model}</Badge>
           </div>
           <p className="mt-2 max-w-3xl text-sm text-slate-600">
-            The clean data room is the same deal with nothing wrong with it. On its first run the pipeline left the construction start open and
-            raised a question to the seller. The construction start decides whether the credit is $71.0M or, in the worst case, nothing.
+            The clean data room is the same deal with nothing wrong with it. On its first run the pipeline left the construction start open, raised a
+            judgment call about it and drafted {cleanFirst.rfis} requests to the seller. The construction start decides whether the credit is $71.0M or, in the
+            worst case, nothing.
           </p>
 
           <div className="mt-5 grid gap-4 lg:grid-cols-3">
@@ -125,13 +126,13 @@ export default function ReliabilityView() {
               <LabelChip label={cleanFirst.findings.T6.label as Label} />
               <p className="mt-2">&ldquo;{firstNote}&rdquo;</p>
               <div className="mt-3 space-y-1 text-[13px]">
-                <div><span className="text-slate-500">Question to the seller:</span> {cleanFirst.questions[0]}</div>
+                <div><span className="text-slate-500">Judgment call raised:</span> {cleanFirst.questions[0]}</div>
                 <div><span className="text-slate-500">Credit range (computed from these findings):</span> <b>{range(cleanFirst)}</b></div>
               </div>
             </Panel>
             <Panel title="What it should have concluded" className="border-emerald-200">
               <LabelChip label="confirmed" />
-              <p className="mt-2">The engineer says it reviewed the manufacturer&apos;s production records and confirms the date. Expected answer, written before the run: confirmed, no question to the seller.</p>
+              <p className="mt-2">The engineer says it reviewed the manufacturer&apos;s production records and confirms the date. Expected answer, written before the run: confirmed, no judgment call, at most one request to the seller.</p>
               <div className="mt-3 text-[13px]"><span className="text-slate-500">Expected credit range:</span> <b>{fmtMoney(cleanFirst.range.low.expected)}</b></div>
               <p className="mt-3 text-[13px] text-slate-600">
                 Why it matters: the buyer would have told the seller its credit could be zero and chased records an independent engineer had already reviewed.
@@ -217,7 +218,7 @@ export default function ReliabilityView() {
                   <td className="px-4 py-3 text-[13px]"><div className="flex flex-wrap items-center gap-2">Domestic content <LabelChip size="sm" label={perturbed.findings.T5.label as Label} /> FEOC <LabelChip size="sm" label={perturbed.findings.T8.label as Label} /></div></td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 font-medium text-slate-700">Question to the seller</td>
+                  <td className="px-4 py-3 font-medium text-slate-700">Judgment call raised</td>
                   <td className="px-4 py-3 text-[13px]">{cottonwood.questions[0] ?? "None"}</td>
                   <td className="px-4 py-3 text-[13px]">{perturbed.questions[0] ?? "None"}</td>
                 </tr>

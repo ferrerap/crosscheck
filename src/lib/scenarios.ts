@@ -11,9 +11,13 @@
 //     * otherwise to each value its independent supporting/contradicting evidence states (sources disagree on
 //       a date). Seller assertions are not independent evidence and never become an outcome.
 // - Judgment-call options in `questions` add their own outcomes.
+// - A value that only seller documents state is the seller's own assertion: it is never applied as a fact or used as an
+//   outcome, whether it arrives through the evidence, the model's resolved value or a judgment-call option.
+// - A reviewer's decision on a check replaces the model's resolution of it: its value becomes a fact (or the term
+//   sheet's value holds) and its open question leaves the range. The model's label is kept beside it.
 // Every combination runs through the playbook's deterministic metrics. A figure a scenario cannot compute stays
 // null and is excluded from the low/high selection; the count of such scenarios is reported.
-import type { Evidence, Finding, Metric, Question } from "@/engine/types";
+import type { Evidence, Finding, Metric, Question, Quote } from "@/engine/types";
 import type { Playbook, Values } from "@/playbooks/types";
 
 /** Enumerating more scenarios than this is a sign the inputs are wrong, not a case to approximate silently. */
@@ -43,12 +47,26 @@ export interface Fork {
   source: "finding" | "question";
 }
 
+/** A reviewer's decision on one check, used by the numbers in place of the model's resolution. */
+export interface Resolution {
+  /** The value to use, typed like the check's values. Null: the term sheet's value holds (the seller's position). */
+  value: string | number | boolean | null;
+  /** Short human form of the decision, e.g. "Jan 12, 2026 (independent engineer report)". */
+  label: string;
+  /** The passage the value is taken from, when it comes from a document. */
+  source?: Quote | null;
+  /** Why, in the reviewer's words. */
+  reason: string;
+}
+
 export interface ScenarioInput {
   findings: Finding[];
   questions: Question[];
   evidence: Evidence[];
   /** Documents produced by the seller (classification sourceRole "seller"). */
   sellerDocs?: Set<string>;
+  /** Reviewer decisions by assumption id. */
+  resolutions?: Record<string, Resolution>;
 }
 
 export interface ScenarioModel {
@@ -60,7 +78,7 @@ export interface ScenarioModel {
 const OPEN = new Set(["contradicted", "conflicting", "unverified"]);
 
 /** Facts, forks and unresolved checks for a run. Exported for tests; the range functions build on it. */
-export function modelScenarios(p: Playbook, baseline: Values, { findings, questions, evidence, sellerDocs }: ScenarioInput): ScenarioModel {
+export function modelScenarios(p: Playbook, baseline: Values, { findings, questions, evidence, sellerDocs, resolutions = {} }: ScenarioInput): ScenarioModel {
   const facts: Values = {};
   const forks: Fork[] = [];
   const unresolved: string[] = [];
@@ -71,12 +89,21 @@ export function modelScenarios(p: Playbook, baseline: Values, { findings, questi
     [...new Set(evidence
       .filter((e) => e.assumptionId === id && e.stance !== "context" && e.value !== null && !sellerDocs?.has(e.docId))
       .map((e) => JSON.stringify(e.value)))].map((v) => JSON.parse(v));
+  const statedBy = (id: string, v: unknown, seller: boolean) =>
+    evidence.some((e) => e.assumptionId === id && e.value !== null && JSON.stringify(e.value) === JSON.stringify(v) && (sellerDocs?.has(e.docId) ?? false) === seller);
+  const sellerOnly = (id: string, v: unknown) => !!sellerDocs?.size && statedBy(id, v, true) && !statedBy(id, v, false);
   const fork = (id: string, outcomes: Values[], unverified = false) => forks.push({ ids: [id], outcomes: [{}, ...outcomes], unverified, source: "finding" });
 
   for (const f of findings) {
     const id = f.assumptionId;
+    if (id in resolutions) {
+      const decided = resolutions[id].value;
+      if (decided !== null) facts[id] = decided;
+      continue;
+    }
     if (f.label === "confirmed") continue;
-    const has = f.currentValue !== undefined && f.currentValue !== null;
+    // A resolved value that only the seller states is treated as if the model had returned none.
+    const has = f.currentValue !== undefined && f.currentValue !== null && !sellerOnly(id, f.currentValue);
     const value = f.currentValue as string | number | boolean;
     const yesNoAssumed = kind.get(id) === "boolean" && baseline[id] === true;
 
@@ -110,8 +137,12 @@ export function modelScenarios(p: Playbook, baseline: Values, { findings, questi
     if (values.length) fork(id, values.map((v) => ({ [id]: v })));
     else unresolved.push(id);
   }
-  for (const q of questions)
-    if (q.options.length) forks.push({ ids: q.assumptionIds, outcomes: [{}, ...q.options.map((o) => o.sets as Values)], unverified: false, source: "question" });
+  // Judgment-call options can neither override a reviewer's decision nor bring in a value only the seller states.
+  const usable = (sets: Values): Values => Object.fromEntries(Object.entries(sets).filter(([id, v]) => !(id in resolutions) && !sellerOnly(id, v)));
+  for (const q of questions) {
+    const ids = q.assumptionIds.filter((id) => !(id in resolutions));
+    if (q.options.length && ids.length) forks.push({ ids, outcomes: [{}, ...q.options.map((o) => usable(o.sets as Values))], unverified: false, source: "question" });
+  }
   return { facts, forks, unresolved };
 }
 
@@ -163,7 +194,9 @@ export function creditAtRisk(p: Playbook, baseline: Values, input: ScenarioInput
   const { facts, forks } = modelScenarios(p, baseline, input);
   const top = num(p.metrics(baseline, facts), metricId);
   if (top === null) return {};
-  const parentOf = new Map(input.findings.filter((f) => f.dependsOn).map((f) => [f.assumptionId, f.dependsOn!]));
+  // A dependent counts toward its parent, unless a reviewer has decided the parent: then it stands on its own.
+  const decided = input.resolutions ?? {};
+  const parentOf = new Map(input.findings.filter((f) => f.dependsOn && !(f.dependsOn in decided)).map((f) => [f.assumptionId, f.dependsOn!]));
   const out: Record<string, number> = {};
   for (const fork of forks) {
     if (fork.ids.every((id) => parentOf.has(id))) continue; // dependents count toward their parent
@@ -207,4 +240,6 @@ export interface CreditImpact {
   cut: Record<string, number>;
   /** Checks whose data room value could not be resolved into the math. */
   unresolved: string[];
+  /** Checks a reviewer has decided, with the decision's short label. */
+  decided: Record<string, string>;
 }

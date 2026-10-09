@@ -163,26 +163,36 @@ const ClassifySchema = z.object({
   })),
 });
 
+/** The classify instruction. The baseline displays came from the model and may echo document text, so they are escaped. */
+export function buildClassifyTask(p: Playbook, docs: DocRecord[], baseline: BaselineAssumption[]): string {
+  return `Classify every document in the data room (${docs.map((d) => d.id).join(", ")}).
+projectMatch: "match" if it concerns the same project as the ${p.anchorLabel.toLowerCase()}; "different_project" if it concerns another project (it must not be used as evidence); "general_reference" for official lists, guidance or rules that are not project-specific; "unclear" otherwise.
+Baseline facts for matching: ${JSON.stringify(baselineForPrompt(baseline).map(({ id, display }) => ({ id, display })))}`;
+}
+
 export async function classifyDocs(p: Playbook, docs: DocRecord[], baseline: BaselineAssumption[]) {
   const { data, usage } = await ask({
     system: system(p, docs),
-    task: `Classify every document in the data room (${docs.map((d) => d.id).join(", ")}).
-projectMatch: "match" if it concerns the same project as the ${p.anchorLabel.toLowerCase()}; "different_project" if it concerns another project (it must not be used as evidence); "general_reference" for official lists, guidance or rules that are not project-specific; "unclear" otherwise.
-Baseline facts for matching: ${JSON.stringify(baseline.map((b) => ({ id: b.id, display: b.display })))}`,
+    task: buildClassifyTask(p, docs, baseline),
     schema: ClassifySchema,
     effort: "low",
   });
-  const classifications: DocClassification[] = data.documents.map((d) => ({
-    docId: d.docId,
-    docType: d.docType,
-    title: d.title,
-    summary: d.suspiciousInstructions ? `${d.summary} Contains text addressed to automated tools, which was ignored.` : d.summary,
-    projectMatch: d.projectMatch,
-    projectMatchReason: d.projectMatchReason,
-    relevantAssumptions: d.relevantAssumptions,
-    suspiciousInstructions: d.suspiciousInstructions,
-    sourceRole: d.sourceRole,
-  }));
+  // Identifiers the model returns are checked against the data room and the playbook before anything uses them.
+  const known = new Set(docs.map((d) => d.id));
+  const defs = defsById(p);
+  const classifications: DocClassification[] = data.documents
+    .filter((d) => known.has(d.docId))
+    .map((d) => ({
+      docId: d.docId,
+      docType: d.docType,
+      title: d.title,
+      summary: d.suspiciousInstructions ? `${d.summary} Contains text addressed to automated tools, which was ignored.` : d.summary,
+      projectMatch: d.projectMatch,
+      projectMatchReason: d.projectMatchReason,
+      relevantAssumptions: d.relevantAssumptions.filter((a) => defs.has(a)),
+      suspiciousInstructions: d.suspiciousInstructions,
+      sourceRole: d.sourceRole,
+    }));
   return { classifications, usage };
 }
 
@@ -213,7 +223,7 @@ export async function gatherEvidence(
     system: system(p, docs),
     task: `For each assumption and identity fact (not deal terms), collect the current evidence from data room documents: every passage that supports, contradicts, or is needed context (including anything that determines which rule applies, such as dates). For identity facts, include every document that states the fact, so consistency can be checked document by document. Also list gaps: documents that should state a value given their type but don't. Do not use the ${p.anchorLabel.toLowerCase()} as current evidence. Do not use documents about a different project: ${excluded.join(", ") || "none"}.
 Baseline: ${JSON.stringify(baselineForPrompt(baseline))}
-Classifications: ${JSON.stringify(classifications.map(({ docId, docType, relevantAssumptions, projectMatch }) => ({ docId, docType: escapeText(docType), relevantAssumptions, projectMatch })))}`,
+Classifications: ${JSON.stringify(classifications.map(({ docId, docType, relevantAssumptions, projectMatch }) => ({ docId: escapeText(docId), docType: escapeText(docType), relevantAssumptions: relevantAssumptions.filter((a) => p.assumptions.some((x) => x.id === a)), projectMatch })))}`,
     schema: EvidenceSchema,
     effort: "medium",
   });
@@ -297,7 +307,7 @@ export function buildReconcileTask(baseline: BaselineAssumption[], evidence: Evi
   const sourceOf = new Map(classifications.map((c) => [c.docId, c.sourceRole]));
   const safe = evidence.map((e) => ({
     assumptionId: e.assumptionId,
-    docId: e.docId,
+    docId: escapeText(e.docId),
     source: sourceOf.get(e.docId) ?? "unknown",
     value: typeof e.value === "string" ? escapeText(e.value) : e.value,
     display: escapeText(e.display),

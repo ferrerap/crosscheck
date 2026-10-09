@@ -3,7 +3,7 @@ import { Fragment, useState } from "react";
 import type { Finding, Label, Metric, Quote, Rfi, Risk, RunUsage } from "@/engine/types";
 import { LABEL_ORDER, NO_FIGURE, fmtMetric, fmtMoney } from "@/lib/format";
 import { GROUPS, assumptionKind, assumptionName } from "@/lib/meta";
-import type { CreditImpact, CreditRange } from "@/lib/scenarios";
+import type { CreditImpact, CreditRange, Resolution } from "@/lib/scenarios";
 import { creditTag } from "@/lib/creditTag";
 import { unverifiedQuotes } from "@/lib/questions";
 import { Card, CreditPill, LabelChip, PriorityBadge, QuoteChip, StanceTag, cx, sortRfis } from "./ui";
@@ -44,6 +44,7 @@ export function ReportStep({
   impact,
   rfis,
   edits,
+  resolutions,
   risks,
   usage,
   onOpen,
@@ -58,6 +59,8 @@ export function ReportStep({
   /** The questions that were accepted for sending. */
   rfis: Rfi[];
   edits: Record<string, string>;
+  /** Reviewer decisions applied to the numbers in place of the model's resolution. */
+  resolutions: Record<string, Resolution>;
   risks: Risk[];
   usage: RunUsage;
   onOpen: (q: Quote) => void;
@@ -77,7 +80,8 @@ export function ReportStep({
   const insGap = ins && ins.current !== null && ins.baseline !== null ? ins.current - ins.baseline : null;
   const ifCleared = pick(range.lowIfCleared, "credit");
   const clearNames = range.clearable.map((a) => assumptionName(a)).join(" and ");
-  const facts = findings.filter((f) => f.label === "changed").map((f) => assumptionName(f.assumptionId).toLowerCase());
+  const decided = Object.entries(resolutions);
+  const facts = findings.filter((f) => f.label === "changed" && !resolutions[f.assumptionId]).map((f) => assumptionName(f.assumptionId).toLowerCase());
 
   return (
     <div>
@@ -153,10 +157,44 @@ export function ReportStep({
           )}
         </div>
         <p className="mt-2 text-xs text-slate-500">
-          Data room facts{facts.length ? ` (${facts.join(", ")})` : ""} are applied. Each open question could resolve either way, which sets the range
+          Data room facts{facts.length ? ` (${facts.join(", ")})` : ""} are applied.
+          {decided.length > 0 && ` ${decided.length} check${decided.length === 1 ? " is" : "s are"} set by the reviewer's decision instead of the model's (below).`} Each
+          open question could resolve either way, which sets the range
           {range.notComputable > 0 ? `; ${range.notComputable} of ${range.scenarios} scenarios could not be computed and are left out` : ""}. Computed in code, not by the model.
         </p>
       </div>
+
+      {decided.length > 0 && (
+        <section className="mt-8" data-testid="report-decisions">
+          <h3 className="text-lg font-semibold tracking-tight">Decided by the reviewer</h3>
+          <p className="mt-1 text-sm text-slate-500">These decisions replace the model&apos;s resolution in the figures above. The model&apos;s own label is shown beside each.</p>
+          <ul className="mt-3 space-y-2">
+            {decided.map(([id, r]) => {
+              const f = findingBy.get(id);
+              return (
+                <li key={id} className="rounded-lg border border-sky-600/25 bg-white p-3.5 text-sm" data-testid={`decision-${id}`}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold text-slate-900">{assumptionName(id)}</span>
+                    <span className="text-slate-400">&rarr;</span>
+                    <span className="font-medium text-sky-900">{r.label}</span>
+                    {f && (
+                      <span className="ml-auto flex items-center gap-1.5 text-xs text-slate-500">
+                        model&apos;s label <LabelChip label={f.label} size="sm" />
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 text-[13px] text-slate-600">{r.reason.trim() ? `Why: ${r.reason.trim()}` : "No reason given."}</div>
+                  {r.source && (
+                    <div className="mt-2">
+                      <QuoteChip quote={r.source} docName={docName(r.source.docId)} onOpen={onOpen} />
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <div className="mt-8 flex flex-wrap items-center gap-2" data-testid="label-summary">
         <span className="mr-1 text-sm font-medium text-slate-700">{findings.length} checks:</span>
